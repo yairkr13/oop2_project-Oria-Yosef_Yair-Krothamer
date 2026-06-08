@@ -1,18 +1,23 @@
 #pragma once
-#include "SFML/graphics.hpp"
+#include <SFML/Graphics.hpp>
+#include <vector>
+#include "Player.h"
 
 class Game
 {
 public:
-	Game();
-	void run();
+    Game();
+    void run();
 
-	enum class State { Menu, Playing, LevelSolved, GameComplete };
-private: 
-	sf::RenderWindow m_window;
-	void handle(const sf::Event::Closed& event);
-	void handle(const sf::Event::MouseButtonPressed& event);
-	void handle(const sf::Event::KeyPressed& event);
-	void handle(const auto& event) {};
-	void draw();
+private:
+    sf::RenderWindow m_window;
+    Player m_player;
+    std::vector<sf::RectangleShape> m_obstacles;
+    sf::Clock m_clock;
+
+    void handleEvents();
+    void update(float dt);
+    void draw();
+
+    static std::vector<sf::RectangleShape> makeObstacles();
 };

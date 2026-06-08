@@ -1,23 +1,42 @@
 #include "Player.h"
+#include <cmath>
 
-Player::Player() : m_position(100.f, 100.f) /*, m_texture(), m_sprite()*/
+namespace
 {
-	// Load texture and set up sprite
-	// m_texture.loadFromFile("player.png");
-	// m_sprite.setTexture(m_texture);
-	// m_sprite.setPosition(m_position);
-	sf::RectangleShape shape(sf::Vector2f(20.f, 20.f));
-	shape.setPosition(m_position);
-	shape.setFillColor(sf::Color::Green);
+    constexpr float DEG_TO_RAD = 3.14159265f / 180.f;
 }
 
-void Player::update()
+Player::Player()
 {
-
-	// Handle player movement and game logic here
+    m_shape.setSize({ 80.f, 40.f });
+    m_shape.setOrigin({ 40.f, 20.f }); // center origin, so rotation looks natural
+    m_shape.setFillColor(sf::Color(70, 130, 220));
+    m_shape.setPosition({ 400.f, 300.f });
 }
 
-void Player::draw(sf::RenderWindow& window)
+void Player::update(float dt)
 {
-	window.draw(shape);
+    using Key = sf::Keyboard::Key;
+
+    if (sf::Keyboard::isKeyPressed(Key::Left))
+        m_angleDeg -= ROTATION_SPEED * dt;
+
+    if (sf::Keyboard::isKeyPressed(Key::Right))
+        m_angleDeg += ROTATION_SPEED * dt;
+
+    const float rad = m_angleDeg * DEG_TO_RAD;
+    const sf::Vector2f forward{ std::cos(rad), std::sin(rad) };
+
+    if (sf::Keyboard::isKeyPressed(Key::Up))
+        m_shape.move(forward * SPEED * dt);
+
+    if (sf::Keyboard::isKeyPressed(Key::Down))
+        m_shape.move(-forward * SPEED * dt);
+
+    m_shape.setRotation(sf::degrees(m_angleDeg));
+}
+
+void Player::draw(sf::RenderWindow& window) const
+{
+    window.draw(m_shape);
 }
