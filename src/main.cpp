@@ -1,5 +1,7 @@
+#include "Game.h"
+
 int main()
 {
-	//Check
-	//hi
+	Game g;
+	g.run();
 }
