@@ -4,13 +4,15 @@
 class Player
 {
 public:
-    Player();
+    Player(const sf::Texture& texture);
+    Player()=default;
 
     void update(float dt);
     void draw(sf::RenderWindow& window) const;
-
+    const sf::Vector2f& getPosition() const;
 private:
-    sf::RectangleShape m_shape;
+    //sf::RectangleShape m_shape;
+    sf::Sprite m_sprite;
     float m_angleDeg = 0.f;
 
     static constexpr float SPEED = 180.f;

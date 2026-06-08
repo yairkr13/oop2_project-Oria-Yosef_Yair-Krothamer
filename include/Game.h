@@ -14,6 +14,10 @@ private:
     Player m_player;
     std::vector<sf::RectangleShape> m_obstacles;
     sf::Clock m_clock;
+    sf::View m_view;
+
+    std::unordered_map<std::string, sf::Texture> m_textures;
+    void loadTextures();
 
     void handleEvents();
     void update(float dt);

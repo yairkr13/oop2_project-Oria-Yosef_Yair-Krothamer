@@ -4,7 +4,11 @@ Game::Game()
     : m_window(sf::VideoMode({ 800u, 600u }), "Parking Mania Prototype"),
     m_obstacles(makeObstacles())
 {
+	loadTextures();
+    m_view.setSize({ 800.f, 600.f });
     m_window.setFramerateLimit(60);
+    //try
+    m_player = std::make_unique<Player>(m_textures.at("player"));
 }
 
 void Game::run()
@@ -38,11 +42,15 @@ void Game::handleEvents()
 void Game::update(float dt)
 {
     m_player.update(dt);
+    // מרכז המצלמה תמיד יהיה על השחקן
+    m_view.setCenter(m_player.getPosition());
 }
 
 void Game::draw()
 {
     m_window.clear(sf::Color(50, 50, 50));
+
+    m_window.setView(m_view);
 
     for (const auto& obstacle : m_obstacles)
         m_window.draw(obstacle);
@@ -78,4 +86,24 @@ std::vector<sf::RectangleShape> Game::makeObstacles()
     }
 
     return obstacles;
+}
+
+void Game::loadTextures()
+{
+    // ב-SFML 3, loadFromFile מחזיר std::optional<sf::Texture>
+    //if (auto tex = sf::Texture::loadFromFile("resources\car_blue.png"))
+    //    m_textures["player"] = std::move(*tex);
+    sf::Texture tex;
+    // 1. קוראים לפונקציה מתוך האובייקט tex שייצרנו
+    // 2. שינינו את הלוכסן ל- /
+    if (tex.loadFromFile("resources/car_blue.png"))
+    {
+        // מעבירים את הטקסטורה בצורה יעילה לתוך ה-Map
+        m_textures["player"] = std::move(tex);
+    }
+    /*if (auto tex = sf::Texture::loadFromFile("assets/wall.png"))
+        m_textures["wall"] = std::move(*tex);
+
+    if (auto tex = sf::Texture::loadFromFile("assets/roundabout.png"))
+        m_textures["roundabout"] = std::move(*tex);*/
 }
