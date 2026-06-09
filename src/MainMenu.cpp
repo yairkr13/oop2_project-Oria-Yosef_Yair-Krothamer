@@ -131,7 +131,7 @@ void MainMenu::updateHighlight()
     for (std::size_t i = 0; i < m_items.size(); ++i)
         m_items[i].text.setFillColor(i == m_activeIndex ? COLOR_ACTIVE : COLOR_INACTIVE);
 }
-
+//check
 // ---------------------------------------------------------------------------
 // Event handling — main menu
 // ---------------------------------------------------------------------------
