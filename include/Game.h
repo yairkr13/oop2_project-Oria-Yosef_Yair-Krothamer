@@ -5,16 +5,26 @@
 #include "Board.h"
 
 enum class GameState { MainMenu, Playing }; //turn1,turn2
+enum class TurnState 
+{
+    ChoosingMonster,
+    ChoosingTargetTile,
+    MonsterSelected,
+    Attacking,
+    TurnEnded
+};
 
 class Game
 {
 public:
     Game();
     void run();
+    //void setState(GameState newState);
 
 private:
     sf::RenderWindow m_window;
     GameState m_state;
+    TurnState m_turnState;
     //std::optional<MainMenu> m_menu;   // optional so we can catch font errors
 
     std::unique_ptr<Player> m_player1;
@@ -32,6 +42,9 @@ private:
     void handleEvents();
     void update(float dt);
     void draw();
+
+    void handlePlayingClick(sf::Vector2f mousePos);
+    void endTurn();
 
     Board m_board;
     static std::vector<sf::RectangleShape> makeObstacles();

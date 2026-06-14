@@ -6,6 +6,8 @@ class Tile : public StaticObject
 public:
 	Tile(const sf::Texture& texture, const sf::Vector2f& position);
 	void draw(sf::RenderWindow& window) const override;
+	int getQ() const;
+	int getRow() const;
 private:
 	int m_row;
 	int m_q;
