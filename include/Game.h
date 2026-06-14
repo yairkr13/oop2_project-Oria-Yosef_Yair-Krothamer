@@ -17,7 +17,10 @@ private:
     GameState m_state;
     //std::optional<MainMenu> m_menu;   // optional so we can catch font errors
 
-    std::unique_ptr<Player> m_player;
+    std::unique_ptr<Player> m_player1;
+	std::unique_ptr<Player> m_player2;
+    Player* m_currentPlayer;
+
     sf::Clock m_clock;
 	//timer for every turn, when time is up- switch to the other player - 2:00
     // 

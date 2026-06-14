@@ -8,6 +8,6 @@ public:
 	void draw(sf::RenderWindow& window) const override;
 private:
 	int m_row;
-	int m_col;
+	int m_q;
 	bool m_isPassable;
 };

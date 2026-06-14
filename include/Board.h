@@ -9,5 +9,5 @@ public:
 	void draw(sf::RenderWindow& window) const;
 	bool isTilePassable(Tile* start, Tile* end) const;
 private:
-	std::vector<std::vector<std::unique_ptr<Tile>>> grid;
+	std::map<std::pair<int, int>, std::unique_ptr<Tile>>
 };
