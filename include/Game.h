@@ -1,13 +1,10 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <vector>
-#include <unordered_map>
-#include <memory>
-#include <optional>
 #include "Player.h"
-#include "MainMenu.h"
+#include "Board.h"
 
-enum class GameState { MainMenu, Playing };
+enum class GameState { MainMenu, Playing }; //turn1,turn2
 
 class Game
 {
@@ -16,21 +13,23 @@ public:
     void run();
 
 private:
-    sf::RenderWindow         m_window;
-    GameState                m_state;
-    std::optional<MainMenu>  m_menu;   // optional so we can catch font errors
+    sf::RenderWindow m_window;
+    GameState m_state;
+    //std::optional<MainMenu> m_menu;   // optional so we can catch font errors
 
-    std::unique_ptr<Player>          m_player;
-    std::vector<sf::RectangleShape>  m_obstacles;
-    sf::Clock  m_clock;
-    sf::View   m_view;
+    std::unique_ptr<Player> m_player;
+    sf::Clock m_clock;
+	//timer for every turn, when time is up- switch to the other player - 2:00
+    // 
+    //sf::View m_view; //when its player 1 turn- the screen get closer to player 1
 
-    std::unordered_map<std::string, sf::Texture> m_textures;
-    void loadTextures();
+    //std::unordered_map<std::string, sf::Texture> m_textures;
+    //void loadTextures();
 
     void handleEvents();
     void update(float dt);
     void draw();
 
+    Board m_board;
     static std::vector<sf::RectangleShape> makeObstacles();
 };

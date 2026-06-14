@@ -1,9 +1,10 @@
 #pragma once
 #include "SFML/Graphics.hpp"
+#include "GameObject.h"
 
-class DynamicObject
+class DynamicObject :public GameObject
 {
 public:
 	DynamicObject(const sf::Vector2f& position, const sf::Vector2f& size);
-	void update();
+	virtual void update() = 0;
 };

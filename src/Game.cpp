@@ -2,7 +2,7 @@
 #include <iostream>
 
 Game::Game()
-    : m_window(sf::VideoMode({ 800u, 600u }), "Parking Mania")
+    : m_window(sf::VideoMode({ 800u, 600u }), "Phobies")
     , m_state(GameState::MainMenu)
     , m_obstacles(makeObstacles())
 {
