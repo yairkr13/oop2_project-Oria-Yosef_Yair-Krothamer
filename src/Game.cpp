@@ -1,28 +1,91 @@
 #include "Game.h"
 #include <iostream>
-Game::Game() : m_state(GameState::MainMenu), m_turnState(TurnState::ChoosingMonster)
+Game::Game() : m_state(GameState::MainMenu), m_turnState(TurnState::ChoosingMonster),
+    m_board(), m_player1(nullptr), m_player2(nullptr), m_currentPlayer(nullptr)
 {
     m_window.create(sf::VideoMode({ 1280, 720 }), "Phobies");
     m_window.setFramerateLimit(60);
 
     // יוצרים את השחקנים
-    m_player1 = std::make_unique<Player>(1);
-    m_player2 = std::make_unique<Player>(2);
+    m_player1 = std::make_unique<Player>();
+    m_player2 = std::make_unique<Player>();
     m_currentPlayer = m_player1.get(); // שחקן 1 מתחיל
 
     // כאן נשתמש ב-Factory כדי לטעון את השלב הראשון (כשמתחילים את המשחק)
     // m_board = LevelFactory::createLevel(1); 
 }
-//
-//Game::Game()
-//    : m_window(sf::VideoMode({ 800u, 600u }), "Phobies")
-//    , m_state(GameState::MainMenu)
-//    , m_obstacles(makeObstacles())
-//{
-//    loadTextures();
-//    m_view.setSize({ 800.f, 600.f });
-//    m_window.setFramerateLimit(60);
-//
+
+void Game::run()
+{
+    while (m_window.isOpen())
+    {
+        m_window.clear(sf::Color(50, 50, 50));
+        draw();
+        m_window.display();
+
+        if (const auto event = m_window.waitEvent())
+        {
+            event->visit([this](const auto& e) { handle(e); });
+        }
+        /*if (m_state == GameState::Playing)
+        {
+            const float dt = m_clock.restart().asSeconds();
+            update(dt);
+        }*/
+    }
+}
+
+
+void Game::handle(const sf::Event::Closed& event)
+{
+    m_window.close();
+}
+
+void Game::handle(const sf::Event::MouseButtonPressed& event)
+{
+    // Extract the precise float coordinates of the mouse click
+
+    //sf::Vector2f pos = m_window.mapPixelToCoords(event.position);
+    ;
+    //The game is currently on the Main Menu
+    //if (m_state == State::Menu)
+    //{
+    //    if (hitX(pos))
+    //        m_window.close();
+    //}
+    //// The player is actively playing a level
+    //else if (m_state == State::Playing)
+    //{
+    //    if (hitX(pos))
+    //    {
+    //        goToMenu();
+    //        return;
+    //    }
+
+    //    bool rightClick = (event.button == sf::Mouse::Button::Right);
+    //    m_board.handleClick(pos, rightClick);
+
+    //    if (m_board.isSolved())
+    //        m_state = State::LevelSolved;
+    //}
+}
+
+void Game::handle(const sf::Event::KeyPressed& event)
+{
+    if (event.code == sf::Keyboard::Key::Enter)
+    {
+        ;
+    }
+
+}
+
+void Game::draw()
+{
+    m_board.draw(m_window);
+    //m_player1->draw(m_window);
+    //m_player2->draw(m_window);
+}
+
 //    // Only create player if both textures loaded successfully
 //    if (m_textures.count("player") && m_textures.count("player_smoke"))
 //    {

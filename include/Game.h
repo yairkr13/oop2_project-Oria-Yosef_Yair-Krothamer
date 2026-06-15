@@ -48,4 +48,8 @@ private:
 
     Board m_board;
     static std::vector<sf::RectangleShape> makeObstacles();
+    void handle(const sf::Event::Closed& event);
+    void handle(const sf::Event::MouseButtonPressed& event);
+    void handle(const sf::Event::KeyPressed& event);
+    void handle(const auto& event) {};
 };

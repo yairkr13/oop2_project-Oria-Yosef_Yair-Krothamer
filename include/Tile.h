@@ -1,15 +1,17 @@
 #pragma once
-#include "StaticObject.h"
+#include "SFML/Graphics.hpp"
+//#include "StaticObject.h"
 
-class Tile : public StaticObject
+class Tile //: public StaticObject
 {
 public:
-	Tile(const sf::Texture& texture, const sf::Vector2f& position);
-	void draw(sf::RenderWindow& window) const override;
+	Tile(int q, int row, const sf::Vector2f& position);
+	void draw(sf::RenderWindow& window) const;
 	int getQ() const;
 	int getRow() const;
 private:
 	int m_row;
 	int m_q;
 	bool m_isPassable;
+	sf::CircleShape m_shape;
 };

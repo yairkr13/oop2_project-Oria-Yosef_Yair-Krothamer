@@ -9,6 +9,7 @@ class GameObject
 public:
 	GameObject(const sf::Texture& texture, const sf::Vector2f& position);
 	//d-tor
+	virtual ~GameObject() = default;
 	virtual void draw(sf::RenderWindow& window) const = 0;
 private:
 	sf::Sprite m_sprite;

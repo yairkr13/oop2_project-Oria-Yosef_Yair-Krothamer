@@ -1,5 +1,6 @@
 #pragma once
 #include "DynamicObject.h"
+#include <string>
 
 class Monster : public DynamicObject
 {
