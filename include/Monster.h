@@ -10,6 +10,7 @@ public:
 	void takeDamage(int damage);
 	//virtual void move(Tile* targetTile);
 	bool isAlive() const;
+	int getRange() const;
 private:
 	int m_health;
 	int m_attackDamage;

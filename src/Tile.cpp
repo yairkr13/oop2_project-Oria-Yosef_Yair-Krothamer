@@ -31,3 +31,16 @@ void Tile::draw(sf::RenderWindow& window) const
     window.draw(m_shape);
 }
 
+void Tile::setHighlighted(bool highlighted)
+{
+    if (highlighted)
+    {
+        m_shape.setFillColor(sf::Color(150, 255, 150)); // ירוק בהיר מסומן
+        m_shape.setOutlineColor(sf::Color::White);      // מסגרת לבנה בולטת
+    }
+    else
+    {
+        m_shape.setFillColor(sf::Color(100, 250, 50));  // צבע מקורי שלכם
+        m_shape.setOutlineColor(sf::Color::Black);
+    }
+}

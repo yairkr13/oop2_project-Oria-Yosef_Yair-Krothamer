@@ -47,3 +47,60 @@ void Board::draw(sf::RenderWindow& window) const
 	}
 }
 
+void Board::handleClick(const sf::Vector2f& pos)
+{
+    int range = 0;
+	sf::Vector2f monsterPos(-1, -1);
+    for (const auto& monster : m_monsters)
+        if (monster.handleClick(pos))
+        {
+            range = monster.getRange();
+            monsterPos = pos;
+			break;
+        }
+	if (monsterPos != sf::Vector2f(-1, -1))
+        setHighlight(monsterPos, range);
+}
+
+void Board::setHighlight(const sf::Vector2f& pos, int range)
+{
+    // Clear previous highlights
+    /*for (auto& pair : m_grid)
+        pair.second->setHighlighted(false);*/
+    // Highlight the clicked monster's tile
+    //ask the chat to 
+    for (auto& tile : m_grid)
+    {
+        if (tile.second->getPosition() == pos)
+        {
+            tile.second->setHighlighted(true);
+            break;
+        }
+    }
+    // Highlight tiles within range
+    for (auto& pair : m_grid)
+    {
+        float distance = std::sqrt(std::pow(pair.second->getPosition().x - pos.x, 2) +
+                                    std::pow(pair.second->getPosition().y - pos.y, 2));
+        if (distance <= range * 32.f) // Assuming each tile has a radius of 32
+        {
+            pair.second->setHighlighted(true);
+        }
+    }
+}
+//
+//void handleClick(const sf::Vector2f& pos)
+//{
+//    int range = 0;
+//    sf::Vector2f hexPos(-1, -1);
+//    for (const auto& hex : m_grid)
+//        if (hex.handleClick(pos))
+//        {
+//            range = hex.getRange();
+//            hexPos = pos;
+//            break;
+//        }
+//    if (hexPos != sf::Vector2f(-1, -1))
+//        setHighlight(hexPos, range);
+//}
+

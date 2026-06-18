@@ -12,6 +12,26 @@ std::string Player::handleCardClick(sf::Vector2f mousePos)
 	}
 	return nullptr; // לא לחצו על אף קלף
 }
+
+void Player::handleClick(const sf::Vector2f& pos)
+{
+	// Check if the click is within any of the cards' bounds
+	for (const auto& card : m_cards)
+	{
+		if (card && card->getBound().contains(pos))
+		{
+			// Handle card click logic here
+			return;
+		}
+		if (card->monsterClicked(pos))
+		{
+			// Handle monster click logic here
+			return;
+		}
+	}
+	// Click was not handled by any interactive element
+}
+
 //bool Player::handleClick(const sf::Vector2f& pos)
 //{
 //	// Check if the click is within the heart's bounds

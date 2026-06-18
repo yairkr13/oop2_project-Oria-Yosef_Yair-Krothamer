@@ -68,7 +68,8 @@ void Game::handle(const sf::Event::MouseButtonPressed& event)
     
     if (m_state == GameState::Playing)
     {
-        m_turnManager.handleInput(pos);
+        m_board.handleClick(pos);
+        //m_turnManager.handleInput(pos);
     }
     // אם אנחנו בתפריט הראשי
     else if (m_state == GameState::MainMenu)

@@ -9,6 +9,8 @@ public:
 	void draw(sf::RenderWindow& window) const;
 	int getQ() const;
 	int getRow() const;
+	bool isPassable() const { return m_isPassable; }
+	void setHighlighted(bool highlighted);
 private:
 	int m_row;
 	int m_q;
