@@ -1,4 +1,40 @@
-//#include "Player.h"
+#include "Player.h"
+
+std::string Player::handleCardClick(sf::Vector2f mousePos)
+{
+	for (auto& card : m_cards)
+	{
+		// נניח שלמחלקה Card יש פונקציה שמחזירה את שטח הפגיעה שלה
+		if (card.getBounds().contains(mousePos))
+		{
+			return card.getMonsterName(); // מצאנו את הקלף שנלחץ!
+		}
+	}
+	return nullptr; // לא לחצו על אף קלף
+}
+//bool Player::handleClick(const sf::Vector2f& pos)
+//{
+//	// Check if the click is within the heart's bounds
+//	if (m_heart && m_heart->getBound().contains(pos))
+//	{
+//		// Handle heart click logic here
+//		return true;
+//	}
+	// Check if the click is within any of the cards' bounds
+	//for (const auto& card : m_cards)
+	//{
+	//	if (card && card->getBound().contains(pos))
+	//	{
+	//		// Handle card click logic here
+
+	//		return true;
+	//	}
+	//}
+	//// Click was not handled by any interactive element
+	//return false;
+}
+
+
 //#include <cmath>
 //
 //namespace { constexpr float DEG_TO_RAD = 3.14159265f / 180.f; }

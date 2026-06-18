@@ -3,16 +3,18 @@
 #include <vector>
 #include "Player.h"
 #include "Board.h"
+#include "TurnManager.h"
 
 enum class GameState { MainMenu, Playing }; //turn1,turn2
-enum class TurnState 
+/*enum class TurnState
 {
     ChoosingMonster,
     ChoosingTargetTile,
     MonsterSelected,
     Attacking,
     TurnEnded
-};
+};*/ //make class named TurnState and make it a state machine with the following states: ChoosingMonster, ChoosingTargetTile, MonsterSelected, Attacking, TurnEnded
+//or to put it in the player
 
 class Game
 {
@@ -24,7 +26,8 @@ public:
 private:
     sf::RenderWindow m_window;
     GameState m_state;
-    TurnState m_turnState;
+    //TurnState m_turnState;
+    TurnManager m_turnManager;
     //std::optional<MainMenu> m_menu;   // optional so we can catch font errors
 
     std::unique_ptr<Player> m_player1;
@@ -48,6 +51,7 @@ private:
 
     Board m_board;
     static std::vector<sf::RectangleShape> makeObstacles();
+
     void handle(const sf::Event::Closed& event);
     void handle(const sf::Event::MouseButtonPressed& event);
     void handle(const sf::Event::KeyPressed& event);

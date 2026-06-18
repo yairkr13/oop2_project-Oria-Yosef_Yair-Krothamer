@@ -1,19 +1,36 @@
 #include "Game.h"
 #include <iostream>
-Game::Game() : m_state(GameState::MainMenu), m_turnState(TurnState::ChoosingMonster),
-    m_board(), m_player1(nullptr), m_player2(nullptr), m_currentPlayer(nullptr)
+
+
+Game::Game() :m_board(),m_player1(), m_player2,
+    m_turnManager(m_player1, m_player2, m_board)
 {
     m_window.create(sf::VideoMode({ 1280, 720 }), "Phobies");
     m_window.setFramerateLimit(60);
 
     // יוצרים את השחקנים
-    m_player1 = std::make_unique<Player>();
-    m_player2 = std::make_unique<Player>();
-    m_currentPlayer = m_player1.get(); // שחקן 1 מתחיל
+    //m_player1 = std::make_unique<Player>();
+    //m_player2 = std::make_unique<Player>();
+    //m_currentPlayer = m_player1.get(); // שחקן 1 מתחיל
 
     // כאן נשתמש ב-Factory כדי לטעון את השלב הראשון (כשמתחילים את המשחק)
     // m_board = LevelFactory::createLevel(1); 
 }
+//
+//Game::Game() : m_state(GameState::MainMenu), m_turnState(TurnState::ChoosingMonster),
+//    m_board(), m_player1(nullptr), m_player2(nullptr), m_currentPlayer(nullptr)
+//{
+//    m_window.create(sf::VideoMode({ 1280, 720 }), "Phobies");
+//    m_window.setFramerateLimit(60);
+//
+//    // יוצרים את השחקנים
+//    m_player1 = std::make_unique<Player>();
+//    m_player2 = std::make_unique<Player>();
+//    m_currentPlayer = m_player1.get(); // שחקן 1 מתחיל
+//
+//    // כאן נשתמש ב-Factory כדי לטעון את השלב הראשון (כשמתחילים את המשחק)
+//    // m_board = LevelFactory::createLevel(1); 
+//}
 
 void Game::run()
 {
@@ -43,31 +60,21 @@ void Game::handle(const sf::Event::Closed& event)
 
 void Game::handle(const sf::Event::MouseButtonPressed& event)
 {
+    if (event.button != sf::Mouse::Button::Left)
+        return;
+
     // Extract the precise float coordinates of the mouse click
-
-    //sf::Vector2f pos = m_window.mapPixelToCoords(event.position);
-    ;
-    //The game is currently on the Main Menu
-    //if (m_state == State::Menu)
-    //{
-    //    if (hitX(pos))
-    //        m_window.close();
-    //}
-    //// The player is actively playing a level
-    //else if (m_state == State::Playing)
-    //{
-    //    if (hitX(pos))
-    //    {
-    //        goToMenu();
-    //        return;
-    //    }
-
-    //    bool rightClick = (event.button == sf::Mouse::Button::Right);
-    //    m_board.handleClick(pos, rightClick);
-
-    //    if (m_board.isSolved())
-    //        m_state = State::LevelSolved;
-    //}
+    sf::Vector2f pos = m_window.mapPixelToCoords(event.position);
+    
+    if (m_state == GameState::Playing)
+    {
+        m_turnManager.handleInput(pos);
+    }
+    // אם אנחנו בתפריט הראשי
+    else if (m_state == GameState::MainMenu)
+    {
+        // כאן נטפל בלחיצות של התפריט (למשל כפתור "Play")
+    }
 }
 
 void Game::handle(const sf::Event::KeyPressed& event)

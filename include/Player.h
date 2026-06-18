@@ -10,6 +10,8 @@ class Player //: public StaticObject do an heart tile
 {
 public:
     Player() {};
+	//bool handleClick(const sf::Vector2f& pos);
+    Card* handleCardClick(sf::Vector2f mousePos);
     //void draw(sf::RenderWindow& window) const;
     //const sf::Vector2f& getPosition() const;
 
