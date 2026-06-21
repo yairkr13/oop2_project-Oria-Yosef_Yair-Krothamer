@@ -1,5 +1,7 @@
 #include "Tile.h"
-const int RADIUS = 32; // Assuming each tile is 64x64 pixels, the radius would be 32
+const float TILE_RADIUS = 48.f;// Assuming each tile is 64x64 pixels, the radius would be 32
+
+
 Tile::Tile(int q, int row, const sf::Vector2f& position)// <--- כאן אנחנו קוראים לבנאי של מחלקת האב!
     :m_q(q),
     m_row(row),
@@ -7,7 +9,7 @@ Tile::Tile(int q, int row, const sf::Vector2f& position)// <--- כאן אנחנו קוראים
 {
     // הגדרות המשושה (m_shape)...
 
-    m_shape.setRadius(RADIUS);
+    m_shape.setRadius(TILE_RADIUS);
 
     // הקסם שקורה כאן: מעגל עם 6 נקודות הוא משושה!
     m_shape.setPointCount(6);
@@ -20,6 +22,7 @@ Tile::Tile(int q, int row, const sf::Vector2f& position)// <--- כאן אנחנו קוראים
     m_shape.setOutlineColor(sf::Color::Black);
 
     // ממקמים את המשושה
+    //m_shape.setRotation(sf::degrees(30.f));
     m_shape.setPosition(position);
 
     // אופציונלי: להגדיר את נקודת העוגן לאמצע המשושה

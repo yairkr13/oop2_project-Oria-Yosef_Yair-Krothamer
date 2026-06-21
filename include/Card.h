@@ -12,7 +12,7 @@ public:
 
 private:
     //sf::Sprite m_sprite;
-    int m_cost;
-    std::unique_ptr<Monster> m_monster;
+    int m_cost = 0;
+    //std::unique_ptr<Monster> m_monster;
     std::string m_monsterName;
 };

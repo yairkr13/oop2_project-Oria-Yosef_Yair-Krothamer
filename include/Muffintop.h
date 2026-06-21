@@ -8,6 +8,8 @@ public:
     static constexpr int BASE_HEALTH = 120;
     static constexpr int BASE_ATTACK = 25;
     static constexpr int BASE_RANGE = 2;
-	Muffintop(int health, int attackPower, int range, int cost);
+
+    Muffintop();
+    void attack(Monster& target) override;
 
 };

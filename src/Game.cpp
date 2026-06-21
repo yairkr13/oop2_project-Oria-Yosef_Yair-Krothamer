@@ -1,42 +1,34 @@
 #include "Game.h"
+#include "Constants.h" 
 #include <iostream>
 
 
-Game::Game() :m_board(),m_player1(), m_player2,
-    m_turnManager(m_player1, m_player2, m_board)
+Game::Game() : m_board(), m_state(GameState::MainMenu)
 {
-    m_window.create(sf::VideoMode({ 1280, 720 }), "Phobies");
+    m_window.create(sf::VideoMode({ Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT }), "Phobies");
     m_window.setFramerateLimit(60);
 
-    // יוצרים את השחקנים
-    //m_player1 = std::make_unique<Player>();
-    //m_player2 = std::make_unique<Player>();
-    //m_currentPlayer = m_player1.get(); // שחקן 1 מתחיל
+    try
+    {
+        m_menu.emplace(m_window);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Menu init failed: " << e.what() << "\n";
+        m_window.close();
+    }
 
-    // כאן נשתמש ב-Factory כדי לטעון את השלב הראשון (כשמתחילים את המשחק)
-    // m_board = LevelFactory::createLevel(1); 
+    m_player1 = std::make_unique<Player>();
+    m_player2 = std::make_unique<Player>();
+    m_currentPlayer = m_player1.get(); // שחקן 1 מתחיל
+
 }
-//
-//Game::Game() : m_state(GameState::MainMenu), m_turnState(TurnState::ChoosingMonster),
-//    m_board(), m_player1(nullptr), m_player2(nullptr), m_currentPlayer(nullptr)
-//{
-//    m_window.create(sf::VideoMode({ 1280, 720 }), "Phobies");
-//    m_window.setFramerateLimit(60);
-//
-//    // יוצרים את השחקנים
-//    m_player1 = std::make_unique<Player>();
-//    m_player2 = std::make_unique<Player>();
-//    m_currentPlayer = m_player1.get(); // שחקן 1 מתחיל
-//
-//    // כאן נשתמש ב-Factory כדי לטעון את השלב הראשון (כשמתחילים את המשחק)
-//    // m_board = LevelFactory::createLevel(1); 
-//}
 
 void Game::run()
 {
     while (m_window.isOpen())
     {
-        m_window.clear(sf::Color(50, 50, 50));
+        m_window.clear(sf::Color(30, 30, 50));
         draw();
         m_window.display();
 
@@ -63,33 +55,94 @@ void Game::handle(const sf::Event::MouseButtonPressed& event)
     if (event.button != sf::Mouse::Button::Left)
         return;
 
-    // Extract the precise float coordinates of the mouse click
     sf::Vector2f pos = m_window.mapPixelToCoords(event.position);
-    
+
     if (m_state == GameState::Playing)
     {
-        m_board.handleClick(pos);
-        //m_turnManager.handleInput(pos);
+        // האם הלחיצה היא באזור הקלפים למטה?
+        if (pos.y > Config::BOTTOM_PANEL_Y)
+        {
+            if (m_currentPlayer)
+            {
+                bool isPlayer2 = (m_currentPlayer == m_player2.get());
+
+                // ננסה לבחור מפלצת מהיד
+                auto clickedMonster = m_currentPlayer->handleHandClick(pos, isPlayer2);
+                if (clickedMonster)
+                {
+                    m_selectedFromHand = clickedMonster;
+                    // אפשר פה לשים פרינט (cout) כדי לראות שזה עובד: "Monster selected!"
+                }
+            }
+        }
+        // הלחיצה היא למעלה באזור הלוח
+        else
+        {
+            // אם יש מפלצת שמחכה ביד לזימון
+            if (m_selectedFromHand)
+            {
+                bool success = m_board.trySpawnMonster(pos, m_selectedFromHand);
+                if (success)
+                {
+                    // הזימון הצליח! נאפס את הבחירה
+                    m_selectedFromHand = nullptr;
+
+                    // (בעתיד נוסיף כאן גם: m_currentPlayer->deductKeys(cost))
+                }
+            }
+            // אם לא נבחרה מפלצת מהיד, אז זו סתם לחיצה רגילה על הלוח (הזזה/תקיפה)
+            else
+            {
+                m_board.handleClick(pos);
+            }
+        }
     }
     // אם אנחנו בתפריט הראשי
     else if (m_state == GameState::MainMenu)
     {
         // כאן נטפל בלחיצות של התפריט (למשל כפתור "Play")
+        auto result = m_menu->handleEvent(event);
+        if (result.has_value())
+        {
+            if (*result == MenuResult::Play)
+                m_state = GameState::Playing;
+            else if (*result == MenuResult::Quit)
+                m_window.close();
+        }
+        return;
     }
 }
 
 void Game::handle(const sf::Event::KeyPressed& event)
 {
-    if (event.code == sf::Keyboard::Key::Enter)
+    if (event.code == sf::Keyboard::Key::Escape)
     {
-        ;
+        m_state = GameState::MainMenu;
+        if (m_menu.has_value())
+            m_menu->reset();
+        return;
     }
-
 }
 
 void Game::draw()
 {
-    m_board.draw(m_window);
+    if (m_state == GameState::MainMenu && m_menu.has_value())
+    {
+        m_menu->draw();
+    }
+    else if (m_state == GameState::Playing)
+    {
+        m_board.draw(m_window);
+        if (m_currentPlayer)
+        {
+            // אם השחקן הנוכחי הוא שחקן 2 -> נעביר true (יישור לימין)
+            // אחרת נעביר false (יישור לשמאל)
+            bool isPlayer2 = (m_currentPlayer == m_player2.get());
+
+            m_currentPlayer->drawHand(m_window, isPlayer2);
+        }
+    }
+    
     //m_player1->draw(m_window);
     //m_player2->draw(m_window);
 }

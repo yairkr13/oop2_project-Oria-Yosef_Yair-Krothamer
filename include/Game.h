@@ -3,7 +3,9 @@
 #include <vector>
 #include "Player.h"
 #include "Board.h"
-#include "TurnManager.h"
+#include "MainMenu.h"
+#include "Monster.h"
+//#include "TurnManager.h"
 
 enum class GameState { MainMenu, Playing }; //turn1,turn2
 /*enum class TurnState
@@ -27,8 +29,9 @@ private:
     sf::RenderWindow m_window;
     GameState m_state;
     //TurnState m_turnState;
-    TurnManager m_turnManager;
-    //std::optional<MainMenu> m_menu;   // optional so we can catch font errors
+   // TurnManager m_turnManager;
+    std::optional<MainMenu> m_menu;   // optional so we can catch font errors
+	//std::unique_ptr<MainMenu> m_menu;
 
     std::unique_ptr<Player> m_player1;
 	std::unique_ptr<Player> m_player2;
@@ -39,18 +42,16 @@ private:
     // 
     //sf::View m_view; //when its player 1 turn- the screen get closer to player 1
 
-    //std::unordered_map<std::string, sf::Texture> m_textures;
-    //void loadTextures();
-
-    void handleEvents();
-    void update(float dt);
+    //void handleEvents();
+    //void update(float dt);
     void draw();
 
-    void handlePlayingClick(sf::Vector2f mousePos);
+    //void handlePlayingClick(sf::Vector2f mousePos);
     void endTurn();
 
     Board m_board;
-    static std::vector<sf::RectangleShape> makeObstacles();
+    std::shared_ptr<Monster> m_selectedFromHand = nullptr;
+    //static std::vector<sf::RectangleShape> makeObstacles();
 
     void handle(const sf::Event::Closed& event);
     void handle(const sf::Event::MouseButtonPressed& event);

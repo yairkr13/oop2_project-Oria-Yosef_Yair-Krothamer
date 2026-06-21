@@ -1,132 +1,125 @@
 #include "Player.h"
+#include "Muffintop.h"
+#include "Constants.h"
+#include "TextureManager.h" 
+//#include "Blue.h"
 
-std::string Player::handleCardClick(sf::Vector2f mousePos)
+Player::Player()
+	: /*m_heart(std::make_unique<Heart>()),*/ m_keys(20)
 {
-	for (auto& card : m_cards)
-	{
-		// נניח שלמחלקה Card יש פונקציה שמחזירה את שטח הפגיעה שלה
-		if (card.getBounds().contains(mousePos))
-		{
-			return card.getMonsterName(); // מצאנו את הקלף שנלחץ!
-		}
-	}
-	return nullptr; // לא לחצו על אף קלף
+	// Initialize cards
+	m_monsters.push_back(std::make_shared<Muffintop>());
+	//m_monsters.push_back(std::make_unique<Blue>());
 }
-
-void Player::handleClick(const sf::Vector2f& pos)
+/*
+void Player::handleClick(sf::Vector2f pos)
 {
-	// Check if the click is within any of the cards' bounds
-	for (const auto& card : m_cards)
+	for (auto& monster : m_monsters)
 	{
-		if (card && card->getBound().contains(pos))
+		if (!monster->isOnBoard() && monster->contains(pos, screenPos in hand))
 		{
-			// Handle card click logic here
-			return;
-		}
-		if (card->monsterClicked(pos))
-		{
-			// Handle monster click logic here
+			m_selected = monster.get();
 			return;
 		}
 	}
-	// Click was not handled by any interactive element
+}*/
+
+void Player::drawHand(sf::RenderWindow& window, bool alignRight) const
+{
+    // 1. ציור "השולחן" (הפאנל התחתון)
+    sf::RectangleShape bottomPanel({static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT});
+    bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
+    bottomPanel.setFillColor(sf::Color(40, 40, 40));
+    window.draw(bottomPanel);
+
+    // 2. שולפים מראש את הטקסטורה של הקלף הריק (נניח ששמרת אותה בשם "card_bg")
+    const sf::Texture* cardBgTex = nullptr;
+    try {
+        cardBgTex = &TextureManager::getInstance().getTexture("card_bg");
+    }
+    catch (...) {}
+
+    for (size_t i = 0; i < m_monsters.size(); ++i)
+    {
+        float startX;
+        if (!alignRight)
+        {
+            startX = 20.f + (i * Config::CARD_SPACING);
+        }
+        else
+        {
+            // שימוש מושלם בקבועים!
+            startX = Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING);
+        }
+
+        // --- ציור רקע הקלף ---
+        if (cardBgTex)
+        {
+            sf::Sprite cardSprite(*cardBgTex);
+            cardSprite.setPosition({ startX, Config::CARD_START_Y });
+
+            float scaleX = Config::CARD_WIDTH / cardBgTex->getSize().x;
+            float scaleY = Config::CARD_HEIGHT / cardBgTex->getSize().y;
+            cardSprite.setScale({ scaleX, scaleY });
+
+            window.draw(cardSprite);
+        }
+        else
+        {
+            sf::RectangleShape fallbackRect({ Config::CARD_WIDTH, Config::CARD_HEIGHT });
+            fallbackRect.setPosition({ startX, Config::CARD_START_Y });
+            fallbackRect.setFillColor(sf::Color(80, 80, 80));
+            fallbackRect.setOutlineThickness(2.f);
+            fallbackRect.setOutlineColor(sf::Color::Black);
+            window.draw(fallbackRect);
+        }
+
+        // --- ציור המפלצת בתוך הקלף ---
+        try
+        {
+            std::string texKey = (m_monsters[i]->getName() == "Muffintop") ? "muffintop" : "default";
+            const sf::Texture& monsterTex = TextureManager::getInstance().getTexture(texKey);
+            sf::Sprite monsterSprite(monsterTex);
+
+            monsterSprite.setOrigin({ monsterTex.getSize().x / 2.f, monsterTex.getSize().y / 2.f });
+            monsterSprite.setPosition({ startX + (Config::CARD_WIDTH / 2.f), Config::CARD_START_Y + (Config::CARD_HEIGHT / 2.f) });
+
+            // --- הנוסחה החכמה לסקייל בתוך הקלף ---
+            // אנחנו רוצים שהמפלצת תהיה בגודל מקסימלי של 50 פיקסלים בתוך הקלף
+            float targetSizeInCard = 50.f;
+            float maxTextureDim = std::max(monsterTex.getSize().x, monsterTex.getSize().y);
+            float monsterScale = targetSizeInCard / maxTextureDim;
+
+            monsterSprite.setScale({ monsterScale, monsterScale });
+            // ---------------------------------------
+
+            window.draw(monsterSprite);
+        }
+        catch (...) {}
+    }
 }
 
-//bool Player::handleClick(const sf::Vector2f& pos)
-//{
-//	// Check if the click is within the heart's bounds
-//	if (m_heart && m_heart->getBound().contains(pos))
-//	{
-//		// Handle heart click logic here
-//		return true;
-//	}
-	// Check if the click is within any of the cards' bounds
-	//for (const auto& card : m_cards)
-	//{
-	//	if (card && card->getBound().contains(pos))
-	//	{
-	//		// Handle card click logic here
+std::shared_ptr<Monster> Player::handleHandClick(sf::Vector2f mousePos, bool alignRight) const
+{
+    if (mousePos.y < Config::BOTTOM_PANEL_Y) return nullptr;
 
-	//		return true;
-	//	}
-	//}
-	//// Click was not handled by any interactive element
-	//return false;
+    for (size_t i = 0; i < m_monsters.size(); ++i)
+    {
+        // אם המפלצת כבר על הלוח, אי אפשר לבחור אותה שוב מהיד
+        if (m_monsters[i]->getQ() != -1) continue;
+
+        float startX;
+        if (!alignRight)
+            startX = 20.f + (i * Config::CARD_SPACING);
+        else
+            startX = Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING); // תוקן ה-1280!
+
+        // יצירת "מלבן וירטואלי" סביב הקלף עם המידות מהקבועים
+        sf::FloatRect cardRect({ startX, Config::CARD_START_Y }, { Config::CARD_WIDTH, Config::CARD_HEIGHT });
+        if (cardRect.contains(mousePos))
+        {
+            return m_monsters[i]; // מצאנו איזה קלף נלחץ!
+        }
+    }
+    return nullptr;
 }
-
-
-//#include <cmath>
-//
-//namespace { constexpr float DEG_TO_RAD = 3.14159265f / 180.f; }
-//
-//Player::Player(const sf::Texture& texNormal, const sf::Texture& texSmoke,
-//               const sf::Texture* texReverse)
-//    : m_sprite(texNormal)
-//    , m_texNormal(&texNormal)
-//    , m_texSmoke(&texSmoke)
-//    , m_texReverse(texReverse)
-//{
-//    const auto bounds = m_sprite.getLocalBounds();
-//    m_sprite.setOrigin({ bounds.size.x / 2.f, bounds.size.y / 2.f });
-//    m_sprite.setScale({ 0.15f, 0.15f });
-//    m_sprite.setPosition({ 400.f, 300.f });
-//}
-//
-//void Player::update(float dt)
-//{
-//    using Key = sf::Keyboard::Key;
-//
-//    const float rad = m_angleDeg * DEG_TO_RAD;
-//    const sf::Vector2f forward{ std::cos(rad), std::sin(rad) };
-//    const bool movingForward = sf::Keyboard::isKeyPressed(Key::Up);
-//
-//    if (movingForward)
-//    {
-//        m_sprite.move(forward * SPEED * dt);
-//        if (sf::Keyboard::isKeyPressed(Key::Left))  m_angleDeg -= ROTATION_SPEED * dt;
-//        if (sf::Keyboard::isKeyPressed(Key::Right)) m_angleDeg += ROTATION_SPEED * dt;
-//
-//        // Advance smoke animation timer
-//        m_animTimer += dt;
-//        if (m_animTimer >= ANIM_INTERVAL)
-//        {
-//            m_animTimer -= ANIM_INTERVAL;
-//            m_showSmoke = !m_showSmoke;
-//        }
-//    }
-//    else
-//    {
-//        // Not moving forward — reset to normal texture immediately
-//        m_showSmoke  = false;
-//        m_animTimer  = 0.f;
-//    }
-//
-//    if (sf::Keyboard::isKeyPressed(Key::Down))
-//    {
-//        m_sprite.move(-forward * SPEED * dt);
-//        if (sf::Keyboard::isKeyPressed(Key::Left))  m_angleDeg -= ROTATION_SPEED * dt;
-//        if (sf::Keyboard::isKeyPressed(Key::Right)) m_angleDeg += ROTATION_SPEED * dt;
-//    }
-//
-//    m_sprite.setRotation(sf::degrees(m_angleDeg));
-//
-//    // Swap texture based on animation state (no reload — just pointer swap)
-//    const sf::Texture* desired = nullptr;
-//    if (sf::Keyboard::isKeyPressed(Key::Down) && m_texReverse)
-//        desired = m_texReverse;
-//    else if (m_texNormal && m_texSmoke)
-//        desired = m_showSmoke ? m_texSmoke : m_texNormal;
-//
-//    if (desired)
-//        m_sprite.setTexture(*desired);
-//}
-//
-//void Player::draw(sf::RenderWindow& window) const
-//{
-//    window.draw(m_sprite);
-//}
-//
-//const sf::Vector2f& Player::getPosition() const
-//{
-//    return m_sprite.getPosition();
-//}

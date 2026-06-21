@@ -5,35 +5,29 @@ Board::Board()
     createBoard();
 }
 
+
+//void Board::setMonsters(std::vector<Monster*> monsters)
+//{
+//    m_monsters = std::move(monsters);
+//}
+
 void Board::createBoard()
 {
-    float radius = 32.f; // שיניתי ל-32 כדי שיתאים בדיוק ל-RADIUS של ה-Tile שלך
-    float width = std::sqrt(3.f) * radius; // הרוחב מקצה לקצה של משושה שפיצי
+    float width = std::sqrt(3.f) * TILE_RADIUS;
 
-    float start_x = 50.f;
-    float start_y = 50.f;
-
-    // לפי התמונה של Red Blob Games שהעלית:
-    int max_rows = 7;  // שורות מ-0 עד 6
-    int max_cols = 14; // טורים מ-0 עד 13
+    int max_rows = 7;
+    int max_cols = 14;
 
     for (int row = 0; row < max_rows; ++row)
     {
-        // קסם ה-Double-width: 
-        // אם השורה זוגית, הטורים יהיו זוגיים (מתחילים ב-0)
-        // אם השורה אי-זוגית, הטורים יהיו אי-זוגיים (מתחילים ב-1)
         int start_col = (row % 2 == 0) ? 0 : 1;
 
-        // אנחנו רצים בקפיצות של 2 בטורים! (q += 2)
         for (int q = start_col; q < max_cols; q += 2)
         {
-            // הנוסחאות הרשמיות של Red Blob Games:
-            float x = start_x + (width / 2.f) * q;
-            float y = start_y + (1.5f * radius) * row;
+            float x = START_X + (width / 2.f) * q;
+            float y = START_Y + (1.5f * TILE_RADIUS) * row;
 
             sf::Vector2f physicalPosition(x, y);
-
-            // הכנסה ל-Map
             m_grid[{q, row}] = std::make_unique<Tile>(q, row, physicalPosition);
         }
     }
@@ -41,66 +35,281 @@ void Board::createBoard()
 
 void Board::draw(sf::RenderWindow& window) const
 {
-	for (const auto &pair : m_grid)
-	{
-        pair.second->draw(window);
-	}
+    // 1. מציירים את כל משושי הרקע קודם
+    for (auto const& [coords, tile] : m_grid)
+    {
+        tile->draw(window);
+    }
+
+    // 2. עכשיו מציירים את המפלצות שעומדות על המשושים
+    for (auto const& [coords, tile] : m_grid)
+    {
+        // lock() הופך את weak_ptr ל-shared_ptr זמני. אם יש מפלצת - נצייר אותה
+        if (auto monster = tile->getMonster())
+        {
+            sf::Vector2f tilePos = tileToScreen(tile->getQ(), tile->getRow());
+            monster->setScreenPosition(tilePos);
+            monster->draw(window);
+        }
+    }
 }
 
 void Board::handleClick(const sf::Vector2f& pos)
 {
-    int range = 0;
-	sf::Vector2f monsterPos(-1, -1);
-    for (const auto& monster : m_monsters)
-        if (monster.handleClick(pos))
-        {
-            range = monster.getRange();
-            monsterPos = pos;
-			break;
-        }
-	if (monsterPos != sf::Vector2f(-1, -1))
-        setHighlight(monsterPos, range);
-}
-
-void Board::setHighlight(const sf::Vector2f& pos, int range)
-{
-    // Clear previous highlights
-    /*for (auto& pair : m_grid)
-        pair.second->setHighlighted(false);*/
-    // Highlight the clicked monster's tile
-    //ask the chat to 
-    for (auto& tile : m_grid)
+    // 1. קודם כל, נבדוק על איזה משושה (Tile) השחקן לחץ בכלל
+    Tile* clickedTile = nullptr;
+    for (auto& [coords, tile] : m_grid)
     {
-        if (tile.second->getPosition() == pos)
+        sf::Vector2f tileCenter = tileToScreen(coords.first, coords.second);
+        float dx = pos.x - tileCenter.x;
+        float dy = pos.y - tileCenter.y;
+
+        // משפט פיתגורס לבדיקה האם הלחיצה בתוך הרדיוס של המשושה
+        if ((dx * dx + dy * dy) <= (TILE_RADIUS * TILE_RADIUS))
         {
-            tile.second->setHighlighted(true);
+            clickedTile = tile.get();
             break;
         }
     }
-    // Highlight tiles within range
-    for (auto& pair : m_grid)
+
+    // אם לחצו מחוץ ללוח, אין לנו מה לעשות
+    if (!clickedTile) return;
+
+    // 2. נחפש אם כבר יש מפלצת שנבחרה קודם לכן בלוח
+    std::shared_ptr<Monster> selectedMonster = nullptr;
+    Tile* selectedMonsterTile = nullptr;
+
+    for (auto& [coords, tile] : m_grid)
     {
-        float distance = std::sqrt(std::pow(pair.second->getPosition().x - pos.x, 2) +
-                                    std::pow(pair.second->getPosition().y - pos.y, 2));
-        if (distance <= range * 32.f) // Assuming each tile has a radius of 32
+        if (auto monster = tile->getMonster())
         {
-            pair.second->setHighlighted(true);
+            sf::Vector2f tilePos = tileToScreen(tile->getQ(), tile->getRow());
+            //monster->setScreenPosition(tilePos); // <--- הנה השורת קסם שחסרה!
+            //monster->draw(window);
+            if (monster->isSelected())
+            {
+                selectedMonster = monster;
+                selectedMonsterTile = tile.get();
+                break;
+            }
+        }
+    }
+
+    // 3. הלוגיקה של הלחיצה:
+    if (selectedMonster)
+    {
+        // אם כבר יש מפלצת מסומנת, ולחצנו על משבצת מוארת ופנויה -> נזיז את המפלצת!
+        if (clickedTile->isHighlighted() && !clickedTile->hasMonster())
+        {
+            clickedTile->setMonster(selectedMonster);     // שמים את המפלצת במשבצת החדשה
+            selectedMonsterTile->setMonster(nullptr);     // מוחקים אותה מהמשבצת הישנה
+            selectedMonster->setPosition(clickedTile->getQ(), clickedTile->getRow()); // מעדכנים קואורדינטות
+        }
+
+        // בכל מקרה, אחרי שלחצנו (לזוז או לבטל), מורידים את הסימון
+        selectedMonster->setSelected(false);
+        clearHighlights();
+    }
+    else
+    {
+        // אם אף מפלצת לא מסומנת, נבדוק אם לחצנו על משבצת שיש בה מפלצת
+        if (auto monster = clickedTile->getMonster())
+        {
+            monster->setSelected(true);
+            highlightNeighbors(clickedTile->getQ(), clickedTile->getRow(), monster->getRange());
         }
     }
 }
-//
-//void handleClick(const sf::Vector2f& pos)
-//{
-//    int range = 0;
-//    sf::Vector2f hexPos(-1, -1);
-//    for (const auto& hex : m_grid)
-//        if (hex.handleClick(pos))
-//        {
-//            range = hex.getRange();
-//            hexPos = pos;
-//            break;
-//        }
-//    if (hexPos != sf::Vector2f(-1, -1))
-//        setHighlight(hexPos, range);
-//}
 
+bool Board::trySpawnMonster(const sf::Vector2f& pos, std::shared_ptr<Monster> monster)
+{
+    Tile* clickedTile = nullptr;
+
+    // מוצאים על איזה משושה לחצו
+    for (auto& [coords, tile] : m_grid)
+    {
+        sf::Vector2f tileCenter = tileToScreen(coords.first, coords.second);
+        float dx = pos.x - tileCenter.x;
+        float dy = pos.y - tileCenter.y;
+        if ((dx * dx + dy * dy) <= (TILE_RADIUS * TILE_RADIUS))
+        {
+            clickedTile = tile.get();
+            break;
+        }
+    }
+
+    // אם לחצנו על משבצת חוקית, והיא ריקה (אין עליה כבר מפלצת)
+    if (clickedTile && !clickedTile->hasMonster())
+    {
+        clickedTile->setMonster(monster);
+        // מעדכנים רק את המיקום הלוגי בלוח (Q, Row)
+        monster->setPosition(clickedTile->getQ(), clickedTile->getRow());
+        return true;
+    }
+
+    return false; // הזימון נכשל (משבצת תפוסה או לחיצה מחוץ ללוח)
+}
+
+// BFS
+void Board::highlightNeighbors(int q, int row, int range)
+{
+    std::pair<int, int> offsets[] = {
+        {-2,  0}, {+2,  0},
+        {-1, -1}, {+1, -1},
+        {-1, +1}, {+1, +1}
+    };
+
+    std::map<std::pair<int, int>, int> visited;
+    std::vector<std::pair<int, int>> frontier;
+    visited[{q, row}] = 0;
+    frontier.push_back({ q, row });
+
+    while (!frontier.empty())
+    {
+        std::vector<std::pair<int, int>> nextFrontier;
+        for (auto [cq, cr] : frontier)
+        {
+            int dist = visited[{cq, cr}];
+            if (dist >= range)
+                continue;
+
+            for (auto [dq, dr] : offsets)
+            {
+                std::pair<int, int> neighbor = { cq + dq, cr + dr };
+                if (visited.count(neighbor))
+                    continue;
+                auto it = m_grid.find(neighbor);
+                if (it == m_grid.end())
+                    continue;
+
+                visited[neighbor] = dist + 1;
+                it->second->setHighlighted(true);
+                nextFrontier.push_back(neighbor);
+            }
+        }
+        frontier = std::move(nextFrontier);
+    }
+}
+
+void Board::clearHighlights()
+{
+    for (auto& pair : m_grid)
+    {
+        pair.second->setHighlighted(false);
+    }
+}
+
+sf::Vector2f Board::tileToScreen(int q, int row) const
+{
+    float width = std::sqrt(3.f) * TILE_RADIUS;
+
+    // עכשיו זה תואם בדיוק ל-createBoard!
+    float x = START_X + (width / 2.f) * q;
+    float y = START_Y + (1.5f * TILE_RADIUS) * row;
+
+    return { x, y };
+}
+/*
+void Board::handleClick(const sf::Vector2f& pos)
+{
+    // If a monster is selected, check if click is on a highlighted tile
+    Monster* selected = nullptr;
+    for (auto* monster : m_monsters)
+    {
+        if (monster->isSelected())
+        {
+            selected = monster;
+            break;
+        }
+    }
+
+    if (selected)
+    {
+        for (auto& [coords, tile] : m_grid)
+        {
+            if (!tile->isHighlighted())
+                continue;
+
+            sf::Vector2f tileCenter = tileToScreen(coords.first, coords.second);
+            float dx = pos.x - tileCenter.x;
+            float dy = pos.y - tileCenter.y;
+            if ((dx * dx + dy * dy) <= (TILE_RADIUS * TILE_RADIUS))
+            {
+                selected->setPosition(coords.first, coords.second);
+                selected->setSelected(false);
+                clearHighlights();
+                return;
+            }
+        }
+
+        selected->setSelected(false);
+        clearHighlights();
+        return;
+    }
+
+    // No monster selected — check if clicking a monster to select it
+    for (auto* monster : m_monsters)
+    {
+        sf::Vector2f screenPos = tileToScreen(monster->getQ(), monster->getRow());
+        if (monster->contains(pos, screenPos))
+        {
+            monster->setSelected(true);
+            highlightNeighbors(monster->getQ(), monster->getRow(), monster->getRange());
+            return;
+        }
+    }
+}
+
+//BFS
+void Board::highlightNeighbors(int q, int row, int range)
+{
+    std::pair<int, int> offsets[] = {
+        {-2,  0}, {+2,  0},
+        {-1, -1}, {+1, -1},
+        {-1, +1}, {+1, +1}
+    };
+
+    std::map<std::pair<int, int>, int> visited;
+    std::vector<std::pair<int, int>> frontier;
+    visited[{q, row}] = 0;
+    frontier.push_back({ q, row });
+
+    while (!frontier.empty())
+    {
+        std::vector<std::pair<int, int>> nextFrontier;
+        for (auto [cq, cr] : frontier)
+        {
+            int dist = visited[{cq, cr}];
+            if (dist >= range)
+                continue;
+
+            for (auto [dq, dr] : offsets)
+            {
+                std::pair<int, int> neighbor = { cq + dq, cr + dr };
+                if (visited.count(neighbor))
+                    continue;
+                auto it = m_grid.find(neighbor);
+                if (it == m_grid.end())
+                    continue;
+
+                visited[neighbor] = dist + 1;
+                it->second->setHighlighted(true);
+                nextFrontier.push_back(neighbor);
+            }
+        }
+        frontier = std::move(nextFrontier);
+    }
+}
+
+void Board::clearHighlights()
+{
+    for (auto& pair : m_grid)
+    {
+        pair.second->setHighlighted(false);
+    }
+}
+
+void Board::addMonster(Monster* monster)
+{
+    m_monsters.push_back(monster);
+}*/
