@@ -3,9 +3,17 @@
 configure_file("Menu/Menu.png" ${CMAKE_BINARY_DIR}/resources/Menu/Menu.png COPYONLY)
 configure_file("Menu/Instructions.png" ${CMAKE_BINARY_DIR}/resources/Menu/Instructions.png COPYONLY)
 
+configure_file("Monster/Barzilla/Barzilla.png" ${CMAKE_BINARY_DIR}/resources/Monster/Barzilla/Barzilla.png COPYONLY)
+configure_file("Monster/Barzilla/Barzilla_card.png" ${CMAKE_BINARY_DIR}/resources/Monster/Barzilla/Barzilla_card.png COPYONLY)
+
 configure_file("Monster/Blue/Blue.png" ${CMAKE_BINARY_DIR}/resources/Monster/Blue/Blue.png COPYONLY)
-configure_file("Monster/Blue/Blue1.png" ${CMAKE_BINARY_DIR}/resources/Monster/Blue/Blue1.png COPYONLY)
 configure_file("Monster/Blue/Blue_card.png" ${CMAKE_BINARY_DIR}/resources/Monster/Blue/Blue_card.png COPYONLY)
+
+configure_file("Monster/Henrietta/Henrietta.png" ${CMAKE_BINARY_DIR}/resources/Monster/Henrietta/Henrietta.png COPYONLY)
+configure_file("Monster/Henrietta/Henrietta_card.png" ${CMAKE_BINARY_DIR}/resources/Monster/Henrietta/Henrietta_card.png COPYONLY)
+
+configure_file("Monster/Mozzy/Mozzy.png" ${CMAKE_BINARY_DIR}/resources/Monster/Mozzy/Mozzy.png COPYONLY)
+configure_file("Monster/Mozzy/Mozzy_card.png" ${CMAKE_BINARY_DIR}/resources/Monster/Mozzy/Mozzy_card.png COPYONLY)
 
 configure_file("Monster/Muffintop/Muffintop_L.png" ${CMAKE_BINARY_DIR}/resources/Monster/Muffintop/Muffintop_L.png COPYONLY)
 configure_file("Monster/Muffintop/Muffintop.png" ${CMAKE_BINARY_DIR}/resources/Monster/Muffintop/Muffintop.png COPYONLY)

@@ -1,34 +1,39 @@
 #include "Player.h"
 #include "Monsters/Muffintop.h"
 #include "Monsters/Blue.h"
+#include "Monsters/Barzilla.h"
+#include "Monsters/Henrietta.h"
+#include "Monsters/Mozzy.h"
 #include "Constants.h"
 #include "TextureManager.h"
 
 Player::Player()
-	: /*m_heart(std::make_unique<Heart>()),*/ m_keys(20)
+    : /*m_heart(std::make_unique<Heart>()),*/ m_keys(20)
 {
-	// Initialize cards
-	m_monsters.push_back(std::make_shared<Muffintop>());
+    // Initialize cards
+    m_monsters.push_back(std::make_shared<Muffintop>());
     m_monsters.push_back(std::make_shared<Blue>());
-	//m_monsters.push_back(std::make_unique<Blue>());
+    m_monsters.push_back(std::make_shared<Barzilla>());
+    m_monsters.push_back(std::make_shared<Henrietta>());
+    m_monsters.push_back(std::make_shared<Mozzy>());
 }
 /*
 void Player::handleClick(sf::Vector2f pos)
 {
-	for (auto& monster : m_monsters)
-	{
-		if (!monster->isOnBoard() && monster->contains(pos, screenPos in hand))
-		{
-			m_selected = monster.get();
-			return;
-		}
-	}
+    for (auto& monster : m_monsters)
+    {
+        if (!monster->isOnBoard() && monster->contains(pos, screenPos in hand))
+        {
+            m_selected = monster.get();
+            return;
+        }
+    }
 }*/
 
 void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
 {
     // 1. ציור "השולחן" (הפאנל התחתון)
-    sf::RectangleShape bottomPanel({static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT});
+    sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
     bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
     bottomPanel.setFillColor(sf::Color(40, 40, 40));
     window.draw(bottomPanel);
@@ -147,5 +152,5 @@ std::shared_ptr<Monster> Player::handleHandClick(sf::Vector2f mousePos, bool ali
 
 void Player::endTurn()
 {
-	m_keys += 5; // Add 5 keys at the end of the turn
+    m_keys += 5; // Add 5 keys at the end of the turn
 }
