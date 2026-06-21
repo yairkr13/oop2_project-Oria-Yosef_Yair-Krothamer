@@ -1,15 +1,14 @@
 #pragma once
-#include "Monster.h"
+#include "Monsters/Monster.h"
 
-class Blue : public Monster
+class Muffintop : public Monster
 {
 public:
     static constexpr int COST = 3;
     static constexpr int BASE_HEALTH = 120;
     static constexpr int BASE_ATTACK = 25;
-    static constexpr int BASE_RANGE = 1;
+    static constexpr int BASE_RANGE = 2;
 
-    Blue();
+    Muffintop();
     void attack(Monster& target) override;
-
 };

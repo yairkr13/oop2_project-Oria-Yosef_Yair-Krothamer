@@ -1,9 +1,8 @@
 #include "Player.h"
-#include "Muffintop.h"
-#include "Blue.h"
+#include "Monsters/Muffintop.h"
+#include "Monsters/Blue.h"
 #include "Constants.h"
-#include "TextureManager.h" 
-//#include "Blue.h"
+#include "TextureManager.h"
 
 Player::Player()
 	: /*m_heart(std::make_unique<Heart>()),*/ m_keys(20)
@@ -26,7 +25,7 @@ void Player::handleClick(sf::Vector2f pos)
 	}
 }*/
 
-void Player::drawHand(sf::RenderWindow& window, bool alignRight) const
+void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
 {
     // 1. ציור "השולחן" (הפאנל התחתון)
     sf::RectangleShape bottomPanel({static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT});
@@ -76,24 +75,45 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight) const
         }
 
         // --- ציור המפלצת בתוך הקלף ---
+        bool isSelected = (selectedFromHand && m_monsters[i] == selectedFromHand);
+
+        // Selection visual: golden outline border
+        if (isSelected)
+        {
+            sf::RectangleShape selectionBorder({ Config::CARD_WIDTH + 6.f, Config::CARD_HEIGHT + 6.f });
+            selectionBorder.setPosition({ startX - 3.f, Config::CARD_START_Y - 3.f });
+            selectionBorder.setFillColor(sf::Color::Transparent);
+            selectionBorder.setOutlineThickness(3.f);
+            selectionBorder.setOutlineColor(sf::Color(255, 220, 50)); // gold
+            window.draw(selectionBorder);
+        }
+
         try
         {
-            std::string texKey = m_monsters[i]->getName();
+            std::string texKey = m_monsters[i]->getCardTextureKey();
             const sf::Texture& monsterTex = TextureManager::getInstance().getTexture(texKey);
             sf::Sprite monsterSprite(monsterTex);
 
-            monsterSprite.setOrigin({ monsterTex.getSize().x / 2.f, monsterTex.getSize().y / 2.f });
-            monsterSprite.setPosition({ startX + (Config::CARD_WIDTH / 2.f), Config::CARD_START_Y + (Config::CARD_HEIGHT / 2.f) });
+            float scaleX = Config::CARD_WIDTH / static_cast<float>(monsterTex.getSize().x);
+            float scaleY = Config::CARD_HEIGHT / static_cast<float>(monsterTex.getSize().y);
 
-            // --- הנוסחה החכמה לסקייל בתוך הקלף ---
-            // אנחנו רוצים שהמפלצת תהיה בגודל מקסימלי של 50 פיקסלים בתוך הקלף
-            float targetSizeInCard = 50.f;
-            float maxTextureDim = std::max(monsterTex.getSize().x, monsterTex.getSize().y);
-            float monsterScale = targetSizeInCard / maxTextureDim;
+            // Slightly enlarge the selected card
+            if (isSelected)
+            {
+                float enlarge = 1.08f;
+                scaleX *= enlarge;
+                scaleY *= enlarge;
+                // Center the enlarged sprite
+                float offsetX = (Config::CARD_WIDTH * (enlarge - 1.f)) / 2.f;
+                float offsetY = (Config::CARD_HEIGHT * (enlarge - 1.f)) / 2.f;
+                monsterSprite.setPosition({ startX - offsetX, Config::CARD_START_Y - offsetY });
+            }
+            else
+            {
+                monsterSprite.setPosition({ startX, Config::CARD_START_Y });
+            }
 
-            monsterSprite.setScale({ monsterScale, monsterScale });
-            // ---------------------------------------
-
+            monsterSprite.setScale({ scaleX, scaleY });
             window.draw(monsterSprite);
         }
         catch (...) {}

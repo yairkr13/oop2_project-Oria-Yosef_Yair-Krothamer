@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 #include "SFML/Graphics.hpp"
 #include "Tile.h"
 #include <vector>
-#include "Monster.h"
+#include "Monsters/Monster.h"
 #include <cmath>
 #include <map>
 
@@ -13,7 +13,7 @@ public:
 	void draw(sf::RenderWindow& window) const;
 	void handleClick(const sf::Vector2f& pos);
 	//bool isTilePassable(Tile* start, Tile* end) const;
-	
+
 	// Board borrows monster pointers (non-owning) from Players
 	//void setMonsters(std::vector<Monster*> monsters);
 	//void addMonster(Monster* monster);
@@ -26,7 +26,7 @@ private:
 	void clearHighlights();
 
 	void createBoard();
-	// úçú public:
+	// ï¿½ï¿½ï¿½ public:
 	//std::vector <Monster*> m_monsters;
 	std::map<std::pair<int, int>, std::unique_ptr<Tile>> m_grid;
 

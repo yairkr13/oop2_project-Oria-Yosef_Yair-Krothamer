@@ -8,7 +8,7 @@ class GameObject
 	//sf::Vector2f getPosition() const;
 public:
 	//GameObject(const sf::Texture& texture, const sf::Vector2f& position);
-	GameObject() =default;
+	GameObject() = default;
 	//d-tor
 	virtual ~GameObject() = default;
 	virtual void draw(sf::RenderWindow& window) const = 0;

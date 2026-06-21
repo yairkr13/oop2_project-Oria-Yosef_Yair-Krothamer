@@ -1,6 +1,6 @@
 #pragma once
 #include "SFML/Graphics.hpp"
-#include "Monster.h"
+#include "Monsters/Monster.h"
 #include <memory>
 //#include "StaticObject.h"
 

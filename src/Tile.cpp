@@ -2,30 +2,29 @@
 const float TILE_RADIUS = 48.f;// Assuming each tile is 64x64 pixels, the radius would be 32
 
 
-Tile::Tile(int q, int row, const sf::Vector2f& position)// <--- ëàï àðçðå ÷åøàéí ìáðàé ùì îçì÷ú äàá!
+Tile::Tile(int q, int row, const sf::Vector2f& position)// <--- ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½!
     :m_q(q),
     m_row(row),
     m_isPassable(true)
 {
-    // äâãøåú äîùåùä (m_shape)...
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (m_shape)...
 
     m_shape.setRadius(TILE_RADIUS);
 
-    // ä÷ñí ù÷åøä ëàï: îòâì òí 6 ð÷åãåú äåà îùåùä!
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ 6 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½!
     m_shape.setPointCount(6);
 
-    // öáò ôðéîé
-    m_shape.setFillColor(sf::Color(100, 250, 50)); // éøå÷ ìîùì
+    // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
+    m_shape.setFillColor(sf::Color(180, 180, 180, 140)); // light gray, semi-transparent
 
-    // ÷å îúàø (îñâøú) ëãé ùðåëì ìøàåú àú äâáåìåú ùì ëì îùåùä
     m_shape.setOutlineThickness(2.f);
-    m_shape.setOutlineColor(sf::Color::Black);
+    m_shape.setOutlineColor(sf::Color(80, 80, 80, 180));
 
-    // îî÷îéí àú äîùåùä
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     //m_shape.setRotation(sf::degrees(30.f));
     m_shape.setPosition(position);
     //m_shape.setOrigin({ TILE_RADIUS, TILE_RADIUS });
-    // àåôöéåðìé: ìäâãéø àú ð÷åãú äòåâï ìàîöò äîùåùä
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     // m_shape.setOrigin(radius, radius);
 }
 
@@ -39,12 +38,12 @@ void Tile::setHighlighted(bool highlighted)
     m_isHighlighted = highlighted;
     if (highlighted)
     {
-        m_shape.setFillColor(sf::Color(150, 255, 150)); // éøå÷ áäéø îñåîï
-        m_shape.setOutlineColor(sf::Color::White);      // îñâøú ìáðä áåìèú
+        m_shape.setFillColor(sf::Color(150, 220, 150, 180)); // light green, semi-transparent
+        m_shape.setOutlineColor(sf::Color(200, 255, 200, 220));
     }
     else
     {
-        m_shape.setFillColor(sf::Color(100, 250, 50));  // öáò î÷åøé ùìëí
-        m_shape.setOutlineColor(sf::Color::Black);
+        m_shape.setFillColor(sf::Color(180, 180, 180, 140)); // light gray, semi-transparent
+        m_shape.setOutlineColor(sf::Color(80, 80, 80, 180));
     }
 }

@@ -2,7 +2,7 @@
 #include "GameObject.h"
 #include <string>
 
-class Monster //: public GameObject
+class Monster
 {
 public:
     Monster(const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey);
@@ -23,6 +23,8 @@ public:
     void setPosition(int q, int row) { m_q = q; m_row = row; }
     int getRange() const { return m_range; }
     const std::string& getName() const { return m_name; }
+    const std::string& getTextureKey() const { return m_textureKey; }
+    std::string getCardTextureKey() const { return m_textureKey + "_card"; }
     void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }
 
     void walkTo(const sf::Vector2f& targetScreenPos);
@@ -43,6 +45,4 @@ protected:
     sf::Vector2f m_targetPos;
     bool m_isMoving = false;
     float m_speed = 300.f;
-	//MovementType m_movementType;
-	//belong to faction????????????????????????????
 };

@@ -4,7 +4,7 @@
 #include "Player.h"
 #include "Board.h"
 #include "MainMenu.h"
-#include "Monster.h"
+#include "Monsters/Monster.h"
 //#include "TurnManager.h"
 
 enum class GameState { MainMenu, Playing }; //turn1,turn2
@@ -31,14 +31,14 @@ private:
     //TurnState m_turnState;
    // TurnManager m_turnManager;
     std::optional<MainMenu> m_menu;   // optional so we can catch font errors
-	//std::unique_ptr<MainMenu> m_menu;
+    //std::unique_ptr<MainMenu> m_menu;
 
     std::unique_ptr<Player> m_player1;
-	std::unique_ptr<Player> m_player2;
+    std::unique_ptr<Player> m_player2;
     Player* m_currentPlayer;
 
     sf::Clock m_clock;
-	//timer for every turn, when time is up- switch to the other player - 2:00
+    //timer for every turn, when time is up- switch to the other player - 2:00
     // 
     //sf::View m_view; //when its player 1 turn- the screen get closer to player 1
 
@@ -50,6 +50,7 @@ private:
     void endTurn();
 
     Board m_board;
+    sf::Sprite m_bgSprite;
     std::shared_ptr<Monster> m_selectedFromHand = nullptr;
     //static std::vector<sf::RectangleShape> makeObstacles();
 

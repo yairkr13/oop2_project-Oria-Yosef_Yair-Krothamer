@@ -1,12 +1,22 @@
 #include "Game.h"
-#include "Constants.h" 
+#include "Constants.h"
+#include "TextureManager.h"
 #include <iostream>
 
 
-Game::Game() : m_board(), m_state(GameState::MainMenu)
+Game::Game() : m_board(), m_state(GameState::MainMenu),
+    m_bgSprite([]() -> const sf::Texture& {
+        TextureManager::getInstance().loadTexture("game_bg", "resources/Background/Background1.png");
+        return TextureManager::getInstance().getTexture("game_bg");
+    }())
 {
     m_window.create(sf::VideoMode({ Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT }), "Phobies");
     m_window.setFramerateLimit(60);
+
+    // Scale background to fit window
+    auto texSize = m_bgSprite.getTexture().getSize();
+    m_bgSprite.setScale({ static_cast<float>(Config::WINDOW_WIDTH) / texSize.x,
+                          static_cast<float>(Config::WINDOW_HEIGHT) / texSize.y });
 
     try
     {
@@ -20,7 +30,7 @@ Game::Game() : m_board(), m_state(GameState::MainMenu)
 
     m_player1 = std::make_unique<Player>();
     m_player2 = std::make_unique<Player>();
-    m_currentPlayer = m_player1.get(); // שחקן 1 מתחיל
+    m_currentPlayer = m_player1.get();
 
 }
 
@@ -28,19 +38,14 @@ void Game::run()
 {
     while (m_window.isOpen())
     {
-        m_window.clear(sf::Color(30, 30, 50));
-        draw();
-        m_window.display();
-
-        if (const auto event = m_window.waitEvent())
+        while (const auto event = m_window.pollEvent())
         {
             event->visit([this](const auto& e) { handle(e); });
         }
-        /*if (m_state == GameState::Playing)
-        {
-            const float dt = m_clock.restart().asSeconds();
-            update(dt);
-        }*/
+
+        m_window.clear(sf::Color(30, 30, 50));
+        draw();
+        m_window.display();
     }
 }
 
@@ -70,8 +75,11 @@ void Game::handle(const sf::Event::MouseButtonPressed& event)
                 auto clickedMonster = m_currentPlayer->handleHandClick(pos, isPlayer2);
                 if (clickedMonster)
                 {
-                    m_selectedFromHand = clickedMonster;
-                    // אפשר פה לשים פרינט (cout) כדי לראות שזה עובד: "Monster selected!"
+                    // Toggle: if clicking the same card, deselect it
+                    if (m_selectedFromHand == clickedMonster)
+                        m_selectedFromHand = nullptr;
+                    else
+                        m_selectedFromHand = clickedMonster;
                 }
             }
         }
@@ -146,12 +154,13 @@ void Game::draw()
     }
     else if (m_state == GameState::Playing)
     {
+        m_window.draw(m_bgSprite);
         m_board.draw(m_window);
         if (m_currentPlayer)
         {
             bool isPlayer2 = (m_currentPlayer == m_player2.get());
 
-            m_currentPlayer->drawHand(m_window, isPlayer2);
+            m_currentPlayer->drawHand(m_window, isPlayer2, m_selectedFromHand);
         }
     }
     
