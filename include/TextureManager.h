@@ -23,7 +23,7 @@ public:
             auto tex = std::make_unique<sf::Texture>();
             if (!tex->loadFromFile(filePath)) // עכשיו קוראים מהנתיב המלא
             {
-                throw std::runtime_error("Failed to load texture: " + filePath);
+                throw std::runtime_error("Failed to load texture: ");
             }
             m_textures[name] = std::move(tex);
         }

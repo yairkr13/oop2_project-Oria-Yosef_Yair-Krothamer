@@ -122,6 +122,26 @@ void Game::handle(const sf::Event::KeyPressed& event)
             m_menu->reset();
         return;
     }
+    if (m_state == GameState::Playing && event.code == sf::Keyboard::Key::Space)
+    {
+        // 1. העברת התור לשחקן השני
+        if (m_currentPlayer == m_player1.get())
+        {
+            m_currentPlayer = m_player2.get();
+        }
+        else
+        {
+            m_currentPlayer = m_player1.get();
+        }
+
+        // 2. ניקוי המצב (State) כדי שהשחקן הבא יתחיל "נקי"
+        m_selectedFromHand = nullptr; // ביטול בחירת קלף מהיד
+        //m_board.clearHighlights();    // ניקוי משבצות מוארות בלוח
+
+        // (אופציונלי) אם יש מפלצת מסומנת על הלוח, כדאי לבטל לה את הסימון
+        // עדיף שתוסיף בעתיד פונקציה ב-Board שעושה את זה:
+        // m_board.deselectAllMonsters(); 
+    }
 }
 
 void Game::draw()

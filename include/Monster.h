@@ -25,6 +25,8 @@ public:
     const std::string& getName() const { return m_name; }
     void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }
 
+    void walkTo(const sf::Vector2f& targetScreenPos);
+    void update(float dt);
 protected:
     std::string m_name;
     int m_health;
@@ -38,6 +40,9 @@ protected:
 
     std::string m_textureKey;
     sf::Vector2f m_screenPos;
+    sf::Vector2f m_targetPos;
+    bool m_isMoving = false;
+    float m_speed = 300.f;
 	//MovementType m_movementType;
 	//belong to faction????????????????????????????
 };

@@ -24,7 +24,7 @@ Tile::Tile(int q, int row, const sf::Vector2f& position)// <--- כאן אנחנו קוראים
     // ממקמים את המשושה
     //m_shape.setRotation(sf::degrees(30.f));
     m_shape.setPosition(position);
-
+    //m_shape.setOrigin({ TILE_RADIUS, TILE_RADIUS });
     // אופציונלי: להגדיר את נקודת העוגן לאמצע המשושה
     // m_shape.setOrigin(radius, radius);
 }
@@ -36,6 +36,7 @@ void Tile::draw(sf::RenderWindow& window) const
 
 void Tile::setHighlighted(bool highlighted)
 {
+    m_isHighlighted = highlighted;
     if (highlighted)
     {
         m_shape.setFillColor(sf::Color(150, 255, 150)); // ירוק בהיר מסומן

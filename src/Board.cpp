@@ -83,7 +83,9 @@ void Board::handleClick(const sf::Vector2f& pos)
     {
         if (auto monster = tile->getMonster())
         {
-            sf::Vector2f tilePos = tileToScreen(tile->getQ(), tile->getRow());
+            //sf::Vector2f tilePos = tileToScreen(clickedTile->getQ(), clickedTile->getRow());
+            //selectedMonster->walkTo(posOnScreen);
+            // 
             //monster->setScreenPosition(tilePos); // <--- הנה השורת קסם שחסרה!
             //monster->draw(window);
             if (monster->isSelected())
@@ -98,12 +100,13 @@ void Board::handleClick(const sf::Vector2f& pos)
     // 3. הלוגיקה של הלחיצה:
     if (selectedMonster)
     {
-        // אם כבר יש מפלצת מסומנת, ולחצנו על משבצת מוארת ופנויה -> נזיז את המפלצת!
         if (clickedTile->isHighlighted() && !clickedTile->hasMonster())
         {
             clickedTile->setMonster(selectedMonster);     // שמים את המפלצת במשבצת החדשה
             selectedMonsterTile->setMonster(nullptr);     // מוחקים אותה מהמשבצת הישנה
-            selectedMonster->setPosition(clickedTile->getQ(), clickedTile->getRow()); // מעדכנים קואורדינטות
+
+            // ברגע ששינינו את ה-Q וה-Row, הפונקציה draw כבר "תשגר" אותה לשם אוטומטית!
+            selectedMonster->setPosition(clickedTile->getQ(), clickedTile->getRow());
         }
 
         // בכל מקרה, אחרי שלחצנו (לזוז או לבטל), מורידים את הסימון
@@ -207,7 +210,7 @@ sf::Vector2f Board::tileToScreen(int q, int row) const
     float x = START_X + (width / 2.f) * q;
     float y = START_Y + (1.5f * TILE_RADIUS) * row;
 
-    return { x, y };
+    return { x + TILE_RADIUS, y + TILE_RADIUS };
 }
 /*
 void Board::handleClick(const sf::Vector2f& pos)

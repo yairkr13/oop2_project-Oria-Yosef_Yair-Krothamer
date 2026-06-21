@@ -12,16 +12,16 @@ void Monster::draw(sf::RenderWindow& window) const
     if (m_q == -1 && m_row == -1) return; // לא על הלוח
 
     // 1. ציור הילה צהובה אם נבחרה
-    if (m_selected)
-    {
-        sf::CircleShape highlight(Config::MONSTER_BOARD_SIZE / 2.f + 5.f); // קצת יותר גדול מהמפלצת
-        highlight.setOrigin({ highlight.getRadius(), highlight.getRadius() });
-        highlight.setPosition(m_screenPos);
-        highlight.setFillColor(sf::Color::Transparent);
-        highlight.setOutlineThickness(3.f);
-        highlight.setOutlineColor(sf::Color::Yellow);
-        window.draw(highlight);
-    }
+    //if (m_selected)
+    //{
+    //    sf::CircleShape highlight(Config::MONSTER_BOARD_SIZE / 2.f + 5.f); // קצת יותר גדול מהמפלצת
+    //    highlight.setOrigin({ highlight.getRadius(), highlight.getRadius() });
+    //    highlight.setPosition(m_screenPos);
+    //    highlight.setFillColor(sf::Color::Transparent);
+    //    highlight.setOutlineThickness(3.f);
+    //    highlight.setOutlineColor(sf::Color::Yellow);
+    //    window.draw(highlight);
+    //}
 
     // 2. ציור המפלצת עצמה על הלוח
     try
@@ -73,3 +73,34 @@ void Monster::takeDamage(int damage)
 //{
 //
 //}
+
+void Monster::walkTo(const sf::Vector2f& targetScreenPos)
+{
+    m_targetPos = targetScreenPos;
+    m_isMoving = true;
+}
+
+void Monster::update(float dt)
+{
+    if (!m_isMoving) return; // אם אין לאן ללכת, אל תעשה כלום
+
+    // 1. מחשבים את המרחק ליעד ב-X וב-Y
+    float dx = m_targetPos.x - m_screenPos.x;
+    float dy = m_targetPos.y - m_screenPos.y;
+
+    // משפט פיתגורס כדי למצוא את המרחק הכללי (האלכסון)
+    float distance = std::sqrt(dx * dx + dy * dy);
+
+    // 2. בודקים אם הגענו! (אם המרחק קטן מ-5 פיקסלים, נעגל ליעד ונעצור)
+    if (distance < 5.f)
+    {
+        m_screenPos = m_targetPos;
+        m_isMoving = false;
+    }
+    else
+    {
+        // 3. הליכה! מחשבים כמה פיקסלים לזוז בפריים הנוכחי (לפי המהירות והזמן)
+        m_screenPos.x += (dx / distance) * m_speed * dt;
+        m_screenPos.y += (dy / distance) * m_speed * dt;
+    }
+}

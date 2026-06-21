@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Muffintop.h"
+#include "Blue.h"
 #include "Constants.h"
 #include "TextureManager.h" 
 //#include "Blue.h"
@@ -9,6 +10,7 @@ Player::Player()
 {
 	// Initialize cards
 	m_monsters.push_back(std::make_shared<Muffintop>());
+    m_monsters.push_back(std::make_shared<Blue>());
 	//m_monsters.push_back(std::make_unique<Blue>());
 }
 /*
@@ -48,7 +50,6 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight) const
         }
         else
         {
-            // שימוש מושלם בקבועים!
             startX = Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING);
         }
 
@@ -77,7 +78,7 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight) const
         // --- ציור המפלצת בתוך הקלף ---
         try
         {
-            std::string texKey = (m_monsters[i]->getName() == "Muffintop") ? "muffintop" : "default";
+            std::string texKey = m_monsters[i]->getName();
             const sf::Texture& monsterTex = TextureManager::getInstance().getTexture(texKey);
             sf::Sprite monsterSprite(monsterTex);
 
