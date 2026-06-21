@@ -124,3 +124,8 @@ std::shared_ptr<Monster> Player::handleHandClick(sf::Vector2f mousePos, bool ali
     }
     return nullptr;
 }
+
+void Player::endTurn()
+{
+	m_keys += 5; // Add 5 keys at the end of the turn
+}

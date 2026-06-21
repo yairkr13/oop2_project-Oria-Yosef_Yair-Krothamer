@@ -97,10 +97,9 @@ void Game::handle(const sf::Event::MouseButtonPressed& event)
             }
         }
     }
-    // אם אנחנו בתפריט הראשי
+
     else if (m_state == GameState::MainMenu)
     {
-        // כאן נטפל בלחיצות של התפריט (למשל כפתור "Play")
         auto result = m_menu->handleEvent(event);
         if (result.has_value())
         {
@@ -134,13 +133,8 @@ void Game::handle(const sf::Event::KeyPressed& event)
             m_currentPlayer = m_player1.get();
         }
 
-        // 2. ניקוי המצב (State) כדי שהשחקן הבא יתחיל "נקי"
         m_selectedFromHand = nullptr; // ביטול בחירת קלף מהיד
         //m_board.clearHighlights();    // ניקוי משבצות מוארות בלוח
-
-        // (אופציונלי) אם יש מפלצת מסומנת על הלוח, כדאי לבטל לה את הסימון
-        // עדיף שתוסיף בעתיד פונקציה ב-Board שעושה את זה:
-        // m_board.deselectAllMonsters(); 
     }
 }
 
@@ -155,8 +149,6 @@ void Game::draw()
         m_board.draw(m_window);
         if (m_currentPlayer)
         {
-            // אם השחקן הנוכחי הוא שחקן 2 -> נעביר true (יישור לימין)
-            // אחרת נעביר false (יישור לשמאל)
             bool isPlayer2 = (m_currentPlayer == m_player2.get());
 
             m_currentPlayer->drawHand(m_window, isPlayer2);

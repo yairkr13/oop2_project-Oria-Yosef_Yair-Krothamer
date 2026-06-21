@@ -16,6 +16,7 @@ public:
     std::shared_ptr<Monster> handleHandClick(sf::Vector2f mousePos, bool alignRight) const;
     //void draw(sf::RenderWindow& window) const;
     //const sf::Vector2f& getPosition() const;
+	void endTurn();
 
 private:
 	//std::unique_ptr<Heart> m_heart;

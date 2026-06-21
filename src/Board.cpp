@@ -108,7 +108,8 @@ void Board::handleClick(const sf::Vector2f& pos)
             // ברגע ששינינו את ה-Q וה-Row, הפונקציה draw כבר "תשגר" אותה לשם אוטומטית!
             selectedMonster->setPosition(clickedTile->getQ(), clickedTile->getRow());
         }
-
+        /*if(clickedTile->hasMonster())
+			selectedMonster->attack(clickedTile->getMonster());*/
         // בכל מקרה, אחרי שלחצנו (לזוז או לבטל), מורידים את הסימון
         selectedMonster->setSelected(false);
         clearHighlights();
