@@ -4,8 +4,10 @@
 Barzilla::Barzilla()
     : Monster("Barzilla", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, COST, -1, -1, sf::Color::Red, "barzilla")
 {
-    TextureManager::getInstance().loadTexture("barzilla", "resources/Monster/Barzilla/Barzilla.png");
-    TextureManager::getInstance().loadTexture("barzilla_card", "resources/Monster/Barzilla/Barzilla_card.png");
+    TextureManager::getInstance().loadTexture("barzilla_r", "resources/Monster/Barzilla/Barzilla_R.png");
+    TextureManager::getInstance().loadTexture("barzilla_l", "resources/Monster/Barzilla/Barzilla_L.png");
+    TextureManager::getInstance().loadTexture("barzilla_card_r", "resources/Monster/Barzilla/Barzilla_card_R.png");
+    TextureManager::getInstance().loadTexture("barzilla_card_l", "resources/Monster/Barzilla/Barzilla_card_L.png");
 }
 
 void Barzilla::attack(Monster& target)

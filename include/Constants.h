@@ -1,12 +1,14 @@
 #pragma once
 
+enum class PlayerSide { Left, Right };
+
 namespace Config
 {
-    // двгшеъ дзмеп
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
     inline constexpr unsigned int WINDOW_WIDTH = 1280;
     inline constexpr unsigned int WINDOW_HEIGHT = 720;
 
-    // двгшеъ дфарм дъзъеп (дйг щм дщзчп)
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)
     inline constexpr float BOTTOM_PANEL_Y = 600.f;
     inline constexpr float BOTTOM_PANEL_HEIGHT = 120.f;
     inline constexpr float CARD_START_Y = 610.f;

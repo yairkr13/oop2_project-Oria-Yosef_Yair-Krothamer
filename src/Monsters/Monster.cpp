@@ -14,7 +14,7 @@ void Monster::draw(sf::RenderWindow& window) const
 
     try
     {
-        const sf::Texture& texture = TextureManager::getInstance().getTexture(m_textureKey);
+        const sf::Texture& texture = TextureManager::getInstance().getTexture(getTextureKey());
         sf::Sprite sprite(texture);
         sprite.setOrigin({ texture.getSize().x / 2.f, texture.getSize().y / 2.f });
         sprite.setPosition(m_screenPos);

@@ -4,7 +4,7 @@
 #include "StaticObject.h"
 #include "Monsters/Monster.h"
 
-class Card :public StaticObject
+class Card:public StaticObject
 {
 public:
     Card(const sf::Texture& texture, const sf::Vector2f& position);

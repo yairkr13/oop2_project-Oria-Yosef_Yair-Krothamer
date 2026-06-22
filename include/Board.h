@@ -1,8 +1,9 @@
-﻿#pragma once
+#pragma once
 #include "SFML/Graphics.hpp"
 #include "Tile.h"
 #include <vector>
 #include "Monsters/Monster.h"
+#include "Constants.h"
 #include <cmath>
 #include <map>
 
@@ -11,19 +12,20 @@ class Board
 public:
 	Board();
 	void draw(sf::RenderWindow& window) const;
-	void handleClick(const sf::Vector2f& pos);
+	void handleClick(const sf::Vector2f& pos, PlayerSide currentSide);
 	//bool isTilePassable(Tile* start, Tile* end) const;
-
+	
 	// Board borrows monster pointers (non-owning) from Players
 	//void setMonsters(std::vector<Monster*> monsters);
 	//void addMonster(Monster* monster);
 	bool trySpawnMonster(const sf::Vector2f& pos, std::shared_ptr<Monster> monster);
+	void highlightSpawnTiles(PlayerSide side);
+	void clearHighlights();
 
 private:
 	//void setHighlight(const sf::Vector2f& pos, int range);
 	sf::Vector2f tileToScreen(int q, int row) const;
 	void highlightNeighbors(int q, int row, int range);
-	void clearHighlights();
 
 	void createBoard();
 	// ��� public:

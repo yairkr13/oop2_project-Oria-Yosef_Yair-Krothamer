@@ -35,16 +35,16 @@ void Board::createBoard()
 
 void Board::draw(sf::RenderWindow& window) const
 {
-    // 1. оцййшйн аъ лм ощещй дшчт чегн
+    // 1. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
     for (auto const& [coords, tile] : m_grid)
     {
         tile->draw(window);
     }
 
-    // 2. тлщйе оцййшйн аъ дофмцеъ щтеогеъ тм дощещйн
+    // 2. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     for (auto const& [coords, tile] : m_grid)
     {
-        // lock() дефк аъ weak_ptr м-shared_ptr жорй. ан йщ офмцъ - рцййш аеъд
+        // lock() пїЅпїЅпїЅпїЅ пїЅпїЅ weak_ptr пїЅ-shared_ptr пїЅпїЅпїЅпїЅ. пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
         if (auto monster = tile->getMonster())
         {
             sf::Vector2f tilePos = tileToScreen(tile->getQ(), tile->getRow());
@@ -54,9 +54,9 @@ void Board::draw(sf::RenderWindow& window) const
     }
 }
 
-void Board::handleClick(const sf::Vector2f& pos)
+void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
 {
-    // 1. чегн лм, рбгеч тм айжд ощещд (Tile) дщзчп мзх блмм
+    // 1. пїЅпїЅпїЅпїЅ пїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (Tile) пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
     Tile* clickedTile = nullptr;
     for (auto& [coords, tile] : m_grid)
     {
@@ -64,7 +64,7 @@ void Board::handleClick(const sf::Vector2f& pos)
         float dx = pos.x - tileCenter.x;
         float dy = pos.y - tileCenter.y;
 
-        // ощфи фйъвешс мбгйчд дан дмзйцд бъек дшгйес щм дощещд
+        // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
         if ((dx * dx + dy * dy) <= (TILE_RADIUS * TILE_RADIUS))
         {
             clickedTile = tile.get();
@@ -72,10 +72,10 @@ void Board::handleClick(const sf::Vector2f& pos)
         }
     }
 
-    // ан мзце озех ммез, айп мре од мтщеъ
+    // пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
     if (!clickedTile) return;
 
-    // 2. рзфщ ан лбш йщ офмцъ щрбзшд чегн млп бмез
+    // 2. пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
     std::shared_ptr<Monster> selectedMonster = nullptr;
     Tile* selectedMonsterTile = nullptr;
 
@@ -86,7 +86,7 @@ void Board::handleClick(const sf::Vector2f& pos)
             //sf::Vector2f tilePos = tileToScreen(clickedTile->getQ(), clickedTile->getRow());
             //selectedMonster->walkTo(posOnScreen);
             // 
-            //monster->setScreenPosition(tilePos); // <--- дрд дщешъ чсн щзсшд!
+            //monster->setScreenPosition(tilePos); // <--- пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ!
             //monster->draw(window);
             if (monster->isSelected())
             {
@@ -97,28 +97,31 @@ void Board::handleClick(const sf::Vector2f& pos)
         }
     }
 
-    // 3. дмевйчд щм дмзйцд:
+    // 3. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ:
     if (selectedMonster)
     {
         if (clickedTile->isHighlighted() && !clickedTile->hasMonster())
         {
-            clickedTile->setMonster(selectedMonster);     // щойн аъ дофмцъ бощбцъ дзгщд
-            selectedMonsterTile->setMonster(nullptr);     // оезчйн аеъд одощбцъ дйщрд
+            clickedTile->setMonster(selectedMonster);     // пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+            selectedMonsterTile->setMonster(nullptr);     // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
-            // бшвт щщйрйре аъ д-Q ед-Row, дферчцйд draw лбш "ъщвш" аеъд мщн аеиеоийъ!
+            // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ-Q пїЅпїЅ-Row, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ draw пїЅпїЅпїЅ "пїЅпїЅпїЅпїЅ" пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!
             selectedMonster->setPosition(clickedTile->getQ(), clickedTile->getRow());
         }
         /*if(clickedTile->hasMonster())
 			selectedMonster->attack(clickedTile->getMonster());*/
-        // блм очшд, азшй щмзцре (мжеж ае мбим), оешйгйн аъ дсйоеп
+        // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ), пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
         selectedMonster->setSelected(false);
         clearHighlights();
     }
     else
     {
-        // ан ау офмцъ ма осеоръ, рбгеч ан мзцре тм ощбцъ щйщ бд офмцъ
+        // пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
         if (auto monster = clickedTile->getMonster())
         {
+            // Only allow selecting your own monsters
+            if (monster->getSide() != currentSide) return;
+
             monster->setSelected(true);
             highlightNeighbors(clickedTile->getQ(), clickedTile->getRow(), monster->getRange());
         }
@@ -129,7 +132,7 @@ bool Board::trySpawnMonster(const sf::Vector2f& pos, std::shared_ptr<Monster> mo
 {
     Tile* clickedTile = nullptr;
 
-    // оецайн тм айжд ощещд мзце
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
     for (auto& [coords, tile] : m_grid)
     {
         sf::Vector2f tileCenter = tileToScreen(coords.first, coords.second);
@@ -142,16 +145,34 @@ bool Board::trySpawnMonster(const sf::Vector2f& pos, std::shared_ptr<Monster> mo
         }
     }
 
-    // ан мзцре тм ощбцъ зечйъ, едйа шйчд (айп тмйд лбш офмцъ)
-    if (clickedTile && !clickedTile->hasMonster())
+    // Only allow spawning on highlighted (valid) tiles that are empty
+    if (clickedTile && clickedTile->isHighlighted() && !clickedTile->hasMonster())
     {
         clickedTile->setMonster(monster);
-        // отглрйн шч аъ дойчен дмевй бмез (Q, Row)
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ (Q, Row)
         monster->setPosition(clickedTile->getQ(), clickedTile->getRow());
         return true;
     }
 
-    return false; // джйоеп рлщм (ощбцъ ъфесд ае мзйцд озех ммез)
+    return false; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ)
+}
+
+void Board::highlightSpawnTiles(PlayerSide side)
+{
+    clearHighlights();
+    for (auto& [coords, tile] : m_grid)
+    {
+        if (tile->hasMonster()) continue;
+
+        if (side == PlayerSide::Left && coords.first <= 1)
+        {
+            tile->setHighlighted(true);
+        }
+        else if (side == PlayerSide::Right && coords.first >= 12)
+        {
+            tile->setHighlighted(true);
+        }
+    }
 }
 
 // BFS
@@ -207,7 +228,7 @@ sf::Vector2f Board::tileToScreen(int q, int row) const
 {
     float width = std::sqrt(3.f) * TILE_RADIUS;
 
-    // тлщйе жд ъеан бгйеч м-createBoard!
+    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ-createBoard!
     float x = START_X + (width / 2.f) * q;
     float y = START_Y + (1.5f * TILE_RADIUS) * row;
 
@@ -251,7 +272,7 @@ void Board::handleClick(const sf::Vector2f& pos)
         return;
     }
 
-    // No monster selected — check if clicking a monster to select it
+    // No monster selected пїЅ check if clicking a monster to select it
     for (auto* monster : m_monsters)
     {
         sf::Vector2f screenPos = tileToScreen(monster->getQ(), monster->getRow());

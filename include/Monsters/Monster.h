@@ -1,5 +1,6 @@
 #pragma once
 #include "GameObject.h"
+#include "Constants.h"
 #include <string>
 
 class Monster
@@ -23,9 +24,12 @@ public:
     void setPosition(int q, int row) { m_q = q; m_row = row; }
     int getRange() const { return m_range; }
     const std::string& getName() const { return m_name; }
-    const std::string& getTextureKey() const { return m_textureKey; }
-    std::string getCardTextureKey() const { return m_textureKey + "_card"; }
+    std::string getTextureKey() const { return m_textureKey + (m_side == PlayerSide::Left ? "_r" : "_l"); }
+    std::string getCardTextureKey() const { return m_textureKey + "_card_" + (m_side == PlayerSide::Left ? "r" : "l"); }
     void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }
+
+    void setSide(PlayerSide side) { m_side = side; }
+    PlayerSide getSide() const { return m_side; }
 
     void walkTo(const sf::Vector2f& targetScreenPos);
     void update(float dt);
@@ -39,6 +43,7 @@ protected:
     int m_row;
     bool m_selected = false;
     sf::Color m_color;
+    PlayerSide m_side = PlayerSide::Left;
 
     std::string m_textureKey;
     sf::Vector2f m_screenPos;

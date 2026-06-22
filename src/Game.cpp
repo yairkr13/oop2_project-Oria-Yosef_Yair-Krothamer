@@ -28,8 +28,8 @@ Game::Game() : m_board(), m_state(GameState::MainMenu),
         m_window.close();
     }
 
-    m_player1 = std::make_unique<Player>();
-    m_player2 = std::make_unique<Player>();
+    m_player1 = std::make_unique<Player>(PlayerSide::Left);
+    m_player2 = std::make_unique<Player>(PlayerSide::Right);
     m_currentPlayer = m_player1.get();
 
 }
@@ -77,9 +77,15 @@ void Game::handle(const sf::Event::MouseButtonPressed& event)
                 {
                     // Toggle: if clicking the same card, deselect it
                     if (m_selectedFromHand == clickedMonster)
+                    {
                         m_selectedFromHand = nullptr;
+                        m_board.clearHighlights();
+                    }
                     else
+                    {
                         m_selectedFromHand = clickedMonster;
+                        m_board.highlightSpawnTiles(m_currentPlayer->getSide());
+                    }
                 }
             }
         }
@@ -92,16 +98,14 @@ void Game::handle(const sf::Event::MouseButtonPressed& event)
                 bool success = m_board.trySpawnMonster(pos, m_selectedFromHand);
                 if (success)
                 {
-                    // הזימון הצליח! נאפס את הבחירה
                     m_selectedFromHand = nullptr;
-
-                    // (בעתיד נוסיף כאן גם: m_currentPlayer->deductKeys(cost))
+                    m_board.clearHighlights();
                 }
             }
             // אם לא נבחרה מפלצת מהיד, אז זו סתם לחיצה רגילה על הלוח (הזזה/תקיפה)
             else
             {
-                m_board.handleClick(pos);
+                m_board.handleClick(pos, m_currentPlayer->getSide());
             }
         }
     }
