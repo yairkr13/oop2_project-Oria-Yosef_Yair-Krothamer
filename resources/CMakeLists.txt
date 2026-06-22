@@ -3,6 +3,9 @@
 configure_file("Menu/Menu.png" ${CMAKE_BINARY_DIR}/resources/Menu/Menu.png COPYONLY)
 configure_file("Menu/Instructions.png" ${CMAKE_BINARY_DIR}/resources/Menu/Instructions.png COPYONLY)
 
+configure_file("Background/Background1.png" ${CMAKE_BINARY_DIR}/resources/Background/Background1.png COPYONLY)
+configure_file("Background/Background2.png" ${CMAKE_BINARY_DIR}/resources/Background/Background2.png COPYONLY)
+
 configure_file("Monster/Barzilla/Barzilla_L.png" ${CMAKE_BINARY_DIR}/resources/Monster/Barzilla/Barzilla_L.png COPYONLY)
 configure_file("Monster/Barzilla/Barzilla_R.png" ${CMAKE_BINARY_DIR}/resources/Monster/Barzilla/Barzilla_R.png COPYONLY)
 configure_file("Monster/Barzilla/Barzilla_card_L.png" ${CMAKE_BINARY_DIR}/resources/Monster/Barzilla/Barzilla_card_L.png COPYONLY)
@@ -37,6 +40,3 @@ configure_file("StaticObject/BonePile.png" ${CMAKE_BINARY_DIR}/resources/StaticO
 configure_file("Tile/Tile1.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile1.png COPYONLY)
 configure_file("Tile/Tile2.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile2.png COPYONLY)
 configure_file("Tile/Tile3.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile3.png COPYONLY)
-
-configure_file("Background/Background1.png" ${CMAKE_BINARY_DIR}/resources/Background/Background1.png COPYONLY)
-
