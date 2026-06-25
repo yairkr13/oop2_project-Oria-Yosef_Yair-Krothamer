@@ -4,28 +4,45 @@
 
 Monster::Monster(const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey)
     : m_name(name), m_health(health), m_attackDamage(attackPower),
-    m_range(range), m_cost(cost), m_q(q), m_row(row), m_color(color), m_textureKey(textureKey)
+    m_range(range), m_cost(cost), m_q(q), m_row(row), m_color(color), m_textureKey(textureKey),
+	m_sprite(TextureManager::getInstance().get<sf::Texture>(m_textureKey))
 {
+    try
+    {
+        const sf::Texture& texture = m_sprite.getTexture();
+        //m_sprite(texture);
+
+        // הגדרת נקודת המרכז
+        m_sprite.setOrigin({ texture.getSize().x / 2.f, texture.getSize().y / 2.f});
+
+        // חישוב ושמירת קנה המידה (Scale)
+        float maxTextureDim = std::max(static_cast<float>(texture.getSize().x), static_cast<float>(texture.getSize().y));
+        m_baseScale = Config::MONSTER_BOARD_SIZE / maxTextureDim;
+
+        //m_sprite.setScale({ m_baseScale, m_baseScale });
+        m_hasTexture = true;
+    }
+    catch (...)
+    {
+        // אם הטקסטורה חסרה, נדליק דגל שיגיד ל-draw לצייר מעגל צבעוני
+        m_hasTexture = false;
+    }
 }
 
 void Monster::draw(sf::RenderWindow& window) const
 {
     if (m_q == -1 && m_row == -1) return;
 
-    try
+    if(m_hasTexture)
     {
-        const sf::Texture& texture = TextureManager::getInstance().getTexture(getTextureKey());
-        sf::Sprite sprite(texture);
-        sprite.setOrigin({ texture.getSize().x / 2.f, texture.getSize().y / 2.f });
-        sprite.setPosition(m_screenPos);
+        m_sprite.setPosition(m_screenPos);
 
-        float maxTextureDim = std::max(texture.getSize().x, texture.getSize().y);
-        float boardScale = Config::MONSTER_BOARD_SIZE / maxTextureDim;
-        sprite.setScale({ boardScale, boardScale });
+        float currentScaleX = (m_side == PlayerSide::Right) ? -m_baseScale : m_baseScale;
+        m_sprite.setScale({ currentScaleX, m_baseScale });
 
-        window.draw(sprite);
+        window.draw(m_sprite);
     }
-    catch (...)
+    else
     {
         sf::CircleShape circle(Config::MONSTER_BOARD_SIZE / 2.f);
         circle.setFillColor(m_color);
@@ -78,6 +95,7 @@ void Monster::update(float dt)
         m_screenPos.y += (dy / distance) * m_speed * dt;
     }
 }
+
 //
 //void Monster::attack(std::shared_ptr<Monster> target)
 //{

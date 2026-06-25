@@ -46,14 +46,16 @@ MainMenu::MainMenu(sf::RenderWindow& window)
     , m_instrControls(m_font)
     , m_instrDismiss(m_font)
     , m_title(m_font)
-    , m_bgSprite([]() -> const sf::Texture& {
+	, m_bgSprite(TextureManager::getInstance().get<sf::Texture>("menu_bg")),
+	m_instrSprite(TextureManager::getInstance().get<sf::Texture>("instructions_bg"))
+    /*, m_bgSprite([]() -> const sf::Texture& {
     TextureManager::getInstance().loadTexture("menu_bg", "resources/Menu/Menu.png");
     return TextureManager::getInstance().getTexture("menu_bg");
         }())
     , m_instrSprite([]() -> const sf::Texture& {
     TextureManager::getInstance().loadTexture("instructions_bg", "resources/Menu/Instructions.png");
     return TextureManager::getInstance().getTexture("instructions_bg");
-        }())
+        }())*/
 {
     loadAssets();
     buildItems();

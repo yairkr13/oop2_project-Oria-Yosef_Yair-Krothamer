@@ -128,11 +128,11 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
     }
 }
 
+//returns true if the monster was successfully spawned on the board, false otherwise
 bool Board::trySpawnMonster(const sf::Vector2f& pos, std::shared_ptr<Monster> monster)
 {
     Tile* clickedTile = nullptr;
 
-    // ������ �� ���� ����� ����
     for (auto& [coords, tile] : m_grid)
     {
         sf::Vector2f tileCenter = tileToScreen(coords.first, coords.second);
@@ -149,12 +149,11 @@ bool Board::trySpawnMonster(const sf::Vector2f& pos, std::shared_ptr<Monster> mo
     if (clickedTile && clickedTile->isHighlighted() && !clickedTile->hasMonster())
     {
         clickedTile->setMonster(monster);
-        // ������� �� �� ������ ����� ���� (Q, Row)
         monster->setPosition(clickedTile->getQ(), clickedTile->getRow());
         return true;
     }
 
-    return false; // ������ ���� (����� ����� �� ����� ���� ����)
+    return false; 
 }
 
 void Board::highlightSpawnTiles(PlayerSide side)

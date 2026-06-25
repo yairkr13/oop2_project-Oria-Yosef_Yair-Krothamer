@@ -21,10 +21,11 @@ public:
     int getQ() const { return m_q; }
     int getRow() const { return m_row; }
     void setPosition(int q, int row) { m_q = q; m_row = row; }
+	int getCost() const { return m_cost; }
     int getRange() const { return m_range; }
     const std::string& getName() const { return m_name; }
-    std::string getTextureKey() const { return m_textureKey + (m_side == PlayerSide::Left ? "_r" : "_l"); }
-    std::string getCardTextureKey() const { return m_textureKey + "_card_" + (m_side == PlayerSide::Left ? "r" : "l"); }
+    //std::string getTextureKey() const { return m_textureKey + (m_side == PlayerSide::Left ? "_r" : "_l"); }
+    //std::string getCardTextureKey() const { return m_textureKey + "_card_" + (m_side == PlayerSide::Left ? "r" : "l"); }
     void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }
 
     void setSide(PlayerSide side) { m_side = side; }
@@ -49,4 +50,8 @@ protected:
     sf::Vector2f m_targetPos;
     bool m_isMoving = false;
     float m_speed = 300.f;
+
+    bool m_hasTexture = true;
+    float m_baseScale = 1.0f;
+    mutable sf::Sprite m_sprite;
 };

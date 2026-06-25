@@ -26,6 +26,7 @@ public:
     //void setState(GameState newState);
 
 private:
+    void loadAllResources(); // <--- הפונקציה החדשה שלנו
     sf::RenderWindow m_window;
     GameState m_state;
     //TurnState m_turnState;

@@ -5,15 +5,18 @@
 
 
 Game::Game() : m_board(), m_state(GameState::MainMenu),
-    m_bgSprite([]() -> const sf::Texture& {
+    /*m_bgSprite([]() -> const sf::Texture& {
         TextureManager::getInstance().loadTexture("game_bg", "resources/Background/Background1.png");
         return TextureManager::getInstance().getTexture("game_bg");
-    }())
+    }())*/
+	m_bgSprite(TextureManager::getInstance().get<sf::Texture>("game_bg"))
 {
+    loadAllResources();
     m_window.create(sf::VideoMode({ Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT }), "Phobies");
     m_window.setFramerateLimit(60);
 
     // Scale background to fit window
+
     auto texSize = m_bgSprite.getTexture().getSize();
     m_bgSprite.setScale({ static_cast<float>(Config::WINDOW_WIDTH) / texSize.x,
                           static_cast<float>(Config::WINDOW_HEIGHT) / texSize.y });
@@ -100,6 +103,7 @@ void Game::handle(const sf::Event::MouseButtonPressed& event)
                 {
                     m_selectedFromHand = nullptr;
                     m_board.clearHighlights();
+					m_currentPlayer->reduceKeys(m_selectedFromHand->getCost()); // end turn after successful spawn
                 }
             }
             // אם לא נבחרה מפלצת מהיד, אז זו סתם לחיצה רגילה על הלוח (הזזה/תקיפה)
@@ -172,6 +176,50 @@ void Game::draw()
     //m_player2->draw(m_window);
 }
 
+void Game::loadAllResources()
+{
+    auto& rm = TextureManager::getInstance();
+
+    try
+    {
+        // --- 1. פונטים ---
+        rm.load<sf::Font>("arial", "resources/arial.ttf");
+
+        // --- 2. ממשק ותפריטים ---
+        rm.load<sf::Texture>("menu_bg", "resources/Menu/Menu.png");
+        rm.load<sf::Texture>("instructions_bg", "resources/Menu/Instructions.png");
+        rm.load<sf::Texture>("game_bg", "resources/Background/Background1.png");
+        rm.load<sf::Texture>("card_bg", "resources/Cards/card_bg.png");
+
+        // --- 3. מפלצות (Phobies) ---
+        // שים לב: אנחנו טוענים רק את תמונת הבסיס (למשל ימין) והמחלקה Monster תהפוך אותה אוטומטית לשמאל כשצריך!
+
+        // Muffintop
+        rm.load<sf::Texture>("muffintop", "resources/Monster/Muffintop/Muffintop_R.png");
+        rm.load<sf::Texture>("muffintop_card", "resources/Monster/Muffintop/Muffintop_card_R.png");
+
+        // Blue
+        rm.load<sf::Texture>("blue", "resources/Monster/Blue/Blue_R.png");
+        rm.load<sf::Texture>("blue_card", "resources/Monster/Blue/Blue_card_R.png");
+
+        // Barzilla
+        rm.load<sf::Texture>("barzilla", "resources/Monster/Barzilla/Barzilla_R.png");
+        rm.load<sf::Texture>("barzilla_card", "resources/Monster/Barzilla/Barzilla_card_R.png");
+
+        // Henrietta
+        rm.load<sf::Texture>("henrietta", "resources/Monster/Henrietta/Henrietta_R.png");
+        rm.load<sf::Texture>("henrietta_card", "resources/Monster/Henrietta/Henrietta_card_R.png");
+
+        // Mozzy
+        rm.load<sf::Texture>("mozzy", "resources/Monster/Mozzy/Mozzy_R.png");
+        rm.load<sf::Texture>("mozzy_card", "resources/Monster/Mozzy/Mozzy_card_R.png");
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "CRITICAL ERROR during resource loading: " << e.what() << "\n";
+        std::exit(EXIT_FAILURE);
+    }
+}
 //    // Only create player if both textures loaded successfully
 //    if (m_textures.count("player") && m_textures.count("player_smoke"))
 //    {

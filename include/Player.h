@@ -19,6 +19,7 @@ public:
     //const sf::Vector2f& getPosition() const;
 	void endTurn();
     PlayerSide getSide() const { return m_side; }
+    void reduceKeys(int cost);
 
 private:
     void drawKeys(sf::RenderWindow& window, bool alignRight) const;
