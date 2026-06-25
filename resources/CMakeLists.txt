@@ -1,10 +1,20 @@
-﻿configure_file("arial.ttf" ${CMAKE_BINARY_DIR}/resources/arial.ttf COPYONLY)
+﻿configure_file("Fonts/arial.ttf" ${CMAKE_BINARY_DIR}/resources/Fonts/arial.ttf COPYONLY)
+configure_file("Fonts/LilitaOne.ttf" ${CMAKE_BINARY_DIR}/resources/Fonts/LilitaOne.ttf COPYONLY)
 
 configure_file("Menu/Menu.png" ${CMAKE_BINARY_DIR}/resources/Menu/Menu.png COPYONLY)
 configure_file("Menu/Instructions.png" ${CMAKE_BINARY_DIR}/resources/Menu/Instructions.png COPYONLY)
 
 configure_file("Background/Background1.png" ${CMAKE_BINARY_DIR}/resources/Background/Background1.png COPYONLY)
 configure_file("Background/Background2.png" ${CMAKE_BINARY_DIR}/resources/Background/Background2.png COPYONLY)
+
+configure_file("Key/3Keys.png" ${CMAKE_BINARY_DIR}/resources/Key/3Keys.png COPYONLY)
+configure_file("Key/1Keys.png" ${CMAKE_BINARY_DIR}/resources/Key/1Keys.png COPYONLY)
+
+configure_file("Heart/Heart0.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart0.png COPYONLY)
+configure_file("Heart/Heart25.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart25.png COPYONLY)
+configure_file("Heart/Heart50.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart50.png COPYONLY)
+configure_file("Heart/Heart75.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart75.png COPYONLY)
+configure_file("Heart/Heart100.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart100.png COPYONLY)
 
 configure_file("Monster/Barzilla/Barzilla_L.png" ${CMAKE_BINARY_DIR}/resources/Monster/Barzilla/Barzilla_L.png COPYONLY)
 configure_file("Monster/Barzilla/Barzilla_R.png" ${CMAKE_BINARY_DIR}/resources/Monster/Barzilla/Barzilla_R.png COPYONLY)
