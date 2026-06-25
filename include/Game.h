@@ -27,6 +27,7 @@ public:
 
 private:
     void loadAllResources(); // <--- הפונקציה החדשה שלנו
+    const sf::Texture& initResourcesAndGetBg();
     sf::RenderWindow m_window;
     GameState m_state;
     //TurnState m_turnState;

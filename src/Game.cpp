@@ -3,15 +3,21 @@
 #include "TextureManager.h"
 #include <iostream>
 
+const sf::Texture& Game::initResourcesAndGetBg()
+{
+    loadAllResources(); // קודם כל טוענים את כל המשחק
+    return TextureManager::getInstance().get<sf::Texture>("game_bg"); // ואז מחזירים את הרקע
+}
 
 Game::Game() : m_board(), m_state(GameState::MainMenu),
     /*m_bgSprite([]() -> const sf::Texture& {
         TextureManager::getInstance().loadTexture("game_bg", "resources/Background/Background1.png");
         return TextureManager::getInstance().getTexture("game_bg");
     }())*/
-	m_bgSprite(TextureManager::getInstance().get<sf::Texture>("game_bg"))
+	m_bgSprite(initResourcesAndGetBg())
 {
-    loadAllResources();
+    
+    m_bgSprite.setTexture(TextureManager::getInstance().get<sf::Texture>("game_bg"));
     m_window.create(sf::VideoMode({ Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT }), "Phobies");
     m_window.setFramerateLimit(60);
 
@@ -183,13 +189,14 @@ void Game::loadAllResources()
     try
     {
         // --- 1. פונטים ---
-        rm.load<sf::Font>("arial", "resources/arial.ttf");
+        rm.load<sf::Font>("arial", "resources/Fonts/arial.ttf");
+        rm.load<sf::Font>("Lilita", "resources/Fonts/LilitaOne.ttf");
 
         // --- 2. ממשק ותפריטים ---
         rm.load<sf::Texture>("menu_bg", "resources/Menu/Menu.png");
         rm.load<sf::Texture>("instructions_bg", "resources/Menu/Instructions.png");
         rm.load<sf::Texture>("game_bg", "resources/Background/Background1.png");
-        rm.load<sf::Texture>("card_bg", "resources/Cards/card_bg.png");
+        //rm.load<sf::Texture>("card_bg", "resources/Cards/card_bg.png");
 
         // --- 3. מפלצות (Phobies) ---
         // שים לב: אנחנו טוענים רק את תמונת הבסיס (למשל ימין) והמחלקה Monster תהפוך אותה אוטומטית לשמאל כשצריך!

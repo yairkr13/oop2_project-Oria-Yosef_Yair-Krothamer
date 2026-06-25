@@ -41,16 +41,25 @@ void Player::draw(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Mon
 
 void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
 {
-    const sf::Font& font = TextureManager::getInstance().get<sf::Font>("arial");
+    const sf::Font& font = TextureManager::getInstance().get<sf::Font>("Lilita");
 
     sf::Text keysText(font);
     keysText.setString("Keys: " + std::to_string(m_keys));
     keysText.setCharacterSize(24);
     keysText.setFillColor(sf::Color::White);
 
-    float xPos = alignRight ? Config::WINDOW_WIDTH - 20.f - keysText.getLocalBounds().width : 20.f;
-    float yPos = Config::BOTTOM_PANEL_Y + (Config::BOTTOM_PANEL_HEIGHT - keysText.getLocalBounds().height) / 2.f;
-    keysText.setPosition(xPos, yPos);
+    // שומרים את ה-bounds של הטקסט
+    auto bounds = keysText.getLocalBounds();
+
+    // --- חישוב מיקום בציר X (ימין או שמאל) ---
+    // SFML 3: משתמשים ב-bounds.size.x במקום ב-width
+    float xPos = alignRight ? Config::WINDOW_WIDTH - 20.f - bounds.size.x : 20.f;
+
+    // --- חישוב מיקום בציר Y (מרכז אנכי מושלם) ---
+    // SFML 3: משתמשים ב-bounds.size.y וב-bounds.position.y
+    float yPos = 20.f - bounds.position.y;
+
+    keysText.setPosition({ xPos, yPos });
 
     window.draw(keysText);
 }
@@ -64,7 +73,18 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
     window.draw(bottomPanel);
 
     // 2. שולפים מראש את הטקסטורה של הקלף הריק (נניח ששמרת אותה בשם "card_bg")
-    const sf::Texture& cardBgTex = TextureManager::getInstance().get<sf::Texture>("card_bg");
+    //const sf::Texture& cardBgTex = TextureManager::getInstance().get<sf::Texture>("card_bg");
+    /*sf::RectangleShape fallbackRect({ Config::CARD_WIDTH, Config::CARD_HEIGHT });
+
+    fallbackRect.setPosition({ startX, Config::CARD_START_Y });
+
+    fallbackRect.setFillColor(sf::Color(80, 80, 80));
+
+    fallbackRect.setOutlineThickness(2.f);
+
+    fallbackRect.setOutlineColor(sf::Color::Black);
+
+    window.draw(fallbackRect);*/
 
     for (size_t i = 0; i < m_monsters.size(); ++i)
     {
@@ -73,15 +93,15 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
             (20.f + (i * Config::CARD_SPACING));
 
         // --- ציור רקע הקלף ---
-        sf::Sprite cardSprite(cardBgTex);
+       /* sf::Sprite cardSprite(cardBgTex);
         cardSprite.setPosition({ startX, Config::CARD_START_Y });
 
         float bgScaleX = Config::CARD_WIDTH / cardBgTex.getSize().x;
         float bgScaleY = Config::CARD_HEIGHT / cardBgTex.getSize().y;
         cardSprite.setScale({ bgScaleX, bgScaleY });
 
-        window.draw(cardSprite);
-       
+        window.draw(cardSprite);*/
+
 
         // --- ציור המפלצת בתוך הקלף ---
         bool isSelected = (selectedFromHand && m_monsters[i] == selectedFromHand);
@@ -97,36 +117,33 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
             window.draw(selectionBorder);
         }
 
-        try
+        std::string texKey = m_monsters[i]->getCardTextureKey();
+        const sf::Texture& monsterTex = TextureManager::getInstance().get<sf::Texture>(texKey);
+        sf::Sprite monsterSprite(monsterTex);
+
+        float scaleX = Config::CARD_WIDTH / static_cast<float>(monsterTex.getSize().x);
+        float scaleY = Config::CARD_HEIGHT / static_cast<float>(monsterTex.getSize().y);
+
+        // Slightly enlarge the selected card
+        if (isSelected)
         {
-            std::string texKey = m_monsters[i]->getCardTextureKey();
-            const sf::Texture& monsterTex = TextureManager::getInstance().getTexture(texKey);
-            sf::Sprite monsterSprite(monsterTex);
-
-            float scaleX = Config::CARD_WIDTH / static_cast<float>(monsterTex.getSize().x);
-            float scaleY = Config::CARD_HEIGHT / static_cast<float>(monsterTex.getSize().y);
-
-            // Slightly enlarge the selected card
-            if (isSelected)
-            {
-                float enlarge = 1.08f;
-                scaleX *= enlarge;
-                scaleY *= enlarge;
-                // Center the enlarged sprite
-                float offsetX = (Config::CARD_WIDTH * (enlarge - 1.f)) / 2.f;
-                float offsetY = (Config::CARD_HEIGHT * (enlarge - 1.f)) / 2.f;
-                monsterSprite.setPosition({ startX - offsetX, Config::CARD_START_Y - offsetY });
-            }
-            else
-            {
-                monsterSprite.setPosition({ startX, Config::CARD_START_Y });
-            }
-
-            monsterSprite.setScale({ scaleX, scaleY });
-            window.draw(monsterSprite);
+            float enlarge = 1.08f;
+            scaleX *= enlarge;
+            scaleY *= enlarge;
+            // Center the enlarged sprite
+            float offsetX = (Config::CARD_WIDTH * (enlarge - 1.f)) / 2.f;
+            float offsetY = (Config::CARD_HEIGHT * (enlarge - 1.f)) / 2.f;
+            monsterSprite.setPosition({ startX - offsetX, Config::CARD_START_Y - offsetY });
         }
-        catch (...) {}
+        else
+        {
+            monsterSprite.setPosition({ startX, Config::CARD_START_Y });
+        }
+
+        monsterSprite.setScale({ scaleX, scaleY });
+        window.draw(monsterSprite);
     }
+    
 }
 
 std::shared_ptr<Monster> Player::handleHandClick(sf::Vector2f mousePos, bool alignRight) const

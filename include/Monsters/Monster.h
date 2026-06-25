@@ -25,7 +25,7 @@ public:
     int getRange() const { return m_range; }
     const std::string& getName() const { return m_name; }
     //std::string getTextureKey() const { return m_textureKey + (m_side == PlayerSide::Left ? "_r" : "_l"); }
-    //std::string getCardTextureKey() const { return m_textureKey + "_card_" + (m_side == PlayerSide::Left ? "r" : "l"); }
+    std::string getCardTextureKey() const { return m_textureKey + "_card_R" ; }
     void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }
 
     void setSide(PlayerSide side) { m_side = side; }
