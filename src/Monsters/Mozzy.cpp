@@ -10,7 +10,7 @@ Mozzy::Mozzy()
     TextureManager::getInstance().loadTexture("mozzy_card_l", "resources/Monster/Mozzy/Mozzy_card_L.png");
 }
 
-void Mozzy::attack(Monster& target)
-{
-    target.takeDamage(m_attackDamage);
-}
+//void Mozzy::attack(Monster& target)
+//{
+//    target.takeDamage(m_attackDamage);
+//}

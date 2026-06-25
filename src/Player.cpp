@@ -33,6 +33,30 @@ void Player::handleClick(sf::Vector2f pos)
 		}
 	}
 }*/
+void Player::draw(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
+{
+	drawHand(window, alignRight, selectedFromHand);
+    drawKeys(window, alignRight);
+}
+
+void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
+{
+    sf::Font font("ariel.ttf");
+    //if (!font.loadFromFile("arial.ttf"))
+    //{
+    //    // Handle error
+    //    return;
+    //}
+    sf::Text keysText;
+    keysText.setFont(font);
+    keysText.setString("Keys: " + std::to_string(m_keys));
+    keysText.setCharacterSize(24);
+    keysText.setFillColor(sf::Color::White);
+    float xPos = alignRight ? Config::WINDOW_WIDTH - 20.f - keysText.getLocalBounds().width : 20.f;
+    float yPos = Config::BOTTOM_PANEL_Y + (Config::BOTTOM_PANEL_HEIGHT - keysText.getLocalBounds().height) / 2.f;
+    keysText.setPosition(xPos, yPos);
+    window.draw(keysText);
+}
 
 void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
 {

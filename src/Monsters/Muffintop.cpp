@@ -10,7 +10,7 @@ Muffintop::Muffintop()
     TextureManager::getInstance().loadTexture("muffintop_card_l", "resources/Monster/Muffintop/Muffintop_card_L.png");
 }
 
-void Muffintop::attack(Monster& target)
-{
-    target.takeDamage(m_attackDamage);
-}
+//void Muffintop::attack(Monster& target)
+//{
+//    target.takeDamage(m_attackDamage);
+//}

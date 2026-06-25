@@ -9,8 +9,8 @@ Blue::Blue()
     TextureManager::getInstance().loadTexture("blue_card_r", "resources/Monster/Blue/Blue_card_R.png");
     TextureManager::getInstance().loadTexture("blue_card_l", "resources/Monster/Blue/Blue_card_L.png");
 }
-
-void Blue::attack(Monster& target)
-{
-    target.takeDamage(m_attackDamage);
-}
+//
+//void Blue::attack(Monster& target)
+//{
+//    target.takeDamage(m_attackDamage);
+//}

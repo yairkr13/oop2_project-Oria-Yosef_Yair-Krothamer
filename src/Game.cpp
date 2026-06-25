@@ -164,7 +164,7 @@ void Game::draw()
         {
             bool isPlayer2 = (m_currentPlayer == m_player2.get());
 
-            m_currentPlayer->drawHand(m_window, isPlayer2, m_selectedFromHand);
+            m_currentPlayer->draw(m_window, isPlayer2, m_selectedFromHand);
         }
     }
     

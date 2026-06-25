@@ -108,8 +108,8 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
             // ���� ������� �� �-Q ��-Row, �������� draw ��� "����" ���� ��� ��������!
             selectedMonster->setPosition(clickedTile->getQ(), clickedTile->getRow());
         }
-        /*if(clickedTile->hasMonster())
-			selectedMonster->attack(clickedTile->getMonster());*/
+        if(clickedTile->hasMonster())
+			selectedMonster->attack(clickedTile->getMonster());
         // ��� ����, ���� ������ (���� �� ����), ������� �� ������
         selectedMonster->setSelected(false);
         clearHighlights();

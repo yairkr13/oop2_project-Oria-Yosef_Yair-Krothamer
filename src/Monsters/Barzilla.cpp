@@ -9,8 +9,8 @@ Barzilla::Barzilla()
     TextureManager::getInstance().loadTexture("barzilla_card_r", "resources/Monster/Barzilla/Barzilla_card_R.png");
     TextureManager::getInstance().loadTexture("barzilla_card_l", "resources/Monster/Barzilla/Barzilla_card_L.png");
 }
-
-void Barzilla::attack(Monster& target)
-{
-    target.takeDamage(m_attackDamage);
-}
+//
+//void Barzilla::attack(std::shared_ptr<Monster> target)
+//{
+//    target.takeDamage(m_attackDamage);
+//}

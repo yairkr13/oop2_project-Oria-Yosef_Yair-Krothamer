@@ -9,8 +9,8 @@ Henrietta::Henrietta()
     TextureManager::getInstance().loadTexture("henrietta_card_r", "resources/Monster/Henrietta/Henrietta_card_R.png");
     TextureManager::getInstance().loadTexture("henrietta_card_l", "resources/Monster/Henrietta/Henrietta_card_L.png");
 }
-
-void Henrietta::attack(Monster& target)
-{
-    target.takeDamage(m_attackDamage);
-}
+//
+//void Henrietta::attack(Monster& target)
+//{
+//    target.takeDamage(m_attackDamage);
+//}

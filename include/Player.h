@@ -13,7 +13,7 @@ public:
     Player(PlayerSide side);
 	//bool handleClick(const sf::Vector2f& pos);
     Card* handleCardClick(sf::Vector2f mousePos);
-    void drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand = nullptr) const;
+    void draw(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand = nullptr) const;
     std::shared_ptr<Monster> handleHandClick(sf::Vector2f mousePos, bool alignRight) const;
     //void draw(sf::RenderWindow& window) const;
     //const sf::Vector2f& getPosition() const;
@@ -21,6 +21,8 @@ public:
     PlayerSide getSide() const { return m_side; }
 
 private:
+    void drawKeys(sf::RenderWindow& window, bool alignRight) const;
+    void drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand = nullptr) const;
 	//std::unique_ptr<Heart> m_heart;
     // 
 	//std::vector<std::unique_ptr<Card>> m_cards;

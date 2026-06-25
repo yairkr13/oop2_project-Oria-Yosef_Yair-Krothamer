@@ -9,12 +9,11 @@ public:
     Monster(const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey);
     virtual ~Monster() = default;
 
-    virtual void attack(Monster& target) = 0;
-
     void draw(sf::RenderWindow& window) const;
     void takeDamage(int damage);
     bool isAlive() const;
     bool contains(sf::Vector2f point, sf::Vector2f screenPos) const;
+	void attack(std::shared_ptr<Monster> target) { target->takeDamage(m_attackDamage); }
 
     void setSelected(bool selected) { m_selected = selected; }
     bool isSelected() const { return m_selected; }

@@ -10,5 +10,5 @@ public:
     static constexpr int BASE_RANGE = 3;
 
     Mozzy();
-    void attack(Monster& target) override;
+    //void attack(Monster& target) override;
 };

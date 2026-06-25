@@ -78,3 +78,8 @@ void Monster::update(float dt)
         m_screenPos.y += (dy / distance) * m_speed * dt;
     }
 }
+//
+//void Monster::attack(std::shared_ptr<Monster> target)
+//{
+//    target->takeDamage(m_attackDamage);
+//}

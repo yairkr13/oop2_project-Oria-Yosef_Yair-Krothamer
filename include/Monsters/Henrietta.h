@@ -10,5 +10,5 @@ public:
     static constexpr int BASE_RANGE = 3;
 
     Henrietta();
-    void attack(Monster& target) override;
+    //void attack(Monster& target) override;
 };
