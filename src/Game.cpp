@@ -107,9 +107,9 @@ void Game::handle(const sf::Event::MouseButtonPressed& event)
                 bool success = m_board.trySpawnMonster(pos, m_selectedFromHand);
                 if (success)
                 {
-                    m_selectedFromHand = nullptr;
+                    m_currentPlayer->reduceKeys(m_selectedFromHand->getCost()); // end turn after successful spawn
                     m_board.clearHighlights();
-					m_currentPlayer->reduceKeys(m_selectedFromHand->getCost()); // end turn after successful spawn
+                    m_selectedFromHand = nullptr;
                 }
             }
             // אם לא נבחרה מפלצת מהיד, אז זו סתם לחיצה רגילה על הלוח (הזזה/תקיפה)

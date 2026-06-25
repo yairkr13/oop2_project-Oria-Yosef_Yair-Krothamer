@@ -63,7 +63,85 @@ void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
 
     window.draw(keysText);
 }
+void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
+{
+    // 1. ציור "השולחן" (הפאנל התחתון)
+    sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
+    bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
+    bottomPanel.setFillColor(sf::Color(40, 40, 40));
+    window.draw(bottomPanel);
 
+    const sf::Font& font = TextureManager::getInstance().get<sf::Font>("Lilita");
+
+    for (size_t i = 0; i < m_monsters.size(); ++i)
+    {
+        // מפלצת שכבר זומנה ללוח (getQ != -1) לא תצויר ביד
+        if (m_monsters[i]->getQ() != -1) continue;
+
+        float startX = alignRight ?
+            (Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING)) :
+            (20.f + (i * Config::CARD_SPACING));
+
+        bool isSelected = (selectedFromHand && m_monsters[i] == selectedFromHand);
+
+        // --- ציור מסגרת זהב אם הקלף נבחר ---
+        if (isSelected)
+        {
+            sf::RectangleShape selectionBorder({ Config::CARD_WIDTH + 6.f, Config::CARD_HEIGHT + 6.f });
+            selectionBorder.setPosition({ startX - 3.f, Config::CARD_START_Y - 3.f });
+            selectionBorder.setFillColor(sf::Color::Transparent);
+            selectionBorder.setOutlineThickness(3.f);
+            selectionBorder.setOutlineColor(sf::Color(255, 220, 50)); // Gold
+            window.draw(selectionBorder);
+        }
+
+        // --- ציור המפלצת (הקלף עצמו) ---
+        // הסרנו את ה-try-catch כדי שאם יש בעיית שמות אנחנו נראה אותה מיד ולא ננחש
+        std::string texKey = m_monsters[i]->getCardTextureKey();
+        const sf::Texture& monsterTex = TextureManager::getInstance().get<sf::Texture>(texKey);
+        sf::Sprite monsterSprite(monsterTex);
+
+        float scaleX = Config::CARD_WIDTH / static_cast<float>(monsterTex.getSize().x);
+        float scaleY = Config::CARD_HEIGHT / static_cast<float>(monsterTex.getSize().y);
+
+        float currentX = startX;
+        float currentY = Config::CARD_START_Y;
+
+        // הגדלה קלה אם הקלף נבחר
+        if (isSelected)
+        {
+            float enlarge = 1.08f;
+            scaleX *= enlarge;
+            scaleY *= enlarge;
+            float offsetX = (Config::CARD_WIDTH * (enlarge - 1.f)) / 2.f;
+            float offsetY = (Config::CARD_HEIGHT * (enlarge - 1.f)) / 2.f;
+            currentX -= offsetX;
+            currentY -= offsetY;
+        }
+
+        monsterSprite.setPosition({ currentX, currentY });
+        monsterSprite.setScale({ scaleX, scaleY });
+        window.draw(monsterSprite);
+
+        // --- ציור עלות המפתחות בתוך הקלף ---
+        sf::Text costText(font);
+        costText.setString(std::to_string(m_monsters[i]->getCost()));
+        costText.setCharacterSize(22);
+
+        // חיווי ויזואלי: אם הקלף יקר מדי, נצבע באדום, אחר כך בלבן
+        if (m_monsters[i]->getCost() > m_keys)
+            costText.setFillColor(sf::Color(255, 100, 100)); // אדום
+        else
+            costText.setFillColor(sf::Color::White);
+
+        costText.setOutlineColor(sf::Color::Black);
+        costText.setOutlineThickness(2.f);
+        costText.setPosition({ currentX + 10.f, currentY + 5.f }); // פינה שמאלית עליונה של הקלף
+
+        window.draw(costText);
+    }
+}
+/*
 void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
 {
     // 1. ציור "השולחן" (הפאנל התחתון)
@@ -84,7 +162,7 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
 
     fallbackRect.setOutlineColor(sf::Color::Black);
 
-    window.draw(fallbackRect);*/
+    window.draw(fallbackRect);
 
     for (size_t i = 0; i < m_monsters.size(); ++i)
     {
@@ -93,14 +171,14 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
             (20.f + (i * Config::CARD_SPACING));
 
         // --- ציור רקע הקלף ---
-       /* sf::Sprite cardSprite(cardBgTex);
+        sf::Sprite cardSprite(cardBgTex);
         cardSprite.setPosition({ startX, Config::CARD_START_Y });
 
         float bgScaleX = Config::CARD_WIDTH / cardBgTex.getSize().x;
         float bgScaleY = Config::CARD_HEIGHT / cardBgTex.getSize().y;
         cardSprite.setScale({ bgScaleX, bgScaleY });
 
-        window.draw(cardSprite);*/
+        window.draw(cardSprite);
 
 
         // --- ציור המפלצת בתוך הקלף ---
@@ -144,7 +222,7 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
         window.draw(monsterSprite);
     }
     
-}
+}*/
 
 std::shared_ptr<Monster> Player::handleHandClick(sf::Vector2f mousePos, bool alignRight) const
 {
