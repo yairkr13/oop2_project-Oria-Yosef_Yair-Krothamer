@@ -9,7 +9,7 @@ public:
     Monster(const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey);
     virtual ~Monster() = default;
 
-    void draw(sf::RenderWindow& window) const;
+    void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const;
     void drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const;
     void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos);
     void takeDamage(int damage);

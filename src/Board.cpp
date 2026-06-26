@@ -33,12 +33,15 @@ void Board::createBoard()
     }
 }
 
-void Board::draw(sf::RenderWindow& window) const
+void Board::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
 {
     // 1. ������� �� �� ����� ���� ����
     for (auto const& [coords, tile] : m_grid)
     {
         tile->draw(window);
+       /* if (tile->hasHeart()) {
+            tile->getHeart()->draw(window);
+        }*/
     }
 
     // 2. ����� ������� �� ������� ������� �� �������
@@ -49,7 +52,7 @@ void Board::draw(sf::RenderWindow& window) const
         {
             //sf::Vector2f tilePos = tileToScreen(tile->getQ(), tile->getRow());
             //monster->setScreenPosition(tilePos);
-            monster->draw(window);
+            monster->draw(window, currentTurnSide);
         }
     }
 }

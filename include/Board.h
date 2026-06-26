@@ -11,7 +11,7 @@ class Board
 {
 public:
 	Board();
-	void draw(sf::RenderWindow& window) const;
+	void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const;
 	void handleClick(const sf::Vector2f& pos, PlayerSide currentSide);
 	//bool isTilePassable(Tile* start, Tile* end) const;
 	

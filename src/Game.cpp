@@ -170,13 +170,15 @@ void Game::draw()
     else if (m_state == GameState::Playing)
     {
         m_window.draw(m_bgSprite);
-        m_board.draw(m_window);
+        m_board.draw(m_window, m_currentPlayer->getSide());
         if (m_currentPlayer)
         {
             bool isPlayer2 = (m_currentPlayer == m_player2.get());
 
             m_currentPlayer->draw(m_window, isPlayer2, m_selectedFromHand);
         }
+		m_player1->drawKeys(m_window, false);
+		m_player2->drawKeys(m_window, true);
     }
     
     //m_player1->draw(m_window);

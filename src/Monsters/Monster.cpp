@@ -29,7 +29,7 @@ Monster::Monster(const std::string& name, int health, int attackPower, int range
     }
 }
 
-void Monster::draw(sf::RenderWindow& window) const
+void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
 {
     if (m_q == -1 && m_row == -1) return;
 
@@ -50,13 +50,17 @@ void Monster::draw(sf::RenderWindow& window) const
         circle.setPosition(m_screenPos);
         window.draw(circle);
     }
-    drawHealthBar(window);
+    if (m_side != currentTurnSide)
+    {
+        drawHealthBar(window);
+    }
 }
 
 void Monster::drawHealthBar(sf::RenderWindow& window) const
 {
     if (!isAlive()) return;
-
+    /*if (m_side == currentPlayer)
+        return;*/
     // 1. הגדרת מידות למד החיים (למשל, 80% מרוחב משבצת הלוח)
     float barWidth = Config::MONSTER_BOARD_SIZE * 0.8f;
     float barHeight = 6.f;

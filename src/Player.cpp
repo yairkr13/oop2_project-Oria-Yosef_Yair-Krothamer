@@ -36,7 +36,6 @@ void Player::handleClick(sf::Vector2f pos)
 void Player::draw(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
 {
 	drawHand(window, alignRight, selectedFromHand);
-    drawKeys(window, alignRight);
 }
 
 //void Player::drawHealth
@@ -272,8 +271,15 @@ std::shared_ptr<Monster> Player::handleHandClick(sf::Vector2f mousePos, bool ali
 
 void Player::endTurn()
 {
-	m_keys = std::min(m_keys+3,m_maxKeys); // Add 5 keys at the end of the turn
-    m_maxKeys -= 3;
+	if (m_maxKeys == 0) return;
+    // Add 3 keys
+    m_keys += 3;
+
+    // Decrease max capacity by 3, but don't go below 0
+    m_maxKeys = std::max(0, m_maxKeys - 3);
+    // Cap current keys to the new max
+    /*if (m_keys > m_maxKeys)
+        m_keys = m_maxKeys;*/
 }
 
 void Player::reduceKeys(int cost)
