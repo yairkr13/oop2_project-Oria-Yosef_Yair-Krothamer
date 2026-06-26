@@ -3,7 +3,7 @@
 #include "TextureManager.h"
 
 Monster::Monster(const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey)
-    : m_name(name), m_health(health), m_attackDamage(attackPower),
+    : m_name(name), m_health(health),m_maxHealth(health), m_attackDamage(attackPower),
     m_range(range), m_cost(cost), m_q(q), m_row(row), m_color(color), m_textureKey(textureKey),
 	m_sprite(TextureManager::getInstance().get<sf::Texture>(m_textureKey))
 {
@@ -55,7 +55,32 @@ void Monster::draw(sf::RenderWindow& window) const
 
 void Monster::drawHealthBar(sf::RenderWindow& window) const
 {
-    ;
+    if (!isAlive()) return;
+
+    // 1. הגדרת מידות למד החיים (למשל, 80% מרוחב משבצת הלוח)
+    float barWidth = Config::MONSTER_BOARD_SIZE * 0.8f;
+    float barHeight = 6.f;
+
+    // 2. חישוב מיקום מעל ראש המפלצת (בהנחה ש-m_screenPos הוא מרכז הדמות)
+    float x = m_screenPos.x - (barWidth / 2.f);
+    float y = m_screenPos.y - (Config::MONSTER_BOARD_SIZE / 2.f) - 12.f; // 12 פיקסלים מעל הדמות
+
+    // 3. ציור רקע מד החיים (אדום כהה או אפור)
+    sf::RectangleShape bgBar({ barWidth, barHeight });
+    bgBar.setPosition({ x, y });
+    bgBar.setFillColor(sf::Color(80, 20, 20)); // אדום עמוק
+
+    // 4. חישוב יחס החיים שנותרו וציור המד הירוק
+    float healthRatio = static_cast<float>(m_health) / m_maxHealth;
+    if (healthRatio < 0.f) healthRatio = 0.f;
+
+    sf::RectangleShape fgBar({ barWidth * healthRatio, barHeight });
+    fgBar.setPosition({ x, y });
+    fgBar.setFillColor(sf::Color(50, 220, 50)); // ירוק בהיר
+
+    // 5. רישום על המסך
+    window.draw(bgBar);
+    window.draw(fgBar);
 }
 //
 //bool Monster::contains(sf::Vector2f point, sf::Vector2f screenPos) const

@@ -41,6 +41,7 @@ public:
 protected:
     std::string m_name;
     int m_health;
+    int m_maxHealth;
     int m_attackDamage;
     int m_range;
     int m_cost;

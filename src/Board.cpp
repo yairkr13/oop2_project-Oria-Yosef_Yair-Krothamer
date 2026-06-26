@@ -112,9 +112,16 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
         }
         if (clickedTile->hasMonster())
         {
-            selectedMonster->attack(clickedTile->getMonster());
-            if (!clickedTile->getMonster()->isAlive())
-                clickedTile->setMonster(nullptr);
+            auto targetMonster = clickedTile->getMonster();
+
+            // בדיקה: האם המטרה היא אויב והאם המשבצת בטווח התקפה/תנועה (מוארת)?
+            if (targetMonster->getSide() != currentSide && clickedTile->isHighlighted())
+            {
+                selectedMonster->attack(targetMonster);
+                if (!targetMonster->isAlive())
+                    clickedTile->setMonster(nullptr);
+
+            }
         }
         // ��� ����, ���� ������ (���� �� ����), ������� �� ������
         selectedMonster->setSelected(false);
