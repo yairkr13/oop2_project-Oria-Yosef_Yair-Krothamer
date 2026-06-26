@@ -11,6 +11,7 @@ configure_file("Key/3Keys.png" ${CMAKE_BINARY_DIR}/resources/Key/3Keys.png COPYO
 configure_file("Key/1Keys.png" ${CMAKE_BINARY_DIR}/resources/Key/1Keys.png COPYONLY)
 
 configure_file("Heart/Heart0.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart0.png COPYONLY)
+configure_file("Heart/Heart12.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart12.png COPYONLY)
 configure_file("Heart/Heart25.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart25.png COPYONLY)
 configure_file("Heart/Heart50.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart50.png COPYONLY)
 configure_file("Heart/Heart75.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart75.png COPYONLY)
