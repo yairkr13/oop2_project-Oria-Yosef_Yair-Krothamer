@@ -47,8 +47,8 @@ void Board::draw(sf::RenderWindow& window) const
         // lock() ���� �� weak_ptr �-shared_ptr ����. �� �� ����� - ����� ����
         if (auto monster = tile->getMonster())
         {
-            sf::Vector2f tilePos = tileToScreen(tile->getQ(), tile->getRow());
-            monster->setScreenPosition(tilePos);
+            //sf::Vector2f tilePos = tileToScreen(tile->getQ(), tile->getRow());
+            //monster->setScreenPosition(tilePos);
             monster->draw(window);
         }
     }
@@ -106,10 +106,16 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
             selectedMonsterTile->setMonster(nullptr);     // ������ ���� ������� �����
 
             // ���� ������� �� �-Q ��-Row, �������� draw ��� "����" ���� ��� ��������!
-            selectedMonster->setPosition(clickedTile->getQ(), clickedTile->getRow());
+            //selectedMonster->setPosition(clickedTile->getQ(), clickedTile->getRow());
+			selectedMonster->spawnOnBoard(clickedTile->getQ(), clickedTile->getRow(), 
+                tileToScreen(clickedTile->getQ(), clickedTile->getRow()));
         }
-        if(clickedTile->hasMonster())
-			selectedMonster->attack(clickedTile->getMonster());
+        if (clickedTile->hasMonster())
+        {
+            selectedMonster->attack(clickedTile->getMonster());
+            if (!clickedTile->getMonster()->isAlive())
+                clickedTile->setMonster(nullptr);
+        }
         // ��� ����, ���� ������ (���� �� ����), ������� �� ������
         selectedMonster->setSelected(false);
         clearHighlights();
@@ -149,7 +155,9 @@ bool Board::trySpawnMonster(const sf::Vector2f& pos, std::shared_ptr<Monster> mo
     if (clickedTile && clickedTile->isHighlighted() && !clickedTile->hasMonster())
     {
         clickedTile->setMonster(monster);
-        monster->setPosition(clickedTile->getQ(), clickedTile->getRow());
+        monster->spawnOnBoard(clickedTile->getQ(), clickedTile->getRow(), 
+			tileToScreen(clickedTile->getQ(), clickedTile->getRow()));
+        //monster->setPosition(clickedTile->getQ(), clickedTile->getRow());
         return true;
     }
 

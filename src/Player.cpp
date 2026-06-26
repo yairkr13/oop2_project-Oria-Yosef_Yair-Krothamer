@@ -8,7 +8,7 @@
 #include "TextureManager.h"
 
 Player::Player(PlayerSide side)
-	: /*m_heart(std::make_unique<Heart>()),*/ m_keys(20), m_side(side)
+	: /*m_heart(std::make_unique<Heart>()),*/ m_keys(3),m_maxKeys(15), m_side(side)
 {
 	// Initialize cards
 	m_monsters.push_back(std::make_shared<Muffintop>());
@@ -39,12 +39,15 @@ void Player::draw(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Mon
     drawKeys(window, alignRight);
 }
 
+//void Player::drawHealth
+
 void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
 {
     const sf::Font& font = TextureManager::getInstance().get<sf::Font>("Lilita");
 
     sf::Text keysText(font);
-    keysText.setString("Keys: " + std::to_string(m_keys));
+    //keysText.setString("Keys: " + std::to_string(m_keys));
+    keysText.setString("Keys: " + std::to_string(m_keys) + " / " + std::to_string(m_maxKeys));
     keysText.setCharacterSize(24);
     keysText.setFillColor(sf::Color::White);
 
@@ -63,6 +66,7 @@ void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
 
     window.draw(keysText);
 }
+
 void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
 {
     // 1. ציור "השולחן" (הפאנל התחתון)
@@ -76,7 +80,8 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
     for (size_t i = 0; i < m_monsters.size(); ++i)
     {
         // מפלצת שכבר זומנה ללוח (getQ != -1) לא תצויר ביד
-        if (m_monsters[i]->getQ() != -1) continue;
+        //if (m_monsters[i]->getQ() != -1) continue;
+        if (m_monsters[i]->isOnBoard()) continue;
 
         float startX = alignRight ?
             (Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING)) :
@@ -84,8 +89,9 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
 
         bool isSelected = (selectedFromHand && m_monsters[i] == selectedFromHand);
 
+        m_monsters[i]->drawAsCard(window, { startX, Config::CARD_START_Y }, isSelected, m_monsters[i]->getCost() > m_keys);
         // --- ציור מסגרת זהב אם הקלף נבחר ---
-        if (isSelected)
+        /*if (isSelected)
         {
             sf::RectangleShape selectionBorder({ Config::CARD_WIDTH + 6.f, Config::CARD_HEIGHT + 6.f });
             selectionBorder.setPosition({ startX - 3.f, Config::CARD_START_Y - 3.f });
@@ -138,7 +144,7 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
         costText.setOutlineThickness(2.f);
         costText.setPosition({ currentX + 10.f, currentY + 5.f }); // פינה שמאלית עליונה של הקלף
 
-        window.draw(costText);
+        window.draw(costText);*/
     }
 }
 /*
@@ -231,28 +237,43 @@ std::shared_ptr<Monster> Player::handleHandClick(sf::Vector2f mousePos, bool ali
     for (size_t i = 0; i < m_monsters.size(); ++i)
     {
         // אם המפלצת כבר על הלוח, אי אפשר לבחור אותה שוב מהיד
-        if (m_monsters[i]->getQ() != -1) continue;
+        //if (m_monsters[i]->getQ() != -1) continue;
+        //if the monster is on the board- we cant choose her again from the hand
+        if (m_monsters[i]->isOnBoard()) continue;
 
-        float startX;
-        if (!alignRight)
-            startX = 20.f + (i * Config::CARD_SPACING);
-        else
-            startX = Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING); // תוקן ה-1280!
+        float startX = alignRight ?
+            (Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING)) :
+            (20.f + (i * Config::CARD_SPACING));
 
-        // יצירת "מלבן וירטואלי" סביב הקלף עם המידות מהקבועים
-        sf::FloatRect cardRect({ startX, Config::CARD_START_Y }, { Config::CARD_WIDTH, Config::CARD_HEIGHT });
-        if (cardRect.contains(mousePos))
+        // שינוי כאן: המפלצת בודקת בעצמה האם לחצו עליה כקלף במיקום הנוכחי
+        if (m_monsters[i]->isCardClicked(mousePos, { startX, Config::CARD_START_Y }))
         {
-			if (m_monsters[i]->getCost() > m_keys) return nullptr; // אם אין מספיק מפתחות, לא ניתן לבחור את הקלף
-            return m_monsters[i]; // מצאנו איזה קלף נלחץ!
+            // בדיקת המפתחות נשארת כאן (כי זה חוק של השחקן)
+            if (m_monsters[i]->getCost() > m_keys) return nullptr;
+
+            return m_monsters[i];
         }
+   //     float startX;
+   //     if (!alignRight)
+   //         startX = 20.f + (i * Config::CARD_SPACING);
+   //     else
+   //         startX = Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING); // תוקן ה-1280!
+
+   //     // יצירת "מלבן וירטואלי" סביב הקלף עם המידות מהקבועים
+   //     sf::FloatRect cardRect({ startX, Config::CARD_START_Y }, { Config::CARD_WIDTH, Config::CARD_HEIGHT });
+   //     if (cardRect.contains(mousePos))
+   //     {
+			//if (m_monsters[i]->getCost() > m_keys) return nullptr; // אם אין מספיק מפתחות, לא ניתן לבחור את הקלף
+   //         return m_monsters[i]; // מצאנו איזה קלף נלחץ!
+   //     }
     }
     return nullptr;
 }
 
 void Player::endTurn()
 {
-	m_keys += 5; // Add 5 keys at the end of the turn
+	m_keys = std::min(m_keys+3,m_maxKeys); // Add 5 keys at the end of the turn
+    m_maxKeys -= 3;
 }
 
 void Player::reduceKeys(int cost)

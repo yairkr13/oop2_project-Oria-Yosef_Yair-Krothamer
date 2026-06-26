@@ -10,23 +10,28 @@ public:
     virtual ~Monster() = default;
 
     void draw(sf::RenderWindow& window) const;
+    void drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const;
+    void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos);
     void takeDamage(int damage);
     bool isAlive() const;
-    bool contains(sf::Vector2f point, sf::Vector2f screenPos) const;
-	void attack(std::shared_ptr<Monster> target) { target->takeDamage(m_attackDamage); }
+   // bool contains(sf::Vector2f point, sf::Vector2f screenPos) const;
+    void attack(std::shared_ptr<Monster> target); 
 
     void setSelected(bool selected) { m_selected = selected; }
     bool isSelected() const { return m_selected; }
 
-    int getQ() const { return m_q; }
-    int getRow() const { return m_row; }
-    void setPosition(int q, int row) { m_q = q; m_row = row; }
+    bool isOnBoard() const;
+    bool isClicked(sf::Vector2f mousePos) const;
+	bool isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPosition) const;
+    //int getQ() const { return m_q; }
+    //int getRow() const { return m_row; }
+    //void setPosition(int q, int row) { m_q = q; m_row = row; }
 	int getCost() const { return m_cost; }
     int getRange() const { return m_range; }
-    const std::string& getName() const { return m_name; }
-    std::string getTextureKey() const { return m_textureKey ; }
-    std::string getCardTextureKey() const { return m_textureKey + "_card" ; }
-    void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }
+    //const std::string& getName() const { return m_name; }
+    //std::string getTextureKey() const { return m_textureKey ; }
+    //std::string getCardTextureKey() const { return m_textureKey + "_card" ; }
+    //void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }
 
     void setSide(PlayerSide side) { m_side = side; }
     PlayerSide getSide() const { return m_side; }
@@ -54,4 +59,8 @@ protected:
     bool m_hasTexture = true;
     float m_baseScale = 1.0f;
     mutable sf::Sprite m_sprite;
+private:
+    void drawHealthBar(sf::RenderWindow& window) const;
+    std::string getCardTextureKey() const { return m_textureKey + "_card" ; }
+
 };

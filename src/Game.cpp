@@ -146,6 +146,7 @@ void Game::handle(const sf::Event::KeyPressed& event)
     if (m_state == GameState::Playing && event.code == sf::Keyboard::Key::Space)
     {
         // 1. העברת התור לשחקן השני
+		m_currentPlayer->endTurn(); // סיום תור השחקן הנוכחי
         if (m_currentPlayer == m_player1.get())
         {
             m_currentPlayer = m_player2.get();

@@ -28,6 +28,7 @@ private:
     // 
 	//std::vector<std::unique_ptr<Card>> m_cards;
     int m_keys;
+    int m_maxKeys;
     PlayerSide m_side;
     std::vector<std::shared_ptr<Monster>> m_monsters;
 };
