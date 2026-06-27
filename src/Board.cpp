@@ -655,3 +655,110 @@ Tile* Board::AI_FindBestTargetForMonster(Monster* monster)
     // נחזיר קודם כל תקיפה, ואם אין - תנועה
     return bestAttackTarget ? bestAttackTarget : bestMoveTarget;
 }
+
+void Board::AI_ExecuteAction(Monster* monster, Tile* targetTile)
+{
+    if (!monster || !targetTile) return;
+
+    // 1. אם יש אויב במשבצת היעד -> תקיפה
+    if (targetTile->hasEntity() && targetTile->getEntity()->getSide() != monster->getSide())
+    {
+        monster->attack(targetTile->getEntity());
+        if (!targetTile->getEntity()->isAlive()) {
+            targetTile->clearEntity();
+        }
+    }
+    // 2. אם המשבצת פנויה -> תנועה
+    else if (!targetTile->hasEntity() && targetTile->isPassable())
+    {
+        // מוצאים את המשבצת הנוכחית של המפלצת כדי לנקות אותה
+        auto sourceIt = m_grid.find({ monster->getQ(), monster->getRow() });
+        if (sourceIt != m_grid.end())
+        {
+            Tile* sourceTile = sourceIt->second.get();
+            targetTile->setMonster(monster); // השמה ביעד
+            sourceTile->clearEntity();       // ניקוי המקור
+
+            // עדכון המיקום הפיזי והגרפי של המפלצת
+            monster->moveTo(targetTile->getQ(), targetTile->getRow(),
+                tileToScreen(targetTile->getQ(), targetTile->getRow()));
+        }
+    }
+
+    // חובה: מורידים למפלצת נקודת פעולה כדי שהלולאה לא תהיה אינסופית!
+    //monster->useAction(); // או איך שנקראת אצלך המתודה שמורידה Action (למשל m_actionsLeft--)
+}
+
+bool Board::AI_SpawnMonster(Monster* monster, PlayerSide side)
+{
+    if (!monster || monster->isOnBoard()) return false;
+
+    // מגדירים את גבולות אזור הזימון. נניח שה-AI תמיד בימין (PlayerSide::Right)
+    int minQ = (side == PlayerSide::Left) ? 0 : 12;
+    int maxQ = (side == PlayerSide::Left) ? 1 : 13;
+
+    std::vector<Tile*> availableSpawnTiles;
+
+    // מחפשים את כל המשבצות הפנויות באזור הזימון שלו
+    for (auto& [coords, tile] : m_grid)
+    {
+        if (coords.first >= minQ && coords.first <= maxQ)
+        {
+            if (!tile->hasEntity() && tile->isPassable())
+            {
+                availableSpawnTiles.push_back(tile.get());
+            }
+        }
+    }
+
+    // אם אין מקום פנוי לזמן, נחזיר שקר
+    if (availableSpawnTiles.empty()) return false;
+
+    // בוחרים משבצת זימון אקראית מתוך מה שפנוי
+    Tile* targetTile = availableSpawnTiles[rand() % availableSpawnTiles.size()];
+
+    // שמים את המפלצת על הלוח!
+    targetTile->setMonster(monster);
+    monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(),
+        tileToScreen(targetTile->getQ(), targetTile->getRow()));
+
+    return true; // הזימון הצליח!
+}
+
+bool Board::spawnMonsterOnTile(Monster* monster, Tile* targetTile)
+{
+    if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassable()) return false;
+
+    targetTile->setMonster(monster);
+    monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(),
+        tileToScreen(targetTile->getQ(), targetTile->getRow()));
+    return true;
+}
+
+void Board::performAction(Monster* monster, Tile* targetTile)
+{
+    if (!monster || !targetTile) return;
+
+    // 1. תקיפה
+    if (targetTile->hasEntity() && targetTile->getEntity()->getSide() != monster->getSide())
+    {
+        monster->attack(targetTile->getEntity());
+        if (!targetTile->getEntity()->isAlive()) {
+            targetTile->clearEntity();
+        }
+    }
+    // 2. תנועה
+    else if (!targetTile->hasEntity() && targetTile->isPassable())
+    {
+        auto sourceIt = m_grid.find({ monster->getQ(), monster->getRow() });
+        if (sourceIt != m_grid.end())
+        {
+            Tile* sourceTile = sourceIt->second.get();
+            targetTile->setMonster(monster);
+            sourceTile->clearEntity();
+
+            monster->moveTo(targetTile->getQ(), targetTile->getRow(),
+                tileToScreen(targetTile->getQ(), targetTile->getRow()));
+        }
+    }
+}

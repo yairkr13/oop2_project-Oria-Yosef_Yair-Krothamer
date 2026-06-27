@@ -26,13 +26,20 @@ public:
 	void initPlayerHearts(Heart* p1Heart, Heart* p2Heart);
 
 	Tile* AI_FindBestTargetForMonster(Monster* monster);
+	sf::Vector2f tileToScreen(int q, int row) const;
+	void AI_ExecuteAction(Monster* monster, Tile* targetTile);
+	bool AI_SpawnMonster(Monster* monster, PlayerSide side);
 private:
 	//void setHighlight(const sf::Vector2f& pos, int range);
-	sf::Vector2f tileToScreen(int q, int row) const;
+	//sf::Vector2f tileToScreen(int q, int row) const;
 	//void highlightNeighbors(int q, int row, int range);
 	void highlightNeighbors(Monster* monster); // שינוי חתימה
 	Tile* getLeftmostTileInRow(int row) const;
 	Tile* getRightmostTileInRow(int row) const;
+
+	bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
+	// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
+	void performAction(Monster* monster, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
 	void generateSpecialTiles(Heart* p1Heart, Heart* p2Heart);
 	void createBoard();

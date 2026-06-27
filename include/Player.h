@@ -34,7 +34,8 @@ public:
 
     Heart* getHeart();
 
-private:
+//private:
+protected:
     //void drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand = nullptr) const;
     void drawHand(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;
 	std::unique_ptr<Heart> m_heart;

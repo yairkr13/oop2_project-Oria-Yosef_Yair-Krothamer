@@ -38,7 +38,9 @@ Game::Game() : m_board(), m_state(GameState::MainMenu),
     }
 
     m_player1 = std::make_unique<Player>(PlayerSide::Left);
-    m_player2 = std::make_unique<Player>(PlayerSide::Right);
+    //make this a choice in the menu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //m_player2 = std::make_unique<Player>(PlayerSide::Right);
+    m_player2 = std::make_unique<AIPlayer>(PlayerSide::Right);
     m_currentPlayer = m_player1.get();
 
     m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart());
@@ -149,21 +151,34 @@ void Game::handle(const sf::Event::KeyPressed& event)
     if (m_state == GameState::Playing && event.code == sf::Keyboard::Key::Space)
     {
         // 1. העברת התור לשחקן השני
-		m_currentPlayer->endTurn(); // סיום תור השחקן הנוכחי
-        m_board.updateTileEffects(); // הלבה שורפת מפלצות בסוף התור!
-
-        if (m_currentPlayer == m_player1.get())
-        {
-            m_currentPlayer = m_player2.get();
-        }
-        else
-        {
-            m_currentPlayer = m_player1.get();
-        }
-
-        m_selectedFromHand = nullptr; // ביטול בחירת קלף מהיד
+        //create function endTurn!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        endTurn();
         //m_board.clearHighlights();    // ניקוי משבצות מוארות בלוח
     }
+}
+
+void Game::endTurn()
+{
+    m_currentPlayer->endTurn(); // סיום תור השחקן הנוכחי
+    m_board.updateTileEffects(); // הלבה שורפת מפלצות בסוף התור!
+    // 1. קוד החלפת התור הקיים שלך... (למשל מוריד פעולות, מחליף את m_currentPlayer)
+    if (m_currentPlayer == m_player1.get()) {
+        m_currentPlayer = m_player2.get();
+
+        // אם עברנו לשחקן 2 והוא AI - נריץ אותו ונחזיר מיד לשחקן 1
+        if (AIPlayer* ai = static_cast<AIPlayer*>(m_player2.get()))
+        {
+            ai->makeMove(m_board);
+
+            // בסיום התור של ה-AI, מחזירים ידנית לשחקן 1 בלי לקרוא שוב ל-endTurn
+            m_currentPlayer = m_player1.get();
+            // כאן אפשר להוסיף קוד שמחדש לשחקן 1 את נקודות הפעולה/מפתחות לתור החדש שלו
+        }
+    }
+    else {
+        m_currentPlayer = m_player1.get();
+    }
+    m_selectedFromHand = nullptr;
 }
 
 void Game::draw()

@@ -5,6 +5,7 @@
 #include "Board.h"
 #include "MainMenu.h"
 #include "Monsters/Monster.h"
+#include "AIPlayer.h"
 //#include "TurnManager.h"
 
 enum class GameState { MainMenu, Playing }; //turn1,turn2
@@ -26,6 +27,7 @@ public:
     //void setState(GameState newState);
 
 private:
+    void endTurn();
     void loadAllResources(); // <--- הפונקציה החדשה שלנו
     const sf::Texture& initResourcesAndGetBg();
     Board m_board;
@@ -51,7 +53,6 @@ private:
     void draw();
 
     //void handlePlayingClick(sf::Vector2f mousePos);
-    void endTurn();
 
     sf::Sprite m_bgSprite;
     //std::shared_ptr<Monster> m_selectedFromHand = nullptr;

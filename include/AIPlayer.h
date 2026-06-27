@@ -6,7 +6,7 @@ class AIPlayer : public Player
 {
 public:
     // קונסטרקטור שמקבל את הצד (בדרך כלל Right) ושם
-    AIPlayer(PlayerSide side, const std::string& name);
+    AIPlayer(PlayerSide side);
 
     // מתודת הליבה של המחשב - תורץ בכל פעם שהתור של ה-AI מתחיל
     void makeMove(Board& board);
