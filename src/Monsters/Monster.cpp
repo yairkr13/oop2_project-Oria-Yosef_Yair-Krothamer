@@ -2,10 +2,11 @@
 #include "Constants.h"
 #include "TextureManager.h"
 
-Monster::Monster(const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey)
-    : m_name(name), m_health(health),m_maxHealth(health), m_attackDamage(attackPower),
-    m_range(range), m_cost(cost), m_q(q), m_row(row), m_color(color), m_textureKey(textureKey),
-	m_sprite(TextureManager::getInstance().get<sf::Texture>(m_textureKey))
+Monster::Monster(const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey,bool flying)
+    : BoardEntity(q, row, {}, health),
+    m_name(name), m_attackDamage(attackPower),
+    m_range(range), m_cost(cost), m_color(color), m_textureKey(textureKey), m_flying(flying),
+    m_sprite(TextureManager::getInstance().get<sf::Texture>(m_textureKey))
 {
     try
     {
@@ -54,38 +55,54 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
     {
         drawHealthBar(window);
     }
+    else
+        drawActionsLeft(window);
 }
-
-void Monster::drawHealthBar(sf::RenderWindow& window) const
+void Monster::drawActionsLeft(sf::RenderWindow& window) const
 {
-    if (!isAlive()) return;
-    /*if (m_side == currentPlayer)
-        return;*/
-    // 1. הגדרת מידות למד החיים (למשל, 80% מרוחב משבצת הלוח)
-    float barWidth = Config::MONSTER_BOARD_SIZE * 0.8f;
-    float barHeight = 6.f;
+    int TILE_RADIUS = 48.f;
+    sf::Text actionText(TextureManager::getInstance().get<sf::Font>("Lilita"));
+    actionText.setString(std::to_string(m_actionsLeft));
+    actionText.setCharacterSize(14); // גודל קטן שלא יפריע
+    actionText.setFillColor(sf::Color::Yellow); // צבע בולט
 
-    // 2. חישוב מיקום מעל ראש המפלצת (בהנחה ש-m_screenPos הוא מרכז הדמות)
-    float x = m_screenPos.x - (barWidth / 2.f);
-    float y = m_screenPos.y - (Config::MONSTER_BOARD_SIZE / 2.f) - 12.f; // 12 פיקסלים מעל הדמות
+    // מיקום: קצת מעל המפלצת, או ליד מד החיים
+    // m_screenPosition הוא המרכז של המשבצת שהמפלצת נמצאת עליה
+    actionText.setPosition({ m_screenPos.x - 15.f, m_screenPos.y + TILE_RADIUS - 20.f });
 
-    // 3. ציור רקע מד החיים (אדום כהה או אפור)
-    sf::RectangleShape bgBar({ barWidth, barHeight });
-    bgBar.setPosition({ x, y });
-    bgBar.setFillColor(sf::Color(80, 20, 20)); // אדום עמוק
-
-    // 4. חישוב יחס החיים שנותרו וציור המד הירוק
-    float healthRatio = static_cast<float>(m_health) / m_maxHealth;
-    if (healthRatio < 0.f) healthRatio = 0.f;
-
-    sf::RectangleShape fgBar({ barWidth * healthRatio, barHeight });
-    fgBar.setPosition({ x, y });
-    fgBar.setFillColor(sf::Color(50, 220, 50)); // ירוק בהיר
-
-    // 5. רישום על המסך
-    window.draw(bgBar);
-    window.draw(fgBar);
+    window.draw(actionText);
 }
+//
+//void Monster::drawHealthBar(sf::RenderWindow& window) const
+//{
+//    if (!isAlive()) return;
+//    /*if (m_side == currentPlayer)
+//        return;*/
+//    // 1. הגדרת מידות למד החיים (למשל, 80% מרוחב משבצת הלוח)
+//    float barWidth = Config::MONSTER_BOARD_SIZE * 0.8f;
+//    float barHeight = 6.f;
+//
+//    // 2. חישוב מיקום מעל ראש המפלצת (בהנחה ש-m_screenPos הוא מרכז הדמות)
+//    float x = m_screenPos.x - (barWidth / 2.f);
+//    float y = m_screenPos.y - (Config::MONSTER_BOARD_SIZE / 2.f) - 12.f; // 12 פיקסלים מעל הדמות
+//
+//    // 3. ציור רקע מד החיים (אדום כהה או אפור)
+//    sf::RectangleShape bgBar({ barWidth, barHeight });
+//    bgBar.setPosition({ x, y });
+//    bgBar.setFillColor(sf::Color(80, 20, 20)); // אדום עמוק
+//
+//    // 4. חישוב יחס החיים שנותרו וציור המד הירוק
+//    float healthRatio = static_cast<float>(m_health) / m_maxHealth;
+//    if (healthRatio < 0.f) healthRatio = 0.f;
+//
+//    sf::RectangleShape fgBar({ barWidth * healthRatio, barHeight });
+//    fgBar.setPosition({ x, y });
+//    fgBar.setFillColor(sf::Color(50, 220, 50)); // ירוק בהיר
+//
+//    // 5. רישום על המסך
+//    window.draw(bgBar);
+//    window.draw(fgBar);
+//}
 //
 //bool Monster::contains(sf::Vector2f point, sf::Vector2f screenPos) const
 //{
@@ -94,21 +111,21 @@ void Monster::drawHealthBar(sf::RenderWindow& window) const
 //    return (dx * dx + dy * dy) <= (32.f * 32.f);
 //}
 
-bool Monster::isAlive() const
-{
-    return m_health > 0;
-}
 
-void Monster::takeDamage(int damage)
-{
-    m_health -= damage;
-    if (m_health < 0) m_health = 0;
-}
 
 void Monster::walkTo(const sf::Vector2f& targetScreenPos)
 {
     m_targetPos = targetScreenPos;
     m_isMoving = true;
+}
+void Monster::moveTo(int q, int row, const sf::Vector2f& screenPos)
+{
+    if (m_actionsLeft <= 0) return;
+
+    // קריאה לפונקציה הקיימת שמזיזה אותה גרפית ומעדכנת קואורדינטות
+    spawnOnBoard(q, row, screenPos);
+
+    useAction(); // המפלצת מורידה לעצמה פעולה!
 }
 
 void Monster::update(float dt)
@@ -130,13 +147,13 @@ void Monster::update(float dt)
         m_screenPos.y += (dy / distance) * m_speed * dt;
     }
 }
-
 //
-void Monster::spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) {
-    m_q = q;
-    m_row = row;
-    m_screenPos = screenPos;
-}
+////
+//void Monster::spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) {
+//    m_q = q;
+//    m_row = row;
+//    m_screenPos = screenPos;
+//}
 
 bool Monster::isOnBoard() const {
     return m_q != -1 && m_row != -1;
@@ -210,7 +227,9 @@ bool Monster::isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPos) const
     return cardRect.contains(mousePos);
 }
 
-void Monster::attack(std::shared_ptr<Monster> target) 
+//void Monster::attack(std::shared_ptr<Monster> target) 
+void Monster::attack(BoardEntity* target)
 { 
     target->takeDamage(m_attackDamage);
+    useAction(); // המפלצת מורידה לעצמה פעולה!
 }

@@ -41,6 +41,7 @@ Game::Game() : m_board(), m_state(GameState::MainMenu),
     m_player2 = std::make_unique<Player>(PlayerSide::Right);
     m_currentPlayer = m_player1.get();
 
+    m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart());
 }
 
 void Game::run()
@@ -66,7 +67,8 @@ void Game::handle(const sf::Event::Closed& event)
 
 void Game::handle(const sf::Event::MouseButtonPressed& event)
 {
-    if (event.button != sf::Mouse::Button::Left)
+    if (event.button != sf::Mouse::Button::Left) //בהמשך- לחיצה ימנית= יופיע מידע על המפלצת
+        //כמה תוקפת...
         return;
 
     sf::Vector2f pos = m_window.mapPixelToCoords(event.position);
@@ -138,6 +140,7 @@ void Game::handle(const sf::Event::KeyPressed& event)
 {
     if (event.code == sf::Keyboard::Key::Escape)
     {
+        //menu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         m_state = GameState::MainMenu;
         if (m_menu.has_value())
             m_menu->reset();
@@ -147,6 +150,8 @@ void Game::handle(const sf::Event::KeyPressed& event)
     {
         // 1. העברת התור לשחקן השני
 		m_currentPlayer->endTurn(); // סיום תור השחקן הנוכחי
+        m_board.updateTileEffects(); // הלבה שורפת מפלצות בסוף התור!
+
         if (m_currentPlayer == m_player1.get())
         {
             m_currentPlayer = m_player2.get();
@@ -196,6 +201,7 @@ void Game::loadAllResources()
         rm.load<sf::Font>("Lilita", "resources/Fonts/LilitaOne.ttf");
 
         // --- 2. ממשק ותפריטים ---
+        rm.load<sf::Texture>("heart100", "resources/Heart/Heart100.png");
         rm.load<sf::Texture>("menu_bg", "resources/Menu/Menu.png");
         rm.load<sf::Texture>("instructions_bg", "resources/Menu/Instructions.png");
         rm.load<sf::Texture>("game_bg", "resources/Background/Background1.png");

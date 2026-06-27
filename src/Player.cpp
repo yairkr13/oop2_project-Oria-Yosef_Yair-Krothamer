@@ -8,14 +8,15 @@
 #include "TextureManager.h"
 
 Player::Player(PlayerSide side)
-	: /*m_heart(std::make_unique<Heart>()),*/ m_keys(3),m_maxKeys(15), m_side(side)
+	: m_heart(std::make_unique<Heart>(side, -1, -1, sf::Vector2f(0.f, 0.f))), // יוצרים את הלב עם מיקום זמני
+    /*m_heart(std::make_unique<Heart>()),*/ m_keys(3),m_maxKeys(12), m_side(side)
 {
 	// Initialize cards
-	m_monsters.push_back(std::make_shared<Muffintop>());
-    m_monsters.push_back(std::make_shared<Blue>());
-    m_monsters.push_back(std::make_shared<Barzilla>());
-    m_monsters.push_back(std::make_shared<Henrietta>());
-    m_monsters.push_back(std::make_shared<Mozzy>());
+    m_monsters.push_back(std::make_unique<Muffintop>());
+    m_monsters.push_back(std::make_unique<Blue>());
+    m_monsters.push_back(std::make_unique<Barzilla>());
+    m_monsters.push_back(std::make_unique<Henrietta>());
+    m_monsters.push_back(std::make_unique<Mozzy>());
 
     // Set side on all monsters
     for (auto& monster : m_monsters)
@@ -33,10 +34,15 @@ void Player::handleClick(sf::Vector2f pos)
 		}
 	}
 }*/
-void Player::draw(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
+void Player::draw(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand) const
 {
-	drawHand(window, alignRight, selectedFromHand);
+    //drawKeys(window, alignRight);
+    drawHand(window, alignRight, selectedFromHand);
 }
+//void Player::draw(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
+//{
+//	drawHand(window, alignRight, selectedFromHand);
+//}
 
 //void Player::drawHealth
 
@@ -66,7 +72,7 @@ void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
     window.draw(keysText);
 }
 
-void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
+void Player::drawHand(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand) const
 {
     // 1. ציור "השולחן" (הפאנל התחתון)
     sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
@@ -86,7 +92,7 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
             (Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING)) :
             (20.f + (i * Config::CARD_SPACING));
 
-        bool isSelected = (selectedFromHand && m_monsters[i] == selectedFromHand);
+        bool isSelected = (selectedFromHand && m_monsters[i].get() == selectedFromHand);
 
         m_monsters[i]->drawAsCard(window, { startX, Config::CARD_START_Y }, isSelected, m_monsters[i]->getCost() > m_keys);
         // --- ציור מסגרת זהב אם הקלף נבחר ---
@@ -229,7 +235,8 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
     
 }*/
 
-std::shared_ptr<Monster> Player::handleHandClick(sf::Vector2f mousePos, bool alignRight) const
+//std::shared_ptr<Monster> Player::handleHandClick(sf::Vector2f mousePos, bool alignRight) const
+Monster* Player::handleHandClick(sf::Vector2f mousePos, bool alignRight) const
 {
     if (mousePos.y < Config::BOTTOM_PANEL_Y) return nullptr;
 
@@ -250,7 +257,7 @@ std::shared_ptr<Monster> Player::handleHandClick(sf::Vector2f mousePos, bool ali
             // בדיקת המפתחות נשארת כאן (כי זה חוק של השחקן)
             if (m_monsters[i]->getCost() > m_keys) return nullptr;
 
-            return m_monsters[i];
+            return m_monsters[i].get();
         }
    //     float startX;
    //     if (!alignRight)
@@ -280,9 +287,17 @@ void Player::endTurn()
     // Cap current keys to the new max
     /*if (m_keys > m_maxKeys)
         m_keys = m_maxKeys;*/
+    for (auto& monster : m_monsters)
+        if (monster->isOnBoard())
+            monster->resetActions();
 }
 
 void Player::reduceKeys(int cost)
 {
 	m_keys -= cost;
+}
+
+Heart* Player::getHeart() 
+{
+    return m_heart.get();
 }

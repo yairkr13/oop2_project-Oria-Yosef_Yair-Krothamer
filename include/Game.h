@@ -28,6 +28,8 @@ public:
 private:
     void loadAllResources(); // <--- הפונקציה החדשה שלנו
     const sf::Texture& initResourcesAndGetBg();
+    Board m_board;
+
     sf::RenderWindow m_window;
     GameState m_state;
     //TurnState m_turnState;
@@ -51,10 +53,9 @@ private:
     //void handlePlayingClick(sf::Vector2f mousePos);
     void endTurn();
 
-    Board m_board;
     sf::Sprite m_bgSprite;
-    std::shared_ptr<Monster> m_selectedFromHand = nullptr;
-    //static std::vector<sf::RectangleShape> makeObstacles();
+    //std::shared_ptr<Monster> m_selectedFromHand = nullptr;
+    Monster* m_selectedFromHand = nullptr;
 
     void handle(const sf::Event::Closed& event);
     void handle(const sf::Event::MouseButtonPressed& event);
