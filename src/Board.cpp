@@ -206,19 +206,34 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
     Monster* selectedMonster = nullptr;
     for (auto& [coords, tile] : m_grid)
     {
-        if (auto monster = tile->getMonster())
+        if (auto entity = tile->getEntity()) // שלב א: לוקחים את הישות הכללית
         {
-            /*Monster* monster;
-            if (entity->isSelectable())
-                monster = static_cast<Monster*>(entity);
-            else
-                return;*/
-            if (monster->isSelected())
+            // שלב ב: הלוח שואל "האם אתה מפלצת?" 
+            if (entity->getType() == EntityType::Monster)
             {
-                selectedMonster = monster;
-                break;
+                // עכשיו אנחנו בטוחים שזו מפלצת, אז אפשר להמיר בבטחה
+                Monster* monster = static_cast<Monster*>(entity);
+
+                if (monster->isSelected())
+                {
+                    selectedMonster = monster;
+                    break;
+                }
             }
         }
+        //if (auto monster = tile->getMonster())
+        //{
+        //    /*Monster* monster;
+        //    if (entity->isSelectable())
+        //        monster = static_cast<Monster*>(entity);
+        //    else
+        //        return;*/
+        //    if (monster->isSelected())
+        //    {
+        //        selectedMonster = monster;
+        //        break;
+        //    }
+        //}
     }
 
     // 3. ביצוע הפעולה בעזרת פונקציית הליבה המשותפת!
@@ -237,18 +252,31 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
     else
     {
         // 4. בחירת מפלצת חדשה
-        if (auto monster = clickedTile->getMonster())
+        if (auto entity = clickedTile->getEntity())
         {
-            /*Monster* monster;
-            if (entity->isSelectable())
-                monster = static_cast<Monster*>(entity);
-            else
-                return;*/
-            if (monster->getSide() != currentSide || monster->getActionsLeft() <= 0) return;
+            // בודקים אם הישות היא מפלצת
+            if (entity->getType() == EntityType::Monster)
+            {
+                Monster* monster = static_cast<Monster*>(entity);
 
-            monster->setSelected(true);
-            highlightNeighbors(monster);
+                if (monster->getSide() != currentSide || monster->getActionsLeft() <= 0) return;
+
+                monster->setSelected(true);
+                highlightNeighbors(monster);
+            }
         }
+        //if (auto monster = clickedTile->getMonster())
+        //{
+        //    /*Monster* monster;
+        //    if (entity->isSelectable())
+        //        monster = static_cast<Monster*>(entity);
+        //    else
+        //        return;*/
+        //    if (monster->getSide() != currentSide || monster->getActionsLeft() <= 0) return;
+
+        //    monster->setSelected(true);
+        //    highlightNeighbors(monster);
+        //}
     }
 }
 //void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)

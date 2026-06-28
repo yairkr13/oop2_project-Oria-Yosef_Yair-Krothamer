@@ -26,12 +26,12 @@ public:
     BoardEntity* getEntity() const { return m_entity; }
 
     // פונקציה ספציפית - מיועדת למערכת הקרב (שצריכה תכלס מפלצת)
-    Monster* getMonster() const {
-        if (m_entity && m_entity->getType() == EntityType::Monster) {
-            return static_cast<Monster*>(m_entity); // Downcasting בטוח
-        }
-        return nullptr;
-    }
+    //Monster* getMonster() const {
+    //    if (m_entity && m_entity->getType() == EntityType::Monster) {
+    //        return static_cast<Monster*>(m_entity); // Downcasting בטוח
+    //    }
+    //    return nullptr;
+    //}
 
     void setEntity(BoardEntity* entity);
     bool hasEntity() const { return m_entity != nullptr; }

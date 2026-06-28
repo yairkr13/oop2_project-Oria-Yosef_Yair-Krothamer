@@ -39,8 +39,8 @@ Game::Game() : m_board(), m_state(GameState::MainMenu),
 
     m_player1 = std::make_unique<Player>(PlayerSide::Left);
     //make this a choice in the menu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //m_player2 = std::make_unique<Player>(PlayerSide::Right);
-    m_player2 = std::make_unique<AIPlayer>(PlayerSide::Right);
+    m_player2 = std::make_unique<Player>(PlayerSide::Right);
+    //m_player2 = std::make_unique<AIPlayer>(PlayerSide::Right);
     m_currentPlayer = m_player1.get();
 
     m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart());
@@ -167,16 +167,18 @@ void Game::endTurn()
     if (m_currentPlayer == m_player1.get()) {
         m_currentPlayer = m_player2.get();
 
+       
         // אם עברנו לשחקן 2 והוא AI - נריץ אותו ונחזיר מיד לשחקן 1
-        if (AIPlayer* ai = static_cast<AIPlayer*>(m_player2.get()))
-        {
-            ai->endTurn();
-            ai->makeMove(m_board);
+        //if (AIPlayer* ai = static_cast<AIPlayer*>(m_player2.get()))
 
-            // בסיום התור של ה-AI, מחזירים ידנית לשחקן 1 בלי לקרוא שוב ל-endTurn
-            m_currentPlayer = m_player1.get();
-            // כאן אפשר להוסיף קוד שמחדש לשחקן 1 את נקודות הפעולה/מפתחות לתור החדש שלו
-        }
+        //{
+        //    ai->endTurn();
+        //    ai->makeMove(m_board);
+
+        //    // בסיום התור של ה-AI, מחזירים ידנית לשחקן 1 בלי לקרוא שוב ל-endTurn
+        //    m_currentPlayer = m_player1.get();
+        //    // כאן אפשר להוסיף קוד שמחדש לשחקן 1 את נקודות הפעולה/מפתחות לתור החדש שלו
+        //}
     }
     else {
         m_currentPlayer = m_player1.get();
