@@ -26,7 +26,7 @@ public:
 
     void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) override
     {
-        BoardEntity::spawnOnBoard(1,row,screenPos);
+        BoardEntity::spawnOnBoard(q,row,screenPos);
         m_sprite.setPosition(screenPos);
     }
 

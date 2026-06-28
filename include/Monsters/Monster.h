@@ -23,6 +23,7 @@ public:
 
     void setSelected(bool selected) { m_selected = selected; }
     bool isSelected() const { return m_selected; }
+    virtual bool isSelectable() const override { return true; } // מפלצת אפשר לבחור!
 
     virtual EntityType getType() const override { return EntityType::Monster; }
 

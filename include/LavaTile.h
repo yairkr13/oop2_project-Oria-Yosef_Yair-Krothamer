@@ -11,10 +11,10 @@ public:
 
     virtual void applyTileEffect() override
     {
-        if (hasMonster())
+        if (hasEntity())
         {
-            if (auto monster = getMonster())
-                monster->takeDamage(20); // הלבה מורידה 20 חיים למפלצת שעומדת עליה
+            if (auto entity = getEntity())
+                entity->takeDamage(20); // הלבה מורידה 20 חיים למפלצת שעומדת עליה
         }
     }
 

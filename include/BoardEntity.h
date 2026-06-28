@@ -26,6 +26,8 @@ public:
     virtual PlayerSide getSide() const = 0;
     virtual EntityType getType() const = 0;
     // 
+    virtual bool isSelectable() const { return false; } // ברירת מחדל: לב אי אפשר לבחור
+
     //// --- פונקציות חדשות: קשר דו-כיווני עם המשבצת ---
     //void setCurrentTile(Tile* tile) { m_currentTile = tile; }
     //Tile* getCurrentTile() const { return m_currentTile; }

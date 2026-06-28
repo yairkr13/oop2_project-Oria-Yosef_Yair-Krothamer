@@ -58,7 +58,7 @@ void AIPlayer::makeMove(Board& board)
             std::cout << "[AI] Moving/Attacking with: " <<  std::endl;
 
             // הלוח מבצע את הפעולה ומוריד את נקודת הפעולה למפלצת
-            board.AI_ExecuteAction(monster, targetTile);
+            board.performAction(monster, targetTile);
         }
     }
 

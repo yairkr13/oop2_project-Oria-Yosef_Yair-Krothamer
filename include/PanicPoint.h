@@ -12,14 +12,14 @@ public:
     }
     void applyTileEffect() override // הפונקציה נשארת ריקה מפרמטרים!
     {
-        if (hasMonster())
+        if (hasEntity())
         {
-            auto monster = getMonster();
+            auto entity = getEntity();
 
             // משתמשים במצביעים ששמרנו מראש:
-            if (monster->getSide() == PlayerSide::Left && m_p2Heart)
+            if (entity->getSide() == PlayerSide::Left && m_p2Heart)
                 m_p2Heart->takeDamage(10);
-            else if (monster->getSide() == PlayerSide::Right && m_p1Heart)
+            else if (entity->getSide() == PlayerSide::Right && m_p1Heart)
                 m_p1Heart->takeDamage(10);
         }
     }

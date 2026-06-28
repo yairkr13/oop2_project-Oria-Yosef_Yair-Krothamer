@@ -54,6 +54,8 @@ void Game::run()
         {
             event->visit([this](const auto& e) { handle(e); });
         }
+        if (m_player1->isDead() || m_player2->isDead())
+            ;
 
         m_window.clear(sf::Color(30, 30, 50));
         draw();

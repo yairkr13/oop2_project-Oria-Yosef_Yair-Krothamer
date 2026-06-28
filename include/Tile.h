@@ -36,20 +36,13 @@ public:
     void setEntity(BoardEntity* entity);
     bool hasEntity() const { return m_entity != nullptr; }
 
-    // --- תאימות לאחור עבור המפלצות (ללא RTTI, בטוח ומהיר) ---
-    void setMonster(Monster* monster) { setEntity(monster); }
+    //void setMonster(Monster* monster) { setEntity(monster); }
 
-    bool hasMonster() const {
+    /*bool hasMonster() const {
         return m_entity != nullptr && m_entity->getType() == EntityType::Monster;
-    }
+    }*/
     virtual bool isHole() const { return false; }
 
-    //Monster* getMonster() const {
-    //    if (hasMonster()) {
-    //        return static_cast<Monster*>(m_entity); // המרה בטוחה כי בדקנו את הסוג
-    //    }
-    //    return nullptr;
-    //}
     virtual void applyTileEffect() {}
 protected:
     sf::CircleShape m_shape;

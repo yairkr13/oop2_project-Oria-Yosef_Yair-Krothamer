@@ -278,6 +278,10 @@ Monster* Player::handleHandClick(sf::Vector2f mousePos, bool alignRight) const
 
 void Player::endTurn()
 {
+    for (auto& monster : m_monsters)
+        if (monster->isOnBoard())
+            monster->resetActions();
+
 	if (m_maxKeys == 0) return;
     // Add 3 keys
     m_keys += 3;
@@ -287,9 +291,7 @@ void Player::endTurn()
     // Cap current keys to the new max
     /*if (m_keys > m_maxKeys)
         m_keys = m_maxKeys;*/
-    for (auto& monster : m_monsters)
-        if (monster->isOnBoard())
-            monster->resetActions();
+    
 }
 
 void Player::reduceKeys(int cost)
@@ -300,4 +302,9 @@ void Player::reduceKeys(int cost)
 Heart* Player::getHeart() 
 {
     return m_heart.get();
+}
+
+bool Player::isDead() const
+{
+    return !(m_heart->isAlive());
 }

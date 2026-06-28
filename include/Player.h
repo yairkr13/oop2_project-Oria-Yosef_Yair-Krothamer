@@ -13,6 +13,7 @@ public:
     Player(PlayerSide side);
 	//bool handleClick(const sf::Vector2f& pos);
     Card* handleCardClick(sf::Vector2f mousePos);
+    bool isDead() const;
     //align right - to delete and use side 
 
     // שינוי: מעבר למצביע רגיל (צופה בלבד) עבור המפלצת הנבחרת ביד
