@@ -9,6 +9,6 @@ public:
     static constexpr int BASE_ATTACK = 30;
     static constexpr int BASE_RANGE = 2;
 
-    Barzilla();
+    Barzilla(PlayerSide side);
     //void attack(Monster& target) override;
 };

@@ -1,8 +1,8 @@
 #include "Monsters/Barzilla.h"
 #include "TextureManager.h"
 
-Barzilla::Barzilla()
-    : Monster("Barzilla", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, COST, -1, -1, sf::Color::Red, "barzilla")
+Barzilla::Barzilla(PlayerSide side)
+    : Monster(side, "Barzilla", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, COST, -1, -1, sf::Color::Red, "barzilla")
 {
     //TextureManager::getInstance().loadTexture("barzilla_r", "resources/Monster/Barzilla/Barzilla_R.png");
     //TextureManager::getInstance().loadTexture("barzilla_l", "resources/Monster/Barzilla/Barzilla_L.png");

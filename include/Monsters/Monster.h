@@ -7,7 +7,7 @@
 class Monster :public BoardEntity
 {
 public:
-    Monster(const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey, bool m_flying=false);
+    Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey, bool m_flying=false);
     virtual ~Monster() = default;
 
     void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const override;
@@ -43,7 +43,7 @@ public:
     //std::string getCardTextureKey() const { return m_textureKey + "_card" ; }
     //void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }
 
-    void setSide(PlayerSide side) { m_side = side; }
+    //void setSide(PlayerSide side) { m_side = side; }
     PlayerSide getSide() const override { return m_side; }
 
     void moveTo(int q, int row, const sf::Vector2f& screenPos);
@@ -61,7 +61,7 @@ protected:
     //int m_row;
     bool m_selected = false;
     sf::Color m_color;
-    PlayerSide m_side = PlayerSide::Left;
+    const PlayerSide m_side;  // לא ניתן לשינוי לאחר היצירה - הקומפיילר עצמו "אוכף" את זה
 
     bool m_flying;
 

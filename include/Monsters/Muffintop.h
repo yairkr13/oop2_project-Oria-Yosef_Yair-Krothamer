@@ -9,6 +9,6 @@ public:
     static constexpr int BASE_ATTACK = 25;
     static constexpr int BASE_RANGE = 2;
 
-    Muffintop();
+    Muffintop(PlayerSide side);
     //void attack(Monster& target) override;
 };

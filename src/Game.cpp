@@ -170,6 +170,7 @@ void Game::endTurn()
         // אם עברנו לשחקן 2 והוא AI - נריץ אותו ונחזיר מיד לשחקן 1
         if (AIPlayer* ai = static_cast<AIPlayer*>(m_player2.get()))
         {
+            ai->endTurn();
             ai->makeMove(m_board);
 
             // בסיום התור של ה-AI, מחזירים ידנית לשחקן 1 בלי לקרוא שוב ל-endTurn

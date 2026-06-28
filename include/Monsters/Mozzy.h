@@ -9,6 +9,6 @@ public:
     static constexpr int BASE_ATTACK = 15;
     static constexpr int BASE_RANGE = 3;
 
-    Mozzy();
+    Mozzy(PlayerSide side);
     //void attack(Monster& target) override;
 };

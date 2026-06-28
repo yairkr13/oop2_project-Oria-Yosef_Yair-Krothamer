@@ -9,6 +9,6 @@ public:
     static constexpr int BASE_ATTACK = 25;
     static constexpr int BASE_RANGE = 1;
 
-    Blue();
+    Blue(PlayerSide side);
     //void attack(Monster& target) override;
 };

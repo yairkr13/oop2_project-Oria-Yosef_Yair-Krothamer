@@ -2,9 +2,9 @@
 #include "Constants.h"
 #include "TextureManager.h"
 
-Monster::Monster(const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey,bool flying)
+Monster::Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey,bool flying)
     : BoardEntity(q, row, {}, health),
-    m_name(name), m_attackDamage(attackPower),
+    m_side(side), m_name(name), m_attackDamage(attackPower),
     m_range(range), m_cost(cost), m_color(color), m_textureKey(textureKey), m_flying(flying),
     m_sprite(TextureManager::getInstance().get<sf::Texture>(m_textureKey))
 {

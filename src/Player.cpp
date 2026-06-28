@@ -1,9 +1,5 @@
 #include "Player.h"
-#include "Monsters/Muffintop.h"
-#include "Monsters/Blue.h"
-#include "Monsters/Barzilla.h"
-#include "Monsters/Henrietta.h"
-#include "Monsters/Mozzy.h"
+#include "MonsterFactory.h"
 #include "Constants.h"
 #include "TextureManager.h"
 
@@ -12,15 +8,17 @@ Player::Player(PlayerSide side)
     /*m_heart(std::make_unique<Heart>()),*/ m_keys(3),m_maxKeys(12), m_side(side)
 {
 	// Initialize cards
-    m_monsters.push_back(std::make_unique<Muffintop>());
-    m_monsters.push_back(std::make_unique<Blue>());
-    m_monsters.push_back(std::make_unique<Barzilla>());
-    m_monsters.push_back(std::make_unique<Henrietta>());
-    m_monsters.push_back(std::make_unique<Mozzy>());
+    m_monsters = MonsterFactory::createStandardDeck(side);
+
+    //m_monsters.push_back(std::make_unique<Muffintop>());
+    //m_monsters.push_back(std::make_unique<Blue>());
+    //m_monsters.push_back(std::make_unique<Barzilla>());
+    //m_monsters.push_back(std::make_unique<Henrietta>());
+    //m_monsters.push_back(std::make_unique<Mozzy>());
 
     // Set side on all monsters
-    for (auto& monster : m_monsters)
-        monster->setSide(m_side);
+    /*for (auto& monster : m_monsters)
+        monster->setSide(m_side);*/
 }
 /*
 void Player::handleClick(sf::Vector2f pos)
