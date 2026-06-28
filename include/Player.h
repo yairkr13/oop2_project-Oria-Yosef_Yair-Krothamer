@@ -11,6 +11,7 @@ class Player //: public StaticObject do an heart tile
 {
 public:
     Player(PlayerSide side);
+    virtual ~Player() = default; // <--- הוספנו את השורה הזו!
 	//bool handleClick(const sf::Vector2f& pos);
     Card* handleCardClick(sf::Vector2f mousePos);
     bool isDead() const;

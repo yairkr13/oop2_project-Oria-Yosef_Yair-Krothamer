@@ -39,8 +39,8 @@ Game::Game() : m_board(), m_state(GameState::MainMenu),
 
     m_player1 = std::make_unique<Player>(PlayerSide::Left);
     //make this a choice in the menu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    m_player2 = std::make_unique<Player>(PlayerSide::Right);
-    //m_player2 = std::make_unique<AIPlayer>(PlayerSide::Right);
+    //m_player2 = std::make_unique<Player>(PlayerSide::Right);
+    m_player2 = std::make_unique<AIPlayer>(PlayerSide::Right);
     m_currentPlayer = m_player1.get();
 
     m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart());
@@ -50,10 +50,30 @@ void Game::run()
 {
     while (m_window.isOpen())
     {
+        float dt = m_clock.restart().asSeconds();
+
         while (const auto event = m_window.pollEvent())
         {
             event->visit([this](const auto& e) { handle(e); });
         }
+        
+        if (m_state == GameState::Playing)
+        {
+            m_board.update(dt);
+
+            // Process AI turn step by step
+            if (m_isAITurn)
+            {
+                AIPlayer* ai = static_cast<AIPlayer*>(m_player2.get());
+                if (ai->advanceTurn(m_board))
+                {
+                    // AI turn finished — switch back to human
+                    m_isAITurn = false;
+                    m_currentPlayer = m_player1.get();
+                }
+            }
+        }
+
         if (m_player1->isDead() || m_player2->isDead())
             ;
 
@@ -74,6 +94,9 @@ void Game::handle(const sf::Event::MouseButtonPressed& event)
     if (event.button != sf::Mouse::Button::Left) //בהמשך- לחיצה ימנית= יופיע מידע על המפלצת
         //כמה תוקפת...
         return;
+
+    // Block input during AI turn
+    if (m_isAITurn) return;
 
     sf::Vector2f pos = m_window.mapPixelToCoords(event.position);
 
@@ -154,6 +177,7 @@ void Game::handle(const sf::Event::KeyPressed& event)
     {
         // 1. העברת התור לשחקן השני
         //create function endTurn!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if (m_isAITurn) return; // block during AI turn
         endTurn();
         //m_board.clearHighlights();    // ניקוי משבצות מוארות בלוח
     }
@@ -161,30 +185,54 @@ void Game::handle(const sf::Event::KeyPressed& event)
 
 void Game::endTurn()
 {
-    m_currentPlayer->endTurn(); // סיום תור השחקן הנוכחי
-    m_board.updateTileEffects(); // הלבה שורפת מפלצות בסוף התור!
-    // 1. קוד החלפת התור הקיים שלך... (למשל מוריד פעולות, מחליף את m_currentPlayer)
-    if (m_currentPlayer == m_player1.get()) {
+    m_currentPlayer->endTurn();
+    m_board.updateTileEffects();
+
+    if (m_currentPlayer == m_player1.get())
+    {
         m_currentPlayer = m_player2.get();
 
-       
-        // אם עברנו לשחקן 2 והוא AI - נריץ אותו ונחזיר מיד לשחקן 1
-        //if (AIPlayer* ai = static_cast<AIPlayer*>(m_player2.get()))
-
-        //{
-        //    ai->endTurn();
-        //    ai->makeMove(m_board);
-
-        //    // בסיום התור של ה-AI, מחזירים ידנית לשחקן 1 בלי לקרוא שוב ל-endTurn
-        //    m_currentPlayer = m_player1.get();
-        //    // כאן אפשר להוסיף קוד שמחדש לשחקן 1 את נקודות הפעולה/מפתחות לתור החדש שלו
-        //}
+        // If player 2 is AI, start animated AI turn
+        if (AIPlayer* ai = static_cast<AIPlayer*>(m_player2.get()))
+        {
+            ai->endTurn();
+            ai->beginTurn(m_board);
+            m_isAITurn = true;
+            // Don't switch back here — the game loop will do it when AI finishes
+        }
     }
-    else {
+    else
+    {
         m_currentPlayer = m_player1.get();
     }
     m_selectedFromHand = nullptr;
 }
+//void Game::endTurn()
+//{
+//    m_currentPlayer->endTurn(); // סיום תור השחקן הנוכחי
+//    m_board.updateTileEffects(); // הלבה שורפת מפלצות בסוף התור!
+//    // 1. קוד החלפת התור הקיים שלך... (למשל מוריד פעולות, מחליף את m_currentPlayer)
+//    if (m_currentPlayer == m_player1.get()) {
+//        m_currentPlayer = m_player2.get();
+//
+//       
+//        // אם עברנו לשחקן 2 והוא AI - נריץ אותו ונחזיר מיד לשחקן 1
+//        //if (AIPlayer* ai = static_cast<AIPlayer*>(m_player2.get()))
+//
+//        //{
+//        //    ai->endTurn();
+//        //    ai->makeMove(m_board);
+//
+//        //    // בסיום התור של ה-AI, מחזירים ידנית לשחקן 1 בלי לקרוא שוב ל-endTurn
+//        //    m_currentPlayer = m_player1.get();
+//        //    // כאן אפשר להוסיף קוד שמחדש לשחקן 1 את נקודות הפעולה/מפתחות לתור החדש שלו
+//        //}
+//    }
+//    else {
+//        m_currentPlayer = m_player1.get();
+//    }
+//    m_selectedFromHand = nullptr;
+//}
 
 void Game::draw()
 {

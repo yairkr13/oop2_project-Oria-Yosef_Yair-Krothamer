@@ -757,7 +757,8 @@ Tile* Board::AI_FindBestTargetForMonster(Monster* monster)
         }
 
         // עדיפות ב': משבצת פנויה שמתקדמת שמאלה (Q קטן יותר)
-        if (!tile->hasEntity() && tile->isPassable())
+        //if (!tile->hasEntity() && tile->isPassable())
+        if (!tile->hasEntity() && tile->isPassableFor(monster))
         {
             if (!bestMoveTarget || tile->getQ() < bestMoveTarget->getQ())
             {
@@ -819,7 +820,8 @@ bool Board::AI_SpawnMonster(Monster* monster, PlayerSide side)
     {
         if (coords.first >= minQ && coords.first <= maxQ)
         {
-            if (!tile->hasEntity() && tile->isPassable())
+            //if (!tile->hasEntity() && tile->isPassable())
+            if (!tile->hasEntity() && tile->isPassableFor(monster))
             {
                 availableSpawnTiles.push_back(tile.get());
             }
@@ -836,8 +838,8 @@ bool Board::AI_SpawnMonster(Monster* monster, PlayerSide side)
 
 bool Board::spawnMonsterOnTile(Monster* monster, Tile* targetTile)
 {
-    if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassable()) return false;
-
+    //if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassable()) return false;
+    if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(monster)) return false;
     targetTile->setEntity(monster);
     monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(),
         tileToScreen(targetTile->getQ(), targetTile->getRow()));
@@ -857,7 +859,8 @@ void Board::performAction(Monster* monster, Tile* targetTile)
         }
     }
     // 2. תנועה
-    else if (!targetTile->hasEntity() && targetTile->isPassable())
+    //else if (!targetTile->hasEntity() && targetTile->isPassable())
+    else if (!targetTile->hasEntity() && targetTile->isPassableFor(monster))
     {
         auto sourceIt = m_grid.find({ monster->getQ(), monster->getRow() });
         if (sourceIt != m_grid.end())
@@ -871,4 +874,34 @@ void Board::performAction(Monster* monster, Tile* targetTile)
                 tileToScreen(targetTile->getQ(), targetTile->getRow()));
         }
     }
+}
+
+void Board::update(float dt)
+{
+    for (auto& [coords, tile] : m_grid)
+    {
+        if (auto entity = tile->getEntity())
+        {
+            entity->update(dt);
+            
+        }
+    }
+}
+
+bool Board::isAnimating() const
+{
+    for (auto const& [coords, tile] : m_grid)
+    {
+        if (auto entity = tile->getEntity())
+        {
+            if (entity->getType() == EntityType::Monster)
+            {
+                // עכשיו אנחנו בטוחים שזו מפלצת, אז אפשר להמיר בבטחה
+                Monster* monster = static_cast<Monster*>(entity);
+                if (monster->isMoving()) return true;
+            }
+
+        }
+    }
+    return false; // <--- חסר לך את זה! אם אף אחד לא זז, מחזירים שקר
 }

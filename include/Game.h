@@ -44,6 +44,7 @@ private:
     Player* m_currentPlayer;
 
     sf::Clock m_clock;
+    bool m_isAITurn = false;
 	//timer for every turn, when time is up- switch to the other player - 2:00
     // 
     //sf::View m_view; //when its player 1 turn- the screen get closer to player 1

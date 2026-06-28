@@ -48,8 +48,9 @@ public:
 
     void moveTo(int q, int row, const sf::Vector2f& screenPos);
     void walkTo(const sf::Vector2f& targetScreenPos);//chanfe to animation!!!!!!!!!!!!!!!
-    void update(float dt);
+    void update(float dt) override;
     virtual bool canFly() const { return m_flying; } // כברירת מחדל מפלצות הן קרקעיות
+    bool isMoving() const { return m_isMoving; }
 protected:
     std::string m_name;
     //int m_health;

@@ -123,29 +123,41 @@ void Monster::moveTo(int q, int row, const sf::Vector2f& screenPos)
     if (m_actionsLeft <= 0) return;
 
     // קריאה לפונקציה הקיימת שמזיזה אותה גרפית ומעדכנת קואורדינטות
-    spawnOnBoard(q, row, screenPos);
+    m_q = q;
+    m_row = row;
+    walkTo(screenPos);  // animate visually instead of teleporting
 
     useAction(); // המפלצת מורידה לעצמה פעולה!
 }
 
-void Monster::update(float dt)
+void Monster::update(float dt)  // (אל תשכחי להוסיף override גם ב-BoardEntity)
 {
+    // אם המפלצת לא אמורה לזוז, אין לנו מה לעשות פה
     if (!m_isMoving) return;
 
+    // 1. חישוב המרחק והכיוון למשבצת היעד
     float dx = m_targetPos.x - m_screenPos.x;
     float dy = m_targetPos.y - m_screenPos.y;
     float distance = std::sqrt(dx * dx + dy * dy);
 
-    if (distance < 5.f)
+    // 2. האם הגענו ליעד? (לוקחים טווח ביטחון קטן של 5 פיקסלים כדי לא לפספס)
+    if (distance < 5.0f)
     {
-        m_screenPos = m_targetPos;
-        m_isMoving = false;
+        m_screenPos = m_targetPos; // מיישרים בדיוק למרכז
+        m_isMoving = false;        // מכבים את האנימציה! (ה-AI עכשיו יוכל להמשיך)
     }
     else
     {
-        m_screenPos.x += (dx / distance) * m_speed * dt;
-        m_screenPos.y += (dy / distance) * m_speed * dt;
+        // 3. תנועה חלקה לכיוון היעד
+        float moveX = (dx / distance) * m_speed * dt;
+        float moveY = (dy / distance) * m_speed * dt;
+
+        m_screenPos.x += moveX;
+        m_screenPos.y += moveY;
     }
+
+    // 4. חשוב מאוד: לעדכן את הספרייט של ה-SFML כדי שנראה אותו זז על המסך!
+    m_sprite.setPosition(m_screenPos);
 }
 //
 ////

@@ -16,6 +16,9 @@ public:
 	void handleClick(const sf::Vector2f& pos, PlayerSide currentSide);
 	//bool isTilePassable(Tile* start, Tile* end) const;
 	
+	void update(float dt);
+	bool isAnimating() const;
+
 	
 	//bool trySpawnMonster(const sf::Vector2f& pos, std::shared_ptr<Monster> monster);
 	bool trySpawnMonster(const sf::Vector2f& pos, Monster* monster);

@@ -35,7 +35,9 @@ public:
 
     void setEntity(BoardEntity* entity);
     bool hasEntity() const { return m_entity != nullptr; }
-
+    virtual bool isPassableFor(Monster* monster) const {
+        return m_isPassable;
+    }
     //void setMonster(Monster* monster) { setEntity(monster); }
 
     /*bool hasMonster() const {

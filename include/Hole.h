@@ -10,6 +10,13 @@ public:
         // זה כל הקסם! מונע ממערכת ה-Pathfinding לאפשר הליכה לכאן
         m_isPassable = false;
     }
+    bool isPassableFor(Monster* monster) const override
+    {
+        if (monster && monster->canFly()) {
+            return true; // מעופפים יכולים לעבור!
+        }
+        return false; // מפלצות קרקע חסומות
+    }
     bool isHole() const override { return true; } // דורס פונקציה וירטואלית שנצטרך להוסיף ל-Tile.h
     void setHighlighted(bool highlighted, const sf::Color& defaultHighlightColor = sf::Color(150, 220, 150, 180)) override
     {

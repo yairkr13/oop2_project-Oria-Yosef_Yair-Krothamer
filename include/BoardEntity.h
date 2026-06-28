@@ -38,6 +38,7 @@ public:
     void setCoords(int q, int row) { m_q = q; m_row = row; }
 
     virtual void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos);
+    virtual void update(float dt) {}
     /*sf::Vector2f getScreenPosition() const { return m_screenPos; }
     void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }*/
 protected:
