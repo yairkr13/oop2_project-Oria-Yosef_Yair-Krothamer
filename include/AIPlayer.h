@@ -26,3 +26,4 @@ private:
     int m_currentMonsterIdx = 0;
     int m_safetyCounter = 0;
 };
+

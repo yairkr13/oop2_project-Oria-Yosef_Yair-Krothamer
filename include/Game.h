@@ -27,6 +27,7 @@ public:
     //void setState(GameState newState);
 
 private:
+    void startGame();
     void endTurn();
     void loadAllResources(); // <--- הפונקציה החדשה שלנו
     const sf::Texture& initResourcesAndGetBg();

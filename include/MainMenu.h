@@ -7,6 +7,12 @@
 // Returned by MainMenu::handleEvent() to tell the caller what to do next.
 enum class MenuResult { Play, Quit, Closed };
 
+// Tracks which sub-screen the menu is currently displaying.
+enum class MenuState { Main, GameModeSelection, Instructions };
+
+// Represents the selected play configuration.
+enum class GameMode { None, PlayerVsAI, PlayerVsPlayer };
+
 // One selectable entry in the menu.
 struct MenuItem
 {
@@ -22,6 +28,7 @@ public:
     void reset();
     std::optional<MenuResult> handleEvent(const sf::Event& event);
     void draw();
+    GameMode getGameMode() const;
 
 private:
     sf::RenderWindow& m_window;
@@ -32,7 +39,15 @@ private:
     std::vector<sf::FloatRect> m_clickZones; // invisible click areas matching image buttons
     std::vector<MenuItem>  m_items;
     std::size_t            m_activeIndex;
-    bool                   m_showInstructions;
+    MenuState              m_menuState;
+    GameMode               m_selectedGameMode;
+
+    // Game mode selection screen elements
+    std::vector<sf::Text>      m_modeItems;
+    std::vector<sf::FloatRect> m_modeClickZones;
+    sf::FloatRect              m_backClickZone;
+    sf::Text                   m_backText;
+    std::size_t                m_modeActiveIndex;
 
     // Instruction-screen texts
     sf::Text m_instrObjective;
@@ -50,12 +65,16 @@ private:
 
     void loadAssets();
     void buildItems();
+    void buildModeItems();
 
-    std::optional<MenuResult> handleMenuEvent(const sf::Event& event);
+    std::optional<MenuResult> handleMainEvent(const sf::Event& event);
+    std::optional<MenuResult> handleModeSelectEvent(const sf::Event& event);
     bool                      handleInstructionsEvent(const sf::Event& event);
     std::optional<MenuResult> activateCurrentItem();
+    std::optional<MenuResult> activateModeItem();
 
     void updateHighlight();
     void drawMenu();
+    void drawModeSelection();
     void drawInstructions();
 };

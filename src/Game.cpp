@@ -10,13 +10,13 @@ const sf::Texture& Game::initResourcesAndGetBg()
 }
 
 Game::Game() : m_board(), m_state(GameState::MainMenu),
-    /*m_bgSprite([]() -> const sf::Texture& {
-        TextureManager::getInstance().loadTexture("game_bg", "resources/Background/Background1.png");
-        return TextureManager::getInstance().getTexture("game_bg");
-    }())*/
-	m_bgSprite(initResourcesAndGetBg())
+/*m_bgSprite([]() -> const sf::Texture& {
+    TextureManager::getInstance().loadTexture("game_bg", "resources/Background/Background1.png");
+    return TextureManager::getInstance().getTexture("game_bg");
+}())*/
+m_bgSprite(initResourcesAndGetBg())
 {
-    
+
     m_bgSprite.setTexture(TextureManager::getInstance().get<sf::Texture>("game_bg"));
     m_window.create(sf::VideoMode({ Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT }), "Phobies");
     m_window.setFramerateLimit(60);
@@ -38,12 +38,7 @@ Game::Game() : m_board(), m_state(GameState::MainMenu),
     }
 
     m_player1 = std::make_unique<Player>(PlayerSide::Left);
-    //make this a choice in the menu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //m_player2 = std::make_unique<Player>(PlayerSide::Right);
-    m_player2 = std::make_unique<AIPlayer>(PlayerSide::Right);
     m_currentPlayer = m_player1.get();
-
-    m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart());
 }
 
 void Game::run()
@@ -56,7 +51,7 @@ void Game::run()
         {
             event->visit([this](const auto& e) { handle(e); });
         }
-        
+
         if (m_state == GameState::Playing)
         {
             m_board.update(dt);
@@ -74,7 +69,7 @@ void Game::run()
             }
         }
 
-        if (m_player1->isDead() || m_player2->isDead())
+        if (m_player1->isDead() || (m_player2 && m_player2->isDead()))
             ;
 
         m_window.clear(sf::Color(30, 30, 50));
@@ -155,7 +150,7 @@ void Game::handle(const sf::Event::MouseButtonPressed& event)
         if (result.has_value())
         {
             if (*result == MenuResult::Play)
-                m_state = GameState::Playing;
+                startGame();
             else if (*result == MenuResult::Quit)
                 m_window.close();
         }
@@ -165,6 +160,19 @@ void Game::handle(const sf::Event::MouseButtonPressed& event)
 
 void Game::handle(const sf::Event::KeyPressed& event)
 {
+    if (m_state == GameState::MainMenu && m_menu.has_value())
+    {
+        auto result = m_menu->handleEvent(event);
+        if (result.has_value())
+        {
+            if (*result == MenuResult::Play)
+                startGame();
+            else if (*result == MenuResult::Quit)
+                m_window.close();
+        }
+        return;
+    }
+
     if (event.code == sf::Keyboard::Key::Escape)
     {
         //menu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -183,6 +191,25 @@ void Game::handle(const sf::Event::KeyPressed& event)
     }
 }
 
+void Game::startGame()
+{
+    GameMode mode = m_menu->getGameMode();
+    if (mode == GameMode::PlayerVsAI) {
+        m_player2 = std::make_unique<AIPlayer>(PlayerSide::Right);
+    }
+    else if (mode == GameMode::PlayerVsPlayer) {
+        m_player2 = std::make_unique<Player>(PlayerSide::Right);
+    }
+    else {
+        // Defensive fallback — should never happen
+        m_player2 = std::make_unique<AIPlayer>(PlayerSide::Right);
+    }
+    m_currentPlayer = m_player1.get();
+    m_isAITurn = false;
+    m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart());
+    m_state = GameState::Playing;
+}
+
 void Game::endTurn()
 {
     m_currentPlayer->endTurn();
@@ -192,14 +219,16 @@ void Game::endTurn()
     {
         m_currentPlayer = m_player2.get();
 
-        // If player 2 is AI, start animated AI turn
-        if (AIPlayer* ai = static_cast<AIPlayer*>(m_player2.get()))
+        // Only trigger AI logic if we're in PvAI mode
+        if (m_menu.has_value() && m_menu->getGameMode() == GameMode::PlayerVsAI)
         {
+            AIPlayer* ai = static_cast<AIPlayer*>(m_player2.get());
             ai->endTurn();
             ai->beginTurn(m_board);
             m_isAITurn = true;
             // Don't switch back here — the game loop will do it when AI finishes
         }
+        // In PvP mode, just switch to player 2 — no AI activation
     }
     else
     {
@@ -250,10 +279,10 @@ void Game::draw()
 
             m_currentPlayer->draw(m_window, isPlayer2, m_selectedFromHand);
         }
-		m_player1->drawKeys(m_window, false);
-		m_player2->drawKeys(m_window, true);
+        m_player1->drawKeys(m_window, false);
+        m_player2->drawKeys(m_window, true);
     }
-    
+
     //m_player1->draw(m_window);
     //m_player2->draw(m_window);
 }
