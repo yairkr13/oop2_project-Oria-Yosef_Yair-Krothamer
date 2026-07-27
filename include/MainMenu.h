@@ -23,6 +23,7 @@ struct MenuItem
 class MainMenu
 {
 public:
+    //Change
     explicit MainMenu(sf::RenderWindow& window);
 
     void reset();
