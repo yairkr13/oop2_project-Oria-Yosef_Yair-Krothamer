@@ -11,8 +11,6 @@ public:
 
 private:
 	std::vector<Button> m_buttons;
-	//void handle(const sf::Event::MouseButtonPressed& event);
 	void handle(const sf::Event::KeyPressed& event);
-	//void handle(const sf::Event::MouseMoved& event);
 	void handle(const auto& event) {};
 };

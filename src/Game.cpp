@@ -326,6 +326,9 @@ void Game::loadAllResources()
         // Mozzy
         rm.load<sf::Texture>("mozzy", "resources/Monster/Mozzy/Mozzy_R.png");
         rm.load<sf::Texture>("mozzy_card", "resources/Monster/Mozzy/Mozzy_card_R.png");
+        
+        
+        rm.load<sf::Texture>("BonePile", "resources/StaticObject/BonePile.png");
     }
     catch (const std::exception& e)
     {

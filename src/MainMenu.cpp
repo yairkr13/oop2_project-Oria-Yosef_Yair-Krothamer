@@ -63,6 +63,11 @@ MainMenu::MainMenu(sf::RenderWindow& window)
     loadAssets();
     buildItems();
     buildModeItems();
+    m_playButton = std::make_unique<Button>(
+        sf::IntRect({ 10, 10 }, { 625, 150 }),
+        TextureManager::getInstance().get<sf::Texture>("BonePile"),
+        [this]() { /*m_menuState = MenuState::GameModeSelection;*/ std::cout<<"HELLO" << std::endl; }
+    );
 }
 
 void MainMenu::reset()
@@ -76,6 +81,8 @@ void MainMenu::reset()
 
 std::optional<MenuResult> MainMenu::handleEvent(const sf::Event& event)
 {
+	m_playButton->handleEvent(event);
+
     if (m_menuState == MenuState::Instructions)
     {
         if (handleInstructionsEvent(event))
@@ -105,6 +112,8 @@ void MainMenu::draw()
         drawMenu();
         break;
     }
+    m_playButton->draw(m_window);
+
 }
 
 void MainMenu::loadAssets()

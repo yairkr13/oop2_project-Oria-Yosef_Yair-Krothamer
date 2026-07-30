@@ -3,6 +3,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include "Button.h"
 
 // Returned by MainMenu::handleEvent() to tell the caller what to do next.
 enum class MenuResult { Play, Quit, Closed };
@@ -42,6 +43,7 @@ private:
     std::size_t            m_activeIndex;
     MenuState              m_menuState;
     GameMode               m_selectedGameMode;
+	std::unique_ptr <Button>				 m_playButton;
 
     // Game mode selection screen elements
     std::vector<sf::Text>      m_modeItems;
@@ -78,4 +80,5 @@ private:
     void drawMenu();
     void drawModeSelection();
     void drawInstructions();
+
 };
