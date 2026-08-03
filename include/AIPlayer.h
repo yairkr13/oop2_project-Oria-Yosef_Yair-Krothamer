@@ -1,7 +1,7 @@
 #pragma once
 #include "Player.h"
 #include "Board.h"
-
+//CHECK
 enum class AITurnPhase { Spawning, Acting, Done };
 
 class AIPlayer : public Player
