@@ -1,5 +1,4 @@
 #include "Monsters/Barzilla.h"
-#include "TextureManager.h"
 
 Barzilla::Barzilla(PlayerSide side)
     : Monster(side, "Barzilla", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, COST, -1, -1, sf::Color::Red, "barzilla")

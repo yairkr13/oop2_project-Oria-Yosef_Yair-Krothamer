@@ -1,22 +1,22 @@
 #include "Monsters/Monster.h"
 #include "Constants.h"
-#include "TextureManager.h"
+#include "AssetsManager.h"
 
 Monster::Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey,bool flying)
     : BoardEntity(q, row, {}, health),
     m_side(side), m_name(name), m_attackDamage(attackPower),
     m_range(range), m_cost(cost), m_color(color), m_textureKey(textureKey), m_flying(flying),
-    m_sprite(TextureManager::getInstance().get<sf::Texture>(m_textureKey))
+    m_sprite(AssetsManager::getInstance().getTexture(m_textureKey))
 {
     try
     {
         const sf::Texture& texture = m_sprite.getTexture();
         //m_sprite(texture);
 
-        // двгшъ рчегъ дошлж
+        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
         m_sprite.setOrigin({ texture.getSize().x / 2.f, texture.getSize().y / 2.f});
 
-        // зйщеб ещойшъ чрд дойгд (Scale)
+        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (Scale)
         float maxTextureDim = std::max(static_cast<float>(texture.getSize().x), static_cast<float>(texture.getSize().y));
         m_baseScale = Config::MONSTER_BOARD_SIZE / maxTextureDim;
 
@@ -25,7 +25,7 @@ Monster::Monster(PlayerSide side, const std::string& name, int health, int attac
     }
     catch (...)
     {
-        // ан дичсиешд зсшд, ргмйч гвм щйвйг м-draw мцййш отвм цбтерй
+        // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ-draw пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
         m_hasTexture = false;
     }
 }
@@ -61,13 +61,13 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
 void Monster::drawActionsLeft(sf::RenderWindow& window) const
 {
     int TILE_RADIUS = 48.f;
-    sf::Text actionText(TextureManager::getInstance().get<sf::Font>("Lilita"));
+    sf::Text actionText(AssetsManager::getInstance().getFont("Lilita"));
     actionText.setString(std::to_string(m_actionsLeft));
-    actionText.setCharacterSize(14); // вегм чип щма йфшйт
-    actionText.setFillColor(sf::Color::Yellow); // цбт беми
+    actionText.setCharacterSize(14); // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+    actionText.setFillColor(sf::Color::Yellow); // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 
-    // ойчен: чцъ отм дофмцъ, ае мйг ог дзййн
-    // m_screenPosition деа дошлж щм дощбцъ щдофмцъ роцаъ тмйд
+    // пїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+    // m_screenPosition пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
     actionText.setPosition({ m_screenPos.x - 15.f, m_screenPos.y + TILE_RADIUS - 20.f });
 
     window.draw(actionText);
@@ -78,28 +78,28 @@ void Monster::drawActionsLeft(sf::RenderWindow& window) const
 //    if (!isAlive()) return;
 //    /*if (m_side == currentPlayer)
 //        return;*/
-//    // 1. двгшъ ойгеъ мог дзййн (мощм, 80% ошезб ощбцъ дмез)
+//    // 1. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ, 80% пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ)
 //    float barWidth = Config::MONSTER_BOARD_SIZE * 0.8f;
 //    float barHeight = 6.f;
 //
-//    // 2. зйщеб ойчен отм шащ дофмцъ (бдрзд щ-m_screenPos деа ошлж дгоеъ)
+//    // 2. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ пїЅ-m_screenPos пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)
 //    float x = m_screenPos.x - (barWidth / 2.f);
-//    float y = m_screenPos.y - (Config::MONSTER_BOARD_SIZE / 2.f) - 12.f; // 12 фйчсмйн отм дгоеъ
+//    float y = m_screenPos.y - (Config::MONSTER_BOARD_SIZE / 2.f) - 12.f; // 12 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 //
-//    // 3. цйеш шчт ог дзййн (аген лдд ае афеш)
+//    // 3. пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ)
 //    sf::RectangleShape bgBar({ barWidth, barHeight });
 //    bgBar.setPosition({ x, y });
-//    bgBar.setFillColor(sf::Color(80, 20, 20)); // аген тоеч
+//    bgBar.setFillColor(sf::Color(80, 20, 20)); // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 //
-//    // 4. зйщеб йзс дзййн щреъше ецйеш дог дйшеч
+//    // 4. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 //    float healthRatio = static_cast<float>(m_health) / m_maxHealth;
 //    if (healthRatio < 0.f) healthRatio = 0.f;
 //
 //    sf::RectangleShape fgBar({ barWidth * healthRatio, barHeight });
 //    fgBar.setPosition({ x, y });
-//    fgBar.setFillColor(sf::Color(50, 220, 50)); // йшеч бдйш
+//    fgBar.setFillColor(sf::Color(50, 220, 50)); // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 //
-//    // 5. шйщен тм доск
+//    // 5. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
 //    window.draw(bgBar);
 //    window.draw(fgBar);
 //}
@@ -122,33 +122,33 @@ void Monster::moveTo(int q, int row, const sf::Vector2f& screenPos)
 {
     if (m_actionsLeft <= 0) return;
 
-    // чшйад мферчцйд дчййоъ щожйжд аеъд вшфйъ еотглръ чеаешгйриеъ
+    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     m_q = q;
     m_row = row;
     walkTo(screenPos);  // animate visually instead of teleporting
 
-    useAction(); // дофмцъ оешйгд мтцод фтемд!
+    useAction(); // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ!
 }
 
-void Monster::update(float dt)  // (ам ъщлзй мдесйу override вн б-BoardEntity)
+void Monster::update(float dt)  // (пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ override пїЅпїЅ пїЅ-BoardEntity)
 {
-    // ан дофмцъ ма аоешд мжеж, айп мре од мтщеъ фд
+    // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ
     if (!m_isMoving) return;
 
-    // 1. зйщеб дошзч едлйееп мощбцъ дйтг
+    // 1. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
     float dx = m_targetPos.x - m_screenPos.x;
     float dy = m_targetPos.y - m_screenPos.y;
     float distance = std::sqrt(dx * dx + dy * dy);
 
-    // 2. дан двтре мйтг? (мечзйн иеез бйизеп чип щм 5 фйчсмйн лгй ма мфсфс)
+    // 2. пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ? (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ 5 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)
     if (distance < 5.0f)
     {
-        m_screenPos = m_targetPos; // оййщшйн бгйеч мошлж
-        m_isMoving = false;        // олбйн аъ дарйоцйд! (д-AI тлщйе йелм мдощйк)
+        m_screenPos = m_targetPos; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+        m_isMoving = false;        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ! (пїЅ-AI пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)
     }
     else
     {
-        // 3. ъретд змчд млйееп дйтг
+        // 3. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
         float moveX = (dx / distance) * m_speed * dt;
         float moveY = (dy / distance) * m_speed * dt;
 
@@ -156,7 +156,7 @@ void Monster::update(float dt)  // (ам ъщлзй мдесйу override вн б-BoardEntity)
         m_screenPos.y += moveY;
     }
 
-    // 4. зщеб оаег: мтглп аъ дсфшййи щм д-SFML лгй щршад аеъе жж тм доск!
+    // 4. пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ-SFML пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ!
     m_sprite.setPosition(m_screenPos);
 }
 //
@@ -172,21 +172,21 @@ bool Monster::isOnBoard() const {
 }
 //bool isClicked(sf::Vector2f mousePos) const {
 //    if (isOnBoard()) {
-//        // бгйчъ мзйцд тм дмез (тйвем ае д-Sprite дрелзй)
+//        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ-Sprite пїЅпїЅпїЅпїЅпїЅпїЅ)
 //        float dx = mousePos.x - m_screenPos.x;
 //        float dy = mousePos.y - m_screenPos.y;
 //        return (dx * dx + dy * dy) <= (32.f * 32.f);
 //    }
 //    else {
-//        // ан дйа бйг, д-Sprite олйм аъ дойчен дтглрй щме од-draw
+//        // пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ, пїЅ-Sprite пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ-draw
 //        return m_sprite.getGlobalBounds().contains(mousePos);
 //    }
 //}
 void Monster::drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const
 {
-    const sf::Font& font = TextureManager::getInstance().get<sf::Font>("Lilita");
+    const sf::Font& font = AssetsManager::getInstance().getFont("Lilita");
 
-    // цйеш освшъ ждб ан рбзш
+    // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
     if (isSelected)
     {
         sf::RectangleShape selectionBorder({ Config::CARD_WIDTH + 6.f, Config::CARD_HEIGHT + 6.f });
@@ -197,10 +197,10 @@ void Monster::drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool i
         window.draw(selectionBorder);
     }
 
-    // итйръ ичсиешъ дчму
+    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
     std::string texKey = getCardTextureKey();
-    const sf::Texture& monsterTex = TextureManager::getInstance().get<sf::Texture>(texKey);
-    //m_sprite.setTexture(monsterTex); // ощъощйн б-m_sprite щм дозмчд
+    const sf::Texture& monsterTex = AssetsManager::getInstance().getTexture(texKey);
+    //m_sprite.setTexture(monsterTex); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ-m_sprite пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     sf::Sprite monsterSprite(monsterTex);
 
     float scaleX = Config::CARD_WIDTH / static_cast<float>(monsterTex.getSize().x);
@@ -221,7 +221,7 @@ void Monster::drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool i
     monsterSprite.setScale({ scaleX, scaleY });
     window.draw(monsterSprite);
 
-    // цйеш ичси тмеъ офъзеъ
+    // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     sf::Text costText(font);
     costText.setString(std::to_string(m_cost));
     costText.setCharacterSize(22);
@@ -243,5 +243,5 @@ bool Monster::isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPos) const
 void Monster::attack(BoardEntity* target)
 { 
     target->takeDamage(m_attackDamage);
-    useAction(); // дофмцъ оешйгд мтцод фтемд!
+    useAction(); // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ!
 }

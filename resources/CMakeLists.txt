@@ -3,6 +3,19 @@ configure_file("Fonts/LilitaOne.ttf" ${CMAKE_BINARY_DIR}/resources/Fonts/LilitaO
 
 configure_file("Menu/Menu.png" ${CMAKE_BINARY_DIR}/resources/Menu/Menu.png COPYONLY)
 configure_file("Menu/Instructions.png" ${CMAKE_BINARY_DIR}/resources/Menu/Instructions.png COPYONLY)
+configure_file("Menu/MiniMenu.png" ${CMAKE_BINARY_DIR}/resources/Menu/MiniMenu.png COPYONLY)
+
+configure_file("Button/AiButton.png" ${CMAKE_BINARY_DIR}/resources/Button/AiButton.png COPYONLY)
+configure_file("Button/StartGameButton.png" ${CMAKE_BINARY_DIR}/resources/Button/StartGameButton.png COPYONLY)
+configure_file("Button/InstructionsButton.png" ${CMAKE_BINARY_DIR}/resources/Button/InstructionsButton.png COPYONLY)
+configure_file("Button/ExitButton.png" ${CMAKE_BINARY_DIR}/resources/Button/ExitButton.png COPYONLY)
+configure_file("Button/BackButton.png" ${CMAKE_BINARY_DIR}/resources/Button/BackButton.png COPYONLY)
+configure_file("Button/FriendButton.png" ${CMAKE_BINARY_DIR}/resources/Button/FriendButton.png COPYONLY)
+configure_file("Button/VolumeUpButton.png" ${CMAKE_BINARY_DIR}/resources/Button/VolumeUpButton.png COPYONLY)
+configure_file("Button/VolumeMuteButton.png" ${CMAKE_BINARY_DIR}/resources/Button/VolumeMuteButton.png COPYONLY)
+configure_file("Button/Button.png" ${CMAKE_BINARY_DIR}/resources/Button/Button.png COPYONLY)
+configure_file("Button/GoToMiniMenuButton.png" ${CMAKE_BINARY_DIR}/resources/Button/GoToMiniMenuButton.png COPYONLY)
+
 
 configure_file("Background/Background1.png" ${CMAKE_BINARY_DIR}/resources/Background/Background1.png COPYONLY)
 configure_file("Background/Background2.png" ${CMAKE_BINARY_DIR}/resources/Background/Background2.png COPYONLY)

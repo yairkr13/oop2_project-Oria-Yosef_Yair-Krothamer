@@ -1,26 +1,26 @@
 #pragma once
 #include "BoardEntity.h"
-#include "TextureManager.h"
+#include "AssetsManager.h"
 
 class Heart : public BoardEntity {
 public:
-    // дбрай щм дмб чеша мбрай щм BoardEntity еотбйш ме аъ дойчеойн
+    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ BoardEntity пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     Heart(PlayerSide side, int q, int row, const sf::Vector2f& position)
-		: BoardEntity(q, row, position, 100), m_side(side), m_sprite(TextureManager::getInstance().get<sf::Texture>("heart100"))
+		: BoardEntity(q, row, position, 100), m_side(side), m_sprite(AssetsManager::getInstance().getTexture("heart100"))
     {
         const sf::Texture& texture = m_sprite.getTexture();
 
-        // двгшъ рчегъ дошлж маоцт дъоерд (тн севшййн осемсмйн)
+        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
         m_sprite.setOrigin({ texture.getSize().x / 2.f, texture.getSize().y / 2.f });
 
-        // зйщеб ещойшъ чрд дойгд (Scale)
-        float desiredSize = 60.f; // аъд йлем мдзмйу лап м-Config::MONSTER_BOARD_SIZE ан аъд шецд щдмб йдйд бвегм щм офмцъ
+        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (Scale)
+        float desiredSize = 60.f; // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ-Config::MONSTER_BOARD_SIZE пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
         float maxTextureDim = std::max(static_cast<float>(texture.getSize().x), static_cast<float>(texture.getSize().y));
         float scale = desiredSize / maxTextureDim;
 
         m_sprite.setScale({ scale, scale });
 
-        // ойчен тм доск
+        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
         m_sprite.setPosition(m_screenPos);
     }
 

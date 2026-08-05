@@ -80,12 +80,27 @@ bool AIPlayer::advanceTurn(Board& board)
         std::cout << "[AI] Performing action with monster at (" << monster->getQ() << "," << monster->getRow() << ")" << std::endl;
         board.performAction(monster, targetTile);
 
-        // Return false — we executed one action, now wait for animation to finish
+        // Return false ï¿½ we executed one action, now wait for animation to finish
         return false;
     }
 
-    // All monsters processed — AI turn is done
+    // All monsters processed ï¿½ AI turn is done
     m_phase = AITurnPhase::Done;
     std::cout << "[AI] Finished turn." << std::endl;
     return true;
+}
+
+void AIPlayer::onTurnStart(Board& board)
+{
+    beginTurn(board);
+}
+
+void AIPlayer::updateTurn(Board& board)
+{
+    advanceTurn(board);
+}
+
+bool AIPlayer::isBusy() const
+{
+    return m_phase != AITurnPhase::Done;
 }

@@ -1,7 +1,7 @@
 #include "Player.h"
 #include "MonsterFactory.h"
 #include "Constants.h"
-#include "TextureManager.h"
+#include "AssetsManager.h"
 
 Player::Player(PlayerSide side)
 	: m_heart(std::make_unique<Heart>(side, -1, -1, sf::Vector2f(0.f, 0.f))), // יוצרים את הלב עם מיקום זמני
@@ -46,7 +46,7 @@ void Player::draw(sf::RenderWindow& window, bool alignRight, Monster* selectedFr
 
 void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
 {
-    const sf::Font& font = TextureManager::getInstance().get<sf::Font>("Lilita");
+    const sf::Font& font = AssetsManager::getInstance().getFont("Lilita");
 
     sf::Text keysText(font);
     //keysText.setString("Keys: " + std::to_string(m_keys));
@@ -78,7 +78,7 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, Monster* select
     bottomPanel.setFillColor(sf::Color(40, 40, 40));
     window.draw(bottomPanel);
 
-    const sf::Font& font = TextureManager::getInstance().get<sf::Font>("Lilita");
+    const sf::Font& font = AssetsManager::getInstance().getFont("Lilita");
 
     for (size_t i = 0; i < m_monsters.size(); ++i)
     {
@@ -107,7 +107,7 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, Monster* select
         // --- ציור המפלצת (הקלף עצמו) ---
         // הסרנו את ה-try-catch כדי שאם יש בעיית שמות אנחנו נראה אותה מיד ולא ננחש
         std::string texKey = m_monsters[i]->getCardTextureKey();
-        const sf::Texture& monsterTex = TextureManager::getInstance().get<sf::Texture>(texKey);
+        const sf::Texture& monsterTex = AssetsManager::getInstance().getTexture(texKey);
         sf::Sprite monsterSprite(monsterTex);
 
         float scaleX = Config::CARD_WIDTH / static_cast<float>(monsterTex.getSize().x);
@@ -205,7 +205,7 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr
         }
 
         std::string texKey = m_monsters[i]->getCardTextureKey();
-        const sf::Texture& monsterTex = TextureManager::getInstance().get<sf::Texture>(texKey);
+        const sf::Texture& monsterTex = AssetsManager::getInstance().getTexture(texKey);
         sf::Sprite monsterSprite(monsterTex);
 
         float scaleX = Config::CARD_WIDTH / static_cast<float>(monsterTex.getSize().x);

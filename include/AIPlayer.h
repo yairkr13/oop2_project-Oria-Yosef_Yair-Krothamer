@@ -8,10 +8,10 @@ class AIPlayer : public Player
 {
 public:
 
-    // черсишчиеш щочбм аъ дцг (бгшк лмм Right) ещн
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ Right) пїЅпїЅпїЅ
     AIPlayer(PlayerSide side);
 
-    // оъегъ дмйбд щм дозщб - ъешх блм фтн щдъеш щм д-AI оъзйм
+    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ-AI пїЅпїЅпїЅпїЅпїЅ
     // Called once at start of AI turn to begin the animated turn sequence
     void beginTurn(Board& board);
 
@@ -19,6 +19,12 @@ public:
     // Only advances to the next action when no animation is playing.
     bool advanceTurn(Board& board);
 
+    // Behavioral turn hooks (see Player) - delegate straight to the
+    // beginTurn/advanceTurn machinery above so callers never need to know
+    // they're dealing with an AIPlayer specifically.
+    void onTurnStart(Board& board) override;
+    void updateTurn(Board& board) override;
+    bool isBusy() const override;
 
 private:
 

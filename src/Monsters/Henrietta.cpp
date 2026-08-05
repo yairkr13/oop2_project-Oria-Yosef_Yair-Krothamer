@@ -1,5 +1,4 @@
 #include "Monsters/Henrietta.h"
-#include "TextureManager.h"
 
 Henrietta::Henrietta(PlayerSide side)
     : Monster(side, "Henrietta", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, COST, -1, -1, sf::Color::Green, "henrietta")

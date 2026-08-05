@@ -1,5 +1,4 @@
 #include "Monsters/Mozzy.h"
-#include "TextureManager.h"
 
 Mozzy::Mozzy(PlayerSide side)
     : Monster(side, "Mozzy", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, COST, -1, -1, sf::Color::Cyan, "mozzy",true)

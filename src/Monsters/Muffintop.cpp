@@ -1,5 +1,4 @@
 #include "Monsters/Muffintop.h"
-#include "TextureManager.h"
 
 Muffintop::Muffintop(PlayerSide side)
     : Monster(side, "Muffintop", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, COST, -1, -1, sf::Color::Magenta, "muffintop")
