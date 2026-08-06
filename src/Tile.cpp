@@ -1,5 +1,4 @@
 #include "Tile.h"
-const float TILE_RADIUS = 48.f;// Assuming each tile is 64x64 pixels, the radius would be 32
 
 
 Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)// <--- ��� ����� ������ ����� �� ����� ���!
@@ -10,7 +9,7 @@ Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)/
 {
     // ������ ������ (m_shape)...
 
-    m_shape.setRadius(TILE_RADIUS);
+    m_shape.setRadius(Config::TILE_RADIUS);
 
     // ���� ����� ���: ���� �� 6 ������ ��� �����!
     m_shape.setPointCount(6);
@@ -24,7 +23,7 @@ Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)/
     // ������ �� ������
     //m_shape.setRotation(sf::degrees(30.f));
     m_shape.setPosition(position);
-    //m_shape.setOrigin({ TILE_RADIUS, TILE_RADIUS });
+    //m_shape.setOrigin({ Config::TILE_RADIUS, Config::TILE_RADIUS });
     // ���������: ������ �� ����� ����� ����� ������
     // m_shape.setOrigin(radius, radius);
 }

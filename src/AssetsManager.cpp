@@ -9,6 +9,7 @@ void AssetsManager::loadAllAssets()
     loadTexture("menu_bg", "resources/Menu/Menu.png");
     loadTexture("instructions_bg", "resources/Menu/Instructions.png");
     loadTexture("mini_menu_bg", "resources/Menu/MiniMenu.png");
+    loadTexture("gameover_bg", "resources/Menu/gameover_bg.png");
 
     loadTexture("StartGameButton", "resources/Button/StartGameButton.png");
     loadTexture("InstructionsButton", "resources/Button/InstructionsButton.png");

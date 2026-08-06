@@ -1,5 +1,6 @@
 #include "State/GameplayState.h"
 #include "State/MiniMenuState.h"
+#include "State/GameOverState.h"
 #include "AIPlayer.h"
 #include "SpriteUtils.h"
 #include "AssetsManager.h"
@@ -77,6 +78,23 @@ void GameplayState::update(sf::Time deltaTime)
 {
     m_board.update(deltaTime.asSeconds());
     m_turnManager.update();
+
+    if (m_player1->isDead() || m_player2->isDead())
+    {
+        PlayerSide winner = (m_player1->isDead()) ? PlayerSide::Right : PlayerSide::Left;
+
+        // מעבירים את m_mode ו-m_window בלבד ללא לכידת this
+        GameMode currentMode = m_mode;
+        sf::RenderWindow& window = m_window;
+
+        transitionTo(std::make_unique<GameOverState>(
+            m_window,
+            winner,
+            [&window, currentMode]() {
+                return std::make_unique<GameplayState>(window, currentMode);
+            }
+        ));
+    }
 }
 
 void GameplayState::handleEvent(const sf::Event& event)

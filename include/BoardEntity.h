@@ -24,10 +24,12 @@ public:
     virtual bool isAlive() const;
     //virtual int getHealth() const = 0;
     virtual PlayerSide getSide() const = 0;
-    virtual EntityType getType() const = 0;
+    //virtual EntityType getType() const = 0;
     // 
     virtual bool isSelectable() const { return false; } // ברירת מחדל: לב אי אפשר לבחור
 
+    virtual bool isSelected() const { return false; }
+    virtual bool isMoving() const { return false; }
     //// --- פונקציות חדשות: קשר דו-כיווני עם המשבצת ---
     //void setCurrentTile(Tile* tile) { m_currentTile = tile; }
     //Tile* getCurrentTile() const { return m_currentTile; }

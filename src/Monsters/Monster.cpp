@@ -60,7 +60,6 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
 }
 void Monster::drawActionsLeft(sf::RenderWindow& window) const
 {
-    int TILE_RADIUS = 48.f;
     sf::Text actionText(AssetsManager::getInstance().getFont("Lilita"));
     actionText.setString(std::to_string(m_actionsLeft));
     actionText.setCharacterSize(14); // ���� ��� ��� �����
@@ -68,7 +67,7 @@ void Monster::drawActionsLeft(sf::RenderWindow& window) const
 
     // �����: ��� ��� ������, �� ��� �� �����
     // m_screenPosition ��� ����� �� ������ ������� ����� ����
-    actionText.setPosition({ m_screenPos.x - 15.f, m_screenPos.y + TILE_RADIUS - 20.f });
+    actionText.setPosition({ m_screenPos.x - 15.f, m_screenPos.y + Config::TILE_RADIUS - 20.f });
 
     window.draw(actionText);
 }

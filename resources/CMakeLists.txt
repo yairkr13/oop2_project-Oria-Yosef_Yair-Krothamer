@@ -5,6 +5,8 @@ configure_file("Menu/Menu.png" ${CMAKE_BINARY_DIR}/resources/Menu/Menu.png COPYO
 configure_file("Menu/Instructions.png" ${CMAKE_BINARY_DIR}/resources/Menu/Instructions.png COPYONLY)
 configure_file("Menu/MiniMenu.png" ${CMAKE_BINARY_DIR}/resources/Menu/MiniMenu.png COPYONLY)
 
+configure_file("Menu/gameover_bg.png" ${CMAKE_BINARY_DIR}/resources/Menu/gameover_bg.png COPYONLY)
+
 configure_file("Button/AiButton.png" ${CMAKE_BINARY_DIR}/resources/Button/AiButton.png COPYONLY)
 configure_file("Button/StartGameButton.png" ${CMAKE_BINARY_DIR}/resources/Button/StartGameButton.png COPYONLY)
 configure_file("Button/InstructionsButton.png" ${CMAKE_BINARY_DIR}/resources/Button/InstructionsButton.png COPYONLY)

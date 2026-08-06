@@ -7,6 +7,8 @@
 #include "Heart.h"
 #include <cmath>
 #include <map>
+#include <random>
+
 //try
 class Board
 {
@@ -51,7 +53,11 @@ private:
 	std::map<std::pair<int, int>, std::unique_ptr<Tile>> m_grid;
 
 	// Board layout constants
-	static constexpr float TILE_RADIUS = 48.f;
 	static constexpr float START_X = 320.f;
 	static constexpr float START_Y = 30.f;
+
+	static std::mt19937& rng() {
+		static std::mt19937 gen(std::random_device{}());
+		return gen;
+	}
 };

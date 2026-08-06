@@ -2,9 +2,7 @@
 #include "LavaTile.h"
 #include "Hole.h"
 #include "PanicPoint.h"
-#include <random>
-//HEY2
-//hiiiiiiiii
+
 Board::Board() 
 {
     createBoard();
@@ -17,7 +15,7 @@ Board::Board()
 //}
 void Board::createBoard()
 {
-    float width = std::sqrt(3.f) * TILE_RADIUS;
+    float width = std::sqrt(3.f) * Config::TILE_RADIUS;
     int max_rows = 7;
     int max_cols = 14;
 
@@ -32,7 +30,7 @@ void Board::createBoard()
         for (int q = start_col; q < max_cols; q += 2)
         {
             float x = START_X + (width / 2.f) * q;
-            float y = START_Y + (1.5f * TILE_RADIUS) * row;
+            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
 
             sf::Vector2f physicalPosition(x, y);
             m_grid[{q, row}] = std::make_unique<Tile>(q, row, physicalPosition);
@@ -56,7 +54,7 @@ void Board::createBoard()
     //    {
     //        auto [q, row] = allCoords[i];
     //        float x = START_X + (width / 2.f) * q;
-    //        float y = START_Y + (1.5f * TILE_RADIUS) * row;
+    //        float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
     //        m_grid[{q, row}] = std::make_unique<LavaTile>(q, row, sf::Vector2f(x, y));
     //    }
     //    //ליצור פונקציה שפשוט מביאה מישהו מהאקראים !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -65,14 +63,14 @@ void Board::createBoard()
     //    {
     //        auto [q, row] = allCoords[i];
     //        float x = START_X + (width / 2.f) * q;
-    //        float y = START_Y + (1.5f * TILE_RADIUS) * row;
+    //        float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
     //        m_grid[{q, row}] = std::make_unique<Hole>(q, row, sf::Vector2f(x, y));
     //    }
     //}
 }
 //void Board::createBoard()
 //{
-//    float width = std::sqrt(3.f) * TILE_RADIUS;
+//    float width = std::sqrt(3.f) * Config::TILE_RADIUS;
 //
 //    int max_rows = 7;
 //    int max_cols = 14;
@@ -84,7 +82,7 @@ void Board::createBoard()
 //        for (int q = start_col; q < max_cols; q += 2)
 //        {
 //            float x = START_X + (width / 2.f) * q;
-//            float y = START_Y + (1.5f * TILE_RADIUS) * row;
+//            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
 //
 //            sf::Vector2f physicalPosition(x, y);
 //            m_grid[{q, row}] = std::make_unique<Tile>(q, row, physicalPosition);
@@ -136,9 +134,10 @@ void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart) {
     }
     generateSpecialTiles(p1Heart, p2Heart);
 }
+
 void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
 {
-    float width = std::sqrt(3.f) * TILE_RADIUS;
+    float width = std::sqrt(3.f) * Config::TILE_RADIUS;
 
     std::vector<std::pair<int, int>> allCoords;
 
@@ -154,15 +153,15 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
 
     if (allCoords.size() >= 5)
     {
-        std::random_device rd;
-        std::mt19937 g(rd());
-        std::shuffle(allCoords.begin(), allCoords.end(), g);
+        //std::random_device rd;
+        //std::mt19937 g(rd());
+        std::shuffle(allCoords.begin(), allCoords.end(), rng());
 
         // 2 משבצות לבה
         for (int i = 0; i < 2; ++i) {
             auto [q, row] = allCoords[i];
             float x = START_X + (width / 2.f) * q;
-            float y = START_Y + (1.5f * TILE_RADIUS) * row;
+            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
             m_grid[{q, row}] = std::make_unique<LavaTile>(q, row, sf::Vector2f(x, y));
         }
 
@@ -170,7 +169,7 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
         for (int i = 2; i < 4; ++i) {
             auto [q, row] = allCoords[i];
             float x = START_X + (width / 2.f) * q;
-            float y = START_Y + (1.5f * TILE_RADIUS) * row;
+            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
             m_grid[{q, row}] = std::make_unique<Hole>(q, row, sf::Vector2f(x, y));
         }
 
@@ -178,7 +177,7 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
         for (int i = 4; i < 5; ++i) {
             auto [q, row] = allCoords[i];
             float x = START_X + (width / 2.f) * q;
-            float y = START_Y + (1.5f * TILE_RADIUS) * row;
+            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
             m_grid[{q, row}] = std::make_unique<PanicPoint>(q, row, sf::Vector2f(x, y), p1Heart, p2Heart);
         }
     }
@@ -194,7 +193,7 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
         float dx = pos.x - tileCenter.x;
         float dy = pos.y - tileCenter.y;
 
-        if ((dx * dx + dy * dy) <= (TILE_RADIUS * TILE_RADIUS))
+        if ((dx * dx + dy * dy) <= (Config::TILE_RADIUS * Config::TILE_RADIUS))
         {
             clickedTile = tile.get();
             break;
@@ -209,18 +208,23 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
     {
         if (auto entity = tile->getEntity()) // שלב א: לוקחים את הישות הכללית
         {
-            // שלב ב: הלוח שואל "האם אתה מפלצת?" 
-            if (entity->getType() == EntityType::Monster)
+            if (entity->isSelected())//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             {
-                // עכשיו אנחנו בטוחים שזו מפלצת, אז אפשר להמיר בבטחה
-                Monster* monster = static_cast<Monster*>(entity);
-
-                if (monster->isSelected())
-                {
-                    selectedMonster = monster;
-                    break;
-                }
+                selectedMonster = static_cast<Monster*>(entity); // אבל שימו לב - selectedMonster חייב עדיין להיות Monster*
+                break;
             }
+            // שלב ב: הלוח שואל "האם אתה מפלצת?" 
+            //if (entity->getType() == EntityType::Monster)
+            //{
+            //    // עכשיו אנחנו בטוחים שזו מפלצת, אז אפשר להמיר בבטחה
+            //    Monster* monster = static_cast<Monster*>(entity);
+
+            //    if (monster->isSelected())
+            //    {
+            //        selectedMonster = monster;
+            //        break;
+            //    }
+            //}
         }
         //if (auto monster = tile->getMonster())
         //{
@@ -256,7 +260,8 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
         if (auto entity = clickedTile->getEntity())
         {
             // בודקים אם הישות היא מפלצת
-            if (entity->getType() == EntityType::Monster)
+            //if (entity->getType() == EntityType::Monster)
+            if(entity->isSelectable())
             {
                 Monster* monster = static_cast<Monster*>(entity);
 
@@ -290,7 +295,7 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
 //        float dx = pos.x - tileCenter.x;
 //        float dy = pos.y - tileCenter.y;
 //
-//        if ((dx * dx + dy * dy) <= (TILE_RADIUS * TILE_RADIUS))
+//        if ((dx * dx + dy * dy) <= (Config::TILE_RADIUS * Config::TILE_RADIUS))
 //        {
 //            clickedTile = tile.get();
 //            break;
@@ -375,7 +380,7 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
 //        float dy = pos.y - tileCenter.y;
 //
 //        // ���� ������� ������ ��� ������ ���� ������ �� ������
-//        if ((dx * dx + dy * dy) <= (TILE_RADIUS * TILE_RADIUS))
+//        if ((dx * dx + dy * dy) <= (Config::TILE_RADIUS * Config::TILE_RADIUS))
 //        {
 //            clickedTile = tile.get();
 //            break;
@@ -464,7 +469,7 @@ bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
     {
         if (tile->isHighlighted() &&
             std::hypot(pos.x - tileToScreen(coords.first, coords.second).x,
-                pos.y - tileToScreen(coords.first, coords.second).y) < TILE_RADIUS)
+                pos.y - tileToScreen(coords.first, coords.second).y) < Config::TILE_RADIUS)
         {
             // משתמשים בפונקציית הליבה לזימון!
             if (spawnMonsterOnTile(monster, tile.get()))
@@ -485,7 +490,7 @@ bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
 //    {
 //        if (tile->isHighlighted() &&
 //            std::hypot(pos.x - tileToScreen(coords.first, coords.second).x,
-//                pos.y - tileToScreen(coords.first, coords.second).y) < TILE_RADIUS)
+//                pos.y - tileToScreen(coords.first, coords.second).y) < Config::TILE_RADIUS)
 //        {
 //            if (tile->isPassable())
 //            {
@@ -512,7 +517,7 @@ bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
 //        sf::Vector2f tileCenter = tileToScreen(coords.first, coords.second);
 //        float dx = pos.x - tileCenter.x;
 //        float dy = pos.y - tileCenter.y;
-//        if ((dx * dx + dy * dy) <= (TILE_RADIUS * TILE_RADIUS))
+//        if ((dx * dx + dy * dy) <= (Config::TILE_RADIUS * Config::TILE_RADIUS))
 //        {
 //            clickedTile = tile.get();
 //            break;
@@ -674,13 +679,13 @@ void Board::clearHighlights()
 
 sf::Vector2f Board::tileToScreen(int q, int row) const
 {
-    float width = std::sqrt(3.f) * TILE_RADIUS;
+    float width = std::sqrt(3.f) * Config::TILE_RADIUS;
 
     // ����� �� ���� ����� �-createBoard!
     float x = START_X + (width / 2.f) * q;
-    float y = START_Y + (1.5f * TILE_RADIUS) * row;
+    float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
 
-    return { x + TILE_RADIUS, y + TILE_RADIUS };
+    return { x + Config::TILE_RADIUS, y + Config::TILE_RADIUS };
 }
 
 void Board::updateTileEffects()
@@ -690,16 +695,16 @@ void Board::updateTileEffects()
         tile->applyTileEffect(); // פולימורפיזם בפעולה! משבצת רגילה לא תעשה כלום, לבה תוריד חיים.
 
         // אם המפלצת מתה מהאפקט (למשל מהלבה), ננקה אותה מהמשבצת
-        if (tile->hasEntity())
+        //change to one function??????????????????????????
+        
+        if (auto entity = tile->getEntity())
         {
-            if (auto monster = tile->getEntity())
+            if (!entity->isAlive()) // משתמש במתודה שלכם שבודקת אם המפלצת חיה
             {
-                if (!monster->isAlive()) // משתמש במתודה שלכם שבודקת אם המפלצת חיה
-                {
-                    tile->clearEntity();
-                }
+                tile->clearEntity();
             }
         }
+        
     }
 }
 
@@ -828,10 +833,12 @@ bool Board::AI_SpawnMonster(Monster* monster, PlayerSide side)
             }
         }
     }
-
+    
     if (availableSpawnTiles.empty()) return false;
 
-    Tile* targetTile = availableSpawnTiles[rand() % availableSpawnTiles.size()];
+    std::uniform_int_distribution<size_t> dist(0, availableSpawnTiles.size() - 1);
+    Tile* targetTile = availableSpawnTiles[dist(rng())];
+    //Tile* targetTile = availableSpawnTiles[rand() % availableSpawnTiles.size()];
 
     // שורה אחת שמחליפה את כל כפל הקוד הפיזי של הזימון!
     return spawnMonsterOnTile(monster, targetTile);
@@ -842,7 +849,7 @@ bool Board::spawnMonsterOnTile(Monster* monster, Tile* targetTile)
     //if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassable()) return false;
     if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(monster)) return false;
     targetTile->setEntity(monster);
-    monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(),
+    monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(), //same function like moveTo?????
         tileToScreen(targetTile->getQ(), targetTile->getRow()));
     return true;
 }
@@ -895,12 +902,13 @@ bool Board::isAnimating() const
     {
         if (auto entity = tile->getEntity())
         {
-            if (entity->getType() == EntityType::Monster)
-            {
-                // עכשיו אנחנו בטוחים שזו מפלצת, אז אפשר להמיר בבטחה
-                Monster* monster = static_cast<Monster*>(entity);
-                if (monster->isMoving()) return true;
-            }
+            if (entity->isMoving()) return true;
+            //if (entity->getType() == EntityType::Monster)
+            //{
+            //    // עכשיו אנחנו בטוחים שזו מפלצת, אז אפשר להמיר בבטחה
+            //    Monster* monster = static_cast<Monster*>(entity);
+            //    if (monster->isMoving()) return true;
+            //}
 
         }
     }

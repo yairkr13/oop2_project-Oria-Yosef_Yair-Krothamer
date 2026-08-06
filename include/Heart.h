@@ -38,7 +38,7 @@ public:
     //void takeDamage(int damage) override { m_health -= damage; }
  //   int getHealth() const override { return m_health; }
     PlayerSide getSide() const override { return m_side; }
-    EntityType getType() const override { return EntityType::Heart; }
+    //EntityType getType() const override { return EntityType::Heart; }
 
 private:
     //int m_health;
