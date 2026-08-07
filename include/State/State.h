@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include "MusicTrack.h"
 #include <memory>
 
 // Abstract base class for every game state (MainMenu, Gameplay, Pause, Victory, ...).
@@ -16,12 +17,12 @@ public:
 
     bool isFinished() const { return m_isFinished; }
 
-    // True for the main-menu screens (MenuState, GameModeState,
-    // InstructionsState). Controller reads this every frame to decide
-    // whether the menu background music should be playing - false by
-    // default so gameplay/pause/game-over states don't need to know
-    // anything about music at all.
-    virtual bool usesMenuMusic() const { return false; }
+    // Which background track this screen wants playing while it's on top
+    // of the stack - MusicTrack::None by default, so states that don't
+    // care about music (MiniMenuState, GameOverState, ...) don't need to
+    // know anything about it. Controller reads this every frame and asks
+    // MusicManager to play it.
+    virtual MusicTrack desiredMusicTrack() const { return MusicTrack::None; }
 
     // Hands ownership of the next state to the caller (Controller).
     // Returns nullptr if the finished state has no successor (e.g. "quit"

@@ -14,7 +14,7 @@ public:
     void draw(sf::RenderWindow& window) const override;
     void update(sf::Time deltaTime) override;
     void handleEvent(const sf::Event& event) override;
-    bool usesMenuMusic() const override { return true; }
+    MusicTrack desiredMusicTrack() const override { return MusicTrack::Menu; }
 
 private:
     void scaleBackgroundToWindow();

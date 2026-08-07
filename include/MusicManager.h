@@ -1,9 +1,14 @@
 #pragma once
+#include "MusicTrack.h"
+#include <string>
 
-// Owns playback of the menu background music - the single place that
-// decides whether it's currently allowed to play, and holds the mute
-// state that the mini-menu's volume button toggles. Callers never touch
-// the underlying sf::Music (owned by AssetsManager) directly.
+// Owns which of the looping background tracks (if any) is currently
+// playing, and the single mute flag that applies to whichever one is
+// active - the shared source of truth for both actual playback and every
+// MusicToggleButton's displayed icon. States never touch sf::Music
+// directly: they just declare which track they want via
+// State::desiredMusicTrack(); Controller reads that every frame and calls
+// playTrack() here, which is a no-op if it's already the active track.
 class MusicManager
 {
 public:
@@ -16,12 +21,9 @@ public:
         return instance;
     }
 
-    // Starts the menu music looping if it isn't already playing. Safe to
-    // call every frame - a no-op once it's underway.
-    void playMenuMusic();
-
-    // Stops the menu music if it's playing. Safe to call every frame.
-    void stopMenuMusic();
+    // Plays `track` looping if it isn't already the active one - stopping
+    // whatever else was playing first. MusicTrack::None just stops.
+    void playTrack(MusicTrack track);
 
     void toggleMute();
     bool isMuted() const { return m_muted; }
@@ -29,5 +31,8 @@ public:
 private:
     MusicManager() = default;
 
+    static const std::string& assetNameFor(MusicTrack track);
+
+    MusicTrack m_currentTrack = MusicTrack::None;
     bool m_muted = false;
 };

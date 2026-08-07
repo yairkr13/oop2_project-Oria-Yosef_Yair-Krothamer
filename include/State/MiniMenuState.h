@@ -1,9 +1,8 @@
 #pragma once
 #include "State/State.h"
 #include "Menu.h"
-#include "Button.h"
+#include "MusicToggleButton.h"
 #include <functional>
-#include <optional>
 
 // Pause-style overlay pushed on top of GameplayState (Escape, or the
 // on-board button). Renders as a small popup centered over the window -
@@ -27,21 +26,18 @@ public:
 private:
     void scaleAndCenterBackground();
     void buildMenu();
-    void buildVolumeButton();
 
     void onResumeClicked();
     void onInstructionsClicked();
     void onRestartClicked();
     void onExitClicked();
-    void onVolumeClicked();
 
     sf::RenderWindow& m_window;
     sf::Sprite m_background;
     Menu m_menu;
 
     // Not part of m_menu: a single fixed-position icon, not a stacked list.
-    std::optional<Button> m_volumeButton;
-    bool m_musicMuted = false;
+    MusicToggleButton m_volumeButton;
 
     std::function<void()> m_onExitGame;
     std::function<void()> m_onRestartGame;

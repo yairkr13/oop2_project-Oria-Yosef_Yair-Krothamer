@@ -47,10 +47,7 @@ void Controller::run()
             break;
         }
 
-        if (m_states.back()->usesMenuMusic())
-            MusicManager::getInstance().playMenuMusic();
-        else
-            MusicManager::getInstance().stopMenuMusic();
+        MusicManager::getInstance().playTrack(m_states.back()->desiredMusicTrack());
 
         m_states.back()->update(deltaTime);
 

@@ -18,6 +18,7 @@ public:
     void draw(sf::RenderWindow& window) const override;
     void update(sf::Time deltaTime) override;
     void handleEvent(const sf::Event& event) override;
+    MusicTrack desiredMusicTrack() const override { return MusicTrack::Gameplay; }
 
 private:
     void scaleBackgroundToWindow();

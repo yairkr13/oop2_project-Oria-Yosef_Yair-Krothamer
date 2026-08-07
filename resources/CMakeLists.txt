@@ -67,3 +67,4 @@ configure_file("Tile/Tile2.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile2.png COP
 configure_file("Tile/Tile3.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile3.png COPYONLY)
 
 configure_file("Music/BackGround/BackGroundMusic.mp3" ${CMAKE_BINARY_DIR}/resources/Music/BackGround/BackGroundMusic.mp3 COPYONLY)
+configure_file("Music/BackGround/InGameMusic.mp3" ${CMAKE_BINARY_DIR}/resources/Music/BackGround/InGameMusic.mp3 COPYONLY)

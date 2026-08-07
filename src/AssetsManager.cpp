@@ -7,6 +7,7 @@ void AssetsManager::loadAllAssets()
     loadFont("Lilita", "resources/Fonts/LilitaOne.ttf");
 
     loadMusic("menu_music", "resources/Music/BackGround/BackGroundMusic.mp3");
+    loadMusic("gameplay_music", "resources/Music/BackGround/InGameMusic.mp3");
 
     loadTexture("menu_bg", "resources/Menu/Menu.png");
     loadTexture("instructions_bg", "resources/Menu/Instructions.png");
