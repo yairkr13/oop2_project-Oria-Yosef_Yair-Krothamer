@@ -2,7 +2,7 @@
 #include "Constants.h"
 #include "AssetsManager.h"
 
-Monster::Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey,bool flying)
+Monster::Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey, bool flying)
     : BoardEntity(q, row, {}, health),
     m_side(side), m_name(name), m_attackDamage(attackPower),
     m_range(range), m_cost(cost), m_color(color), m_textureKey(textureKey), m_flying(flying),
@@ -13,10 +13,10 @@ Monster::Monster(PlayerSide side, const std::string& name, int health, int attac
         const sf::Texture& texture = m_sprite.getTexture();
         //m_sprite(texture);
 
-        // ����� ����� �����
-        m_sprite.setOrigin({ texture.getSize().x / 2.f, texture.getSize().y / 2.f});
+        // origin at texture center
+        m_sprite.setOrigin({ texture.getSize().x / 2.f, texture.getSize().y / 2.f });
 
-        // ����� ������ ��� ����� (Scale)
+        // scale relative to on-board size
         float maxTextureDim = std::max(static_cast<float>(texture.getSize().x), static_cast<float>(texture.getSize().y));
         m_baseScale = Config::MONSTER_BOARD_SIZE / maxTextureDim;
 
@@ -25,7 +25,7 @@ Monster::Monster(PlayerSide side, const std::string& name, int health, int attac
     }
     catch (...)
     {
-        // �� �������� ����, ����� ��� ����� �-draw ����� ���� ������
+        // no texture available, draw fallback shape in draw()
         m_hasTexture = false;
     }
 }
@@ -34,7 +34,7 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
 {
     if (m_q == -1 && m_row == -1) return;
 
-    if(m_hasTexture)
+    if (m_hasTexture)
     {
         m_sprite.setPosition(m_screenPos);
 
@@ -62,92 +62,80 @@ void Monster::drawActionsLeft(sf::RenderWindow& window) const
 {
     sf::Text actionText(AssetsManager::getInstance().getFont("Lilita"));
     actionText.setString(std::to_string(m_actionsLeft));
-    actionText.setCharacterSize(14); // ���� ��� ��� �����
-    actionText.setFillColor(sf::Color::Yellow); // ��� ����
+    actionText.setCharacterSize(14);
+    actionText.setFillColor(sf::Color::Yellow);
 
-    // �����: ��� ��� ������, �� ��� �� �����
-    // m_screenPosition ��� ����� �� ������ ������� ����� ����
     actionText.setPosition({ m_screenPos.x - 15.f, m_screenPos.y + Config::TILE_RADIUS - 20.f });
 
     window.draw(actionText);
 }
-//
-//void Monster::drawHealthBar(sf::RenderWindow& window) const
-//{
-//    if (!isAlive()) return;
-//    /*if (m_side == currentPlayer)
-//        return;*/
-//    // 1. ����� ����� ��� ����� (����, 80% ����� ����� ����)
-//    float barWidth = Config::MONSTER_BOARD_SIZE * 0.8f;
-//    float barHeight = 6.f;
-//
-//    // 2. ����� ����� ��� ��� ������ (����� �-m_screenPos ��� ���� �����)
-//    float x = m_screenPos.x - (barWidth / 2.f);
-//    float y = m_screenPos.y - (Config::MONSTER_BOARD_SIZE / 2.f) - 12.f; // 12 ������� ��� �����
-//
-//    // 3. ���� ��� �� ����� (���� ��� �� ����)
-//    sf::RectangleShape bgBar({ barWidth, barHeight });
-//    bgBar.setPosition({ x, y });
-//    bgBar.setFillColor(sf::Color(80, 20, 20)); // ���� ����
-//
-//    // 4. ����� ��� ����� ������ ����� ��� �����
-//    float healthRatio = static_cast<float>(m_health) / m_maxHealth;
-//    if (healthRatio < 0.f) healthRatio = 0.f;
-//
-//    sf::RectangleShape fgBar({ barWidth * healthRatio, barHeight });
-//    fgBar.setPosition({ x, y });
-//    fgBar.setFillColor(sf::Color(50, 220, 50)); // ���� ����
-//
-//    // 5. ����� �� ����
-//    window.draw(bgBar);
-//    window.draw(fgBar);
-//}
-//
-//bool Monster::contains(sf::Vector2f point, sf::Vector2f screenPos) const
-//{
-//    float dx = point.x - screenPos.x;
-//    float dy = point.y - screenPos.y;
-//    return (dx * dx + dy * dy) <= (32.f * 32.f);
-//}
-
-
 
 void Monster::walkTo(const sf::Vector2f& targetScreenPos)
 {
     m_targetPos = targetScreenPos;
     m_isMoving = true;
 }
+
 void Monster::moveTo(int q, int row, const sf::Vector2f& screenPos)
 {
     if (m_actionsLeft <= 0) return;
 
-    // ����� �������� ������ ������ ���� ����� ������� �����������
+    // עדכון המיקום הלוגי מיידי, רק הציור זז בהדרגה דרך update()
     m_q = q;
     m_row = row;
     walkTo(screenPos);  // animate visually instead of teleporting
 
-    useAction(); // ������ ������ ����� �����!
+    useAction();
 }
 
-void Monster::update(float dt)  // (�� ����� ������ override �� �-BoardEntity)
+void Monster::moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions)
 {
-    // �� ������ �� ����� ����, ��� ��� �� ����� ��
+    if (m_actionsLeft <= 0 || pathScreenPositions.empty()) return;
+
+    // בדיוק כמו ב-moveTo: המיקום הלוגי מתעדכן מיידית ליעד הסופי. השינוי היחיד הוא
+    // שהציור לא "יטפס" בקו ישר אליו, אלא יעבור דרך כל צעד ברשימה, אחד אחרי השני.
+    m_q = finalQ;
+    m_row = finalRow;
+
+    m_pathQueue.clear();
+    for (size_t i = 1; i < pathScreenPositions.size(); ++i)
+        m_pathQueue.push_back(pathScreenPositions[i]);
+
+    walkTo(pathScreenPositions[0]); // מתחילים לזוז לעבר הצעד הראשון בנתיב
+
+    useAction();
+}
+
+void Monster::update(float dt)
+{
+    // אם לא זזים כרגע, אין מה לעדכן
     if (!m_isMoving) return;
 
-    // 1. ����� ����� ������� ������ ����
+    // 1. וקטור הכיוון והמרחק ליעד הנוכחי (הצעד הבא בנתיב, לא בהכרח היעד הסופי)
     float dx = m_targetPos.x - m_screenPos.x;
     float dy = m_targetPos.y - m_screenPos.y;
     float distance = std::sqrt(dx * dx + dy * dy);
 
-    // 2. ��� ����� ����? (������ ���� ������ ��� �� 5 ������� ��� �� �����)
+    // 2. הגענו לצעד הנוכחי? (מספיק קרוב - פחות מ-5 פיקסלים)
     if (distance < 5.0f)
     {
-        m_screenPos = m_targetPos; // ������� ����� �����
-        m_isMoving = false;        // ����� �� ��������! (�-AI ����� ���� ������)
+        m_screenPos = m_targetPos; // מיישרים בדיוק לצעד הנוכחי
+
+        if (!m_pathQueue.empty())
+        {
+            // עוד יש צעדים בנתיב - שולפים את הבא וממשיכים לזוז (m_isMoving נשאר true)
+            m_targetPos = m_pathQueue.front();
+            m_pathQueue.pop_front();
+        }
+        else
+        {
+            // זה היה הצעד האחרון - האנימציה נגמרה
+            m_isMoving = false;
+        }
     }
     else
     {
-        // 3. ����� ���� ������ ����
+        // 3. עוד לא הגענו - נזוז צעד קטן לכיוון היעד הנוכחי
         float moveX = (dx / distance) * m_speed * dt;
         float moveY = (dy / distance) * m_speed * dt;
 
@@ -155,37 +143,18 @@ void Monster::update(float dt)  // (�� ����� ������ ov
         m_screenPos.y += moveY;
     }
 
-    // 4. ���� ����: ����� �� ������� �� �-SFML ��� ����� ���� �� �� ����!
+    // 4. עדכון גרפי: מעדכנים את ה-sprite כדי שה-SFML ידע איפה לצייר אותו עכשיו
     m_sprite.setPosition(m_screenPos);
 }
-//
-////
-//void Monster::spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) {
-//    m_q = q;
-//    m_row = row;
-//    m_screenPos = screenPos;
-//}
 
 bool Monster::isOnBoard() const {
     return m_q != -1 && m_row != -1;
 }
-//bool isClicked(sf::Vector2f mousePos) const {
-//    if (isOnBoard()) {
-//        // ����� ����� �� ���� (����� �� �-Sprite ������)
-//        float dx = mousePos.x - m_screenPos.x;
-//        float dy = mousePos.y - m_screenPos.y;
-//        return (dx * dx + dy * dy) <= (32.f * 32.f);
-//    }
-//    else {
-//        // �� ��� ���, �-Sprite ���� �� ������ ������ ��� ��-draw
-//        return m_sprite.getGlobalBounds().contains(mousePos);
-//    }
-//}
+
 void Monster::drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const
 {
     const sf::Font& font = AssetsManager::getInstance().getFont("Lilita");
 
-    // ���� ����� ��� �� ����
     if (isSelected)
     {
         sf::RectangleShape selectionBorder({ Config::CARD_WIDTH + 6.f, Config::CARD_HEIGHT + 6.f });
@@ -196,10 +165,8 @@ void Monster::drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool i
         window.draw(selectionBorder);
     }
 
-    // ����� ������� ����
     std::string texKey = getCardTextureKey();
     const sf::Texture& monsterTex = AssetsManager::getInstance().getTexture(texKey);
-    //m_sprite.setTexture(monsterTex); // ������� �-m_sprite �� ������
     sf::Sprite monsterSprite(monsterTex);
 
     float scaleX = Config::CARD_WIDTH / static_cast<float>(monsterTex.getSize().x);
@@ -220,7 +187,6 @@ void Monster::drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool i
     monsterSprite.setScale({ scaleX, scaleY });
     window.draw(monsterSprite);
 
-    // ���� ���� ���� ������
     sf::Text costText(font);
     costText.setString(std::to_string(m_cost));
     costText.setCharacterSize(22);
@@ -238,9 +204,8 @@ bool Monster::isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPos) const
     return cardRect.contains(mousePos);
 }
 
-//void Monster::attack(std::shared_ptr<Monster> target) 
 void Monster::attack(BoardEntity* target)
-{ 
+{
     target->takeDamage(m_attackDamage);
-    useAction(); // ������ ������ ����� �����!
+    useAction();
 }

@@ -1,4 +1,5 @@
 #include "AIPlayer.h"
+#include "Tile.h"
 #include <iostream>
 
 AIPlayer::AIPlayer(PlayerSide side)
@@ -65,7 +66,7 @@ bool AIPlayer::advanceTurn(Board& board)
         }
 
         // Find best target for this monster
-        Tile* targetTile = board.AI_FindBestTargetForMonster(monster);
+        Tile* targetTile = findBestTarget(board, monster);
 
         if (!targetTile)
         {
@@ -88,6 +89,39 @@ bool AIPlayer::advanceTurn(Board& board)
     m_phase = AITurnPhase::Done;
     std::cout << "[AI] Finished turn." << std::endl;
     return true;
+}
+
+Tile* AIPlayer::findBestTarget(Board& board, Monster* monster) const
+{
+    if (!monster || !monster->isAlive()) return nullptr;
+
+    // שאילתה עובדתית בלבד - "מה נגיש?" - Board לא בוחר כלום כאן, רק מחזיר רשימה.
+    std::vector<Tile*> reachable = board.getReachableTiles(monster);
+
+    Tile* bestAttackTarget = nullptr;
+    Tile* bestMoveTarget = nullptr;
+
+    for (Tile* tile : reachable)
+    {
+        // עדיפות א': אויב בטווח - תוקפים אותו
+        if (tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide())
+        {
+            bestAttackTarget = tile;
+            break; // מצאנו מטרה, אין צורך להמשיך לחפש
+        }
+
+        // עדיפות ב': משבצת פנויה שמתקדמת שמאלה (Q קטן יותר)
+        if (!tile->hasEntity() && tile->isPassableFor(monster))
+        {
+            if (!bestMoveTarget || tile->getQ() < bestMoveTarget->getQ())
+            {
+                bestMoveTarget = tile;
+            }
+        }
+    }
+
+    // נחזיר קודם כל תקיפה, ואם אין - תנועה
+    return bestAttackTarget ? bestAttackTarget : bestMoveTarget;
 }
 
 void AIPlayer::onTurnStart(Board& board)

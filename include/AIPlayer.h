@@ -28,8 +28,12 @@ public:
 
 private:
 
+    // ההיוריסטיקה של ה-AI: מתוך כל ה-tiles הנגישים למפלצת (Board::getReachableTiles
+    // שהיא שאילתה עובדתית בלבד), *AIPlayer עצמו* בוחר מה עדיף - תקיפה קודמת לתנועה,
+    // ובין תנועות - זו שמתקדמת הכי שמאלה. Board לא מעורב בהחלטה בכלל, רק מספק עובדות.
+    Tile* findBestTarget(Board& board, Monster* monster) const;
+
     AITurnPhase m_phase = AITurnPhase::Done;
     int m_currentMonsterIdx = 0;
     int m_safetyCounter = 0;
 };
-
