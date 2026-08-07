@@ -16,6 +16,13 @@ public:
 
     bool isFinished() const { return m_isFinished; }
 
+    // True for the main-menu screens (MenuState, GameModeState,
+    // InstructionsState). Controller reads this every frame to decide
+    // whether the menu background music should be playing - false by
+    // default so gameplay/pause/game-over states don't need to know
+    // anything about music at all.
+    virtual bool usesMenuMusic() const { return false; }
+
     // Hands ownership of the next state to the caller (Controller).
     // Returns nullptr if the finished state has no successor (e.g. "quit"
     // or "just pop back to whatever's beneath me").

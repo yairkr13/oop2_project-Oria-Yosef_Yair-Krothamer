@@ -57,7 +57,6 @@ configure_file("Monster/Muffintop/Muffintop_R.png" ${CMAKE_BINARY_DIR}/resources
 configure_file("Monster/Muffintop/Muffintop_card_L.png" ${CMAKE_BINARY_DIR}/resources/Monster/Muffintop/Muffintop_card_L.png COPYONLY)
 configure_file("Monster/Muffintop/Muffintop_card_R.png" ${CMAKE_BINARY_DIR}/resources/Monster/Muffintop/Muffintop_card_R.png COPYONLY)
 
-
 configure_file("StaticObject/CrystalSpike.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/CrystalSpike.png COPYONLY)
 configure_file("StaticObject/DeadTree.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/DeadTree.png COPYONLY)
 configure_file("StaticObject/RockPillar.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/RockPillar.png COPYONLY)
@@ -66,3 +65,5 @@ configure_file("StaticObject/BonePile.png" ${CMAKE_BINARY_DIR}/resources/StaticO
 configure_file("Tile/Tile1.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile1.png COPYONLY)
 configure_file("Tile/Tile2.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile2.png COPYONLY)
 configure_file("Tile/Tile3.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile3.png COPYONLY)
+
+configure_file("Music/BackGround/BackGroundMusic.mp3" ${CMAKE_BINARY_DIR}/resources/Music/BackGround/BackGroundMusic.mp3 COPYONLY)

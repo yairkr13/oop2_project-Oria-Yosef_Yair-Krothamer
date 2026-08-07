@@ -2,6 +2,7 @@
 #include "State/MenuState.h"
 #include "Constants.h"
 #include "AssetsManager.h"
+#include "MusicManager.h"
 
 Controller::Controller()
 {
@@ -45,6 +46,11 @@ void Controller::run()
             m_window.close();
             break;
         }
+
+        if (m_states.back()->usesMenuMusic())
+            MusicManager::getInstance().playMenuMusic();
+        else
+            MusicManager::getInstance().stopMenuMusic();
 
         m_states.back()->update(deltaTime);
 

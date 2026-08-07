@@ -6,6 +6,8 @@ void AssetsManager::loadAllAssets()
     loadFont("arial", "resources/Fonts/arial.ttf");
     loadFont("Lilita", "resources/Fonts/LilitaOne.ttf");
 
+    loadMusic("menu_music", "resources/Music/BackGround/BackGroundMusic.mp3");
+
     loadTexture("menu_bg", "resources/Menu/Menu.png");
     loadTexture("instructions_bg", "resources/Menu/Instructions.png");
     loadTexture("mini_menu_bg", "resources/Menu/MiniMenu.png");

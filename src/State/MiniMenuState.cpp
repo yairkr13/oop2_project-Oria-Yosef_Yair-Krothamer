@@ -2,6 +2,7 @@
 #include "State/InstructionsState.h"
 #include "SpriteUtils.h"
 #include "AssetsManager.h"
+#include "MusicManager.h"
 
 namespace
 {
@@ -44,7 +45,8 @@ void MiniMenuState::buildMenu()
 void MiniMenuState::buildVolumeButton()
 {
     auto& am = AssetsManager::getInstance();
-    const sf::Texture& texture = am.getTexture("VolumeUpButton");
+    m_musicMuted = MusicManager::getInstance().isMuted();
+    const sf::Texture& texture = am.getTexture(m_musicMuted ? "VolumeMuteButton" : "VolumeUpButton");
 
     auto textureSize = texture.getSize();
     float scale = static_cast<float>(VOLUME_BUTTON_WIDTH) / static_cast<float>(textureSize.x);
@@ -86,7 +88,8 @@ void MiniMenuState::onExitClicked()
 
 void MiniMenuState::onVolumeClicked()
 {
-    m_musicMuted = !m_musicMuted;
+    MusicManager::getInstance().toggleMute();
+    m_musicMuted = MusicManager::getInstance().isMuted();
 
     auto& am = AssetsManager::getInstance();
     m_volumeButton->setTexture(am.getTexture(m_musicMuted ? "VolumeMuteButton" : "VolumeUpButton"));
