@@ -35,6 +35,7 @@ public:
 	bool AI_SpawnMonster(Monster* monster, PlayerSide side);
 	void performAction(Monster* monster, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
+	std::vector<Tile*> getReachableTiles(Monster* monster) const;
 private:
 	//void setHighlight(const sf::Vector2f& pos, int range);
 	//sf::Vector2f tileToScreen(int q, int row) const;
@@ -42,12 +43,15 @@ private:
 	void highlightNeighbors(Monster* monster); // שינוי חתימה
 	Tile* getLeftmostTileInRow(int row) const;
 	Tile* getRightmostTileInRow(int row) const;
+	//std::vector<Tile*> getReachableTiles(Monster* monster) const;
 
 	bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
 	// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
 	void generateSpecialTiles(Heart* p1Heart, Heart* p2Heart);
 	void createBoard();
+
+	std::pair<int, int> screenToTile(const sf::Vector2f& pos) const;
 	// ��� public:
 	//std::vector <Monster*> m_monsters;
 	std::map<std::pair<int, int>, std::unique_ptr<Tile>> m_grid;

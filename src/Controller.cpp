@@ -13,7 +13,7 @@ Controller::Controller()
     m_states.push_back(std::make_unique<MenuState>(m_window));
 }
 
-void Controller::run()
+void Controller::run() 
 {
     while (m_window.isOpen())
     {

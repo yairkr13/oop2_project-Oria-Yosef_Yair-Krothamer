@@ -199,6 +199,10 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
             break;
         }
     }
+    //instade of for loop that search the tile:
+    /*auto [q, row] = screenToTile(pos);
+    auto it = m_grid.find({ q, row });
+    Tile* clickedTile = (it != m_grid.end()) ? it->second.get() : nullptr;*/
 
     if (!clickedTile) return;
 
@@ -595,79 +599,81 @@ void Board::highlightSpawnTiles(PlayerSide side)
 //        frontier = std::move(nextFrontier);
 //    }
 //}
-void Board::highlightNeighbors(Monster* monster)
-{
-    if (!monster) return;
 
-    int q = monster->getQ();
-    int row = monster->getRow();
-    int range = monster->getRange();
-
-    std::pair<int, int> offsets[] = {
-        {-2,  0}, {+2,  0},
-        {-1, -1}, {+1, -1},
-        {-1, +1}, {+1, +1}
-    };
-
-    std::map<std::pair<int, int>, int> visited;
-    std::vector<std::pair<int, int>> frontier;
-    visited[{q, row}] = 0;
-    frontier.push_back({ q, row });
-
-    while (!frontier.empty())
-    {
-        std::vector<std::pair<int, int>> nextFrontier;
-        for (auto [cq, cr] : frontier)
-        {
-            int dist = visited[{cq, cr}];
-            if (dist >= range)
-                continue;
-
-            for (auto [dq, dr] : offsets)
-            {
-                std::pair<int, int> neighbor = { cq + dq, cr + dr };
-                if (visited.count(neighbor))
-                    continue;
-                auto it = m_grid.find(neighbor);
-                if (it == m_grid.end())
-                    continue;
-
-                // --- שדרוג 1: בדיקת חור ותעופה ---
-                if (it->second->isHole() && !monster->canFly())
-                {
-                    // מפלצת קרקע לא יכולה ללכת על בור, אבל היא כן יכולה לתקוף אויב שעף מעליו!
-                    if (it->second->hasEntity() && it->second->getEntity()->getSide() != monster->getSide())
-                    {
-                        // מצאנו אויב מעופף מעל הבור - נצבע אותו באדום כדי לאפשר תקיפה
-                        it->second->setHighlighted(true, sf::Color(255, 90, 90, 180));
-                    }
-
-                    // בכל מקרה, מפלצת קרקע לא יכולה לעבור דרך החור או לעמוד עליו, אז נעצור את התנועה פה
-                    continue;
-                }
-                visited[neighbor] = dist + 1;
-
-                // --- שדרוג 2: זיהוי אויבים ולבבות וצביעה באדום ---
-                if (it->second->hasEntity() && it->second->getEntity()->getSide() != monster->getSide())
-                {
-                    // מצאנו ישות (מפלצת או לב) ששייכת לאויב! נצבע באדום חצי שקוף
-                    it->second->setHighlighted(true, sf::Color(255, 90, 90, 180));
-
-                    // חוק Phobies חשוב: מפלצת קרקע לא יכולה ללכת *מעבר* לאויב, האויב חוסם את המשך הדרך
-                    if (!monster->canFly()) continue;
-                }
-                else
-                {
-                    // משבצת ריקה, לבה או בעלת ברית - נצבע בירוק רגיל (ברירת המחדל של הפונקציה)
-                    it->second->setHighlighted(true);
-                }
-
-                nextFrontier.push_back(neighbor);
-            }
-        }
-        frontier = std::move(nextFrontier);
-    }
-}
+//fic????????????????????
+//void Board::highlightNeighbors(Monster* monster)
+//{
+//    if (!monster) return;
+//
+//    int q = monster->getQ();
+//    int row = monster->getRow();
+//    int range = monster->getRange();
+//
+//    std::pair<int, int> offsets[] = {
+//        {-2,  0}, {+2,  0},
+//        {-1, -1}, {+1, -1},
+//        {-1, +1}, {+1, +1}
+//    };
+//
+//    std::map<std::pair<int, int>, int> visited;
+//    std::vector<std::pair<int, int>> frontier;
+//    visited[{q, row}] = 0;
+//    frontier.push_back({ q, row });
+//
+//    while (!frontier.empty())
+//    {
+//        std::vector<std::pair<int, int>> nextFrontier;
+//        for (auto [cq, cr] : frontier)
+//        {
+//            int dist = visited[{cq, cr}];
+//            if (dist >= range)
+//                continue;
+//
+//            for (auto [dq, dr] : offsets)
+//            {
+//                std::pair<int, int> neighbor = { cq + dq, cr + dr };
+//                if (visited.count(neighbor))
+//                    continue;
+//                auto it = m_grid.find(neighbor);
+//                if (it == m_grid.end())
+//                    continue;
+//
+//                // --- שדרוג 1: בדיקת חור ותעופה ---
+//                if (it->second->isHole() && !monster->canFly())
+//                {
+//                    // מפלצת קרקע לא יכולה ללכת על בור, אבל היא כן יכולה לתקוף אויב שעף מעליו!
+//                    if (it->second->hasEntity() && it->second->getEntity()->getSide() != monster->getSide())
+//                    {
+//                        // מצאנו אויב מעופף מעל הבור - נצבע אותו באדום כדי לאפשר תקיפה
+//                        it->second->setHighlighted(true, sf::Color(255, 90, 90, 180));
+//                    }
+//
+//                    // בכל מקרה, מפלצת קרקע לא יכולה לעבור דרך החור או לעמוד עליו, אז נעצור את התנועה פה
+//                    continue;
+//                }
+//                visited[neighbor] = dist + 1;
+//
+//                // --- שדרוג 2: זיהוי אויבים ולבבות וצביעה באדום ---
+//                if (it->second->hasEntity() && it->second->getEntity()->getSide() != monster->getSide())
+//                {
+//                    // מצאנו ישות (מפלצת או לב) ששייכת לאויב! נצבע באדום חצי שקוף
+//                    it->second->setHighlighted(true, sf::Color(255, 90, 90, 180));
+//
+//                    // חוק Phobies חשוב: מפלצת קרקע לא יכולה ללכת *מעבר* לאויב, האויב חוסם את המשך הדרך
+//                    if (!monster->canFly()) continue;
+//                }
+//                else
+//                {
+//                    // משבצת ריקה, לבה או בעלת ברית - נצבע בירוק רגיל (ברירת המחדל של הפונקציה)
+//                    it->second->setHighlighted(true);
+//                }
+//
+//                nextFrontier.push_back(neighbor);
+//            }
+//        }
+//        frontier = std::move(nextFrontier);
+//    }
+//}
 
 void Board::clearHighlights()
 {
@@ -739,7 +745,7 @@ Tile* Board::getRightmostTileInRow(int row) const {
     }
     return rightmost;
 }
-
+//deleted!!!!!!!!!
 Tile* Board::AI_FindBestTargetForMonster(Monster* monster)
 {
     if (!monster || !monster->isAlive()) return nullptr;
@@ -913,4 +919,134 @@ bool Board::isAnimating() const
         }
     }
     return false; // <--- חסר לך את זה! אם אף אחד לא זז, מחזירים שקר
+}
+//
+std::pair<int, int> Board::screenToTile(const sf::Vector2f& pos) const
+{
+    float x = pos.x - START_X - Config::TILE_RADIUS;
+    float y = pos.y - START_Y - Config::TILE_RADIUS;
+
+    // 2. המרה ל-Axial שברי
+    float q_frac = (std::sqrt(3.f) / 3.f * x - 1.f / 3.f * y) / Config::TILE_RADIUS;
+    float r_frac = (2.f / 3.f * y) / Config::TILE_RADIUS;
+
+    // 3. המרה ל-Cube Coordinates (x, y, z) עבור עיגול מדויק
+    float x_cube = q_frac;
+    float z_cube = r_frac;
+    float y_cube = -x_cube - z_cube;
+
+    int rx = static_cast<int>(std::round(x_cube));
+    int ry = static_cast<int>(std::round(y_cube));
+    int rz = static_cast<int>(std::round(z_cube));
+
+    float x_diff = std::abs(rx - x_cube);
+    float y_diff = std::abs(ry - y_cube);
+    float z_diff = std::abs(rz - z_cube);
+
+    // תיקון שגיאות עיגול לפי הציר עם הסטייה הגדולה ביותר
+    if (x_diff > y_diff && x_diff > z_diff)
+        rx = -ry - rz;
+    else if (y_diff > z_diff)
+        ry = -rx - rz;
+    else
+        rz = -rx - ry;
+
+    // החזרת קואורדינטות Axial (q, r)
+    return { rx, rz };
+}
+//
+// שכבה 2: wrapper דק שקורא לשכבה 1 וצובע
+// הערה: נשמרה כאן במכוון "תכונה" קיימת מהגרסה המקורית - tile של חור עם אויב מעופף
+// עליו אף פעם לא מסומן ב-visited (רק tiles "רגילים" מסומנים). זה אומר שתיאורטית, אם
+// אותו חור נגיש משני כיוונים שונים באותו BFS, הוא עלול להיכנס לרשימה פעמיים. זו לא
+// באגה חדשה שהוספתי - היא הייתה קיימת גם בגרסה הישנה (רק שם זה היה "לצבוע פעמיים"
+// שלא נראה למשתמש, ואילו כאן זה "רשימה עם כפילות אפשרית"). אם תרצו, אפשר לתקן בקלות
+// ע"י סימון visited גם על tiles של חור - תגיד לי אם לתקן את זה גם.
+std::vector<Tile*> Board::getReachableTiles(Monster * monster) const
+{
+    std::vector<Tile*> reachable;
+    if (!monster) return reachable;
+
+    int q = monster->getQ();
+    int row = monster->getRow();
+    int range = monster->getRange();
+
+    std::pair<int, int> offsets[] = {
+        {-2,  0}, {+2,  0},
+        {-1, -1}, {+1, -1},
+        {-1, +1}, {+1, +1}
+    };
+
+    std::map<std::pair<int, int>, int> visited;
+    std::vector<std::pair<int, int>> frontier;
+    visited[{q, row}] = 0;
+    frontier.push_back({ q, row });
+
+    while (!frontier.empty())
+    {
+        std::vector<std::pair<int, int>> nextFrontier;
+        for (auto [cq, cr] : frontier)
+        {
+            int dist = visited[{cq, cr}];
+            if (dist >= range)
+                continue;
+
+            for (auto [dq, dr] : offsets)
+            {
+                std::pair<int, int> neighbor = { cq + dq, cr + dr };
+                if (visited.count(neighbor))
+                    continue;
+                auto it = m_grid.find(neighbor);
+                if (it == m_grid.end())
+                    continue;
+
+                Tile* tile = it->second.get();
+
+                // --- בדיקת חור ותעופה ---
+                if (tile->isHole() && !monster->canFly())
+                {
+                    // מפלצת קרקע לא יכולה ללכת על בור, אבל היא כן יכולה לתקוף אויב שעף מעליו!
+                    if (tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide())
+                    {
+                        reachable.push_back(tile); // אויב מעופף מעל הבור - ניתן לתקוף
+                    }
+                    // בכל מקרה, מפלצת קרקע לא יכולה לעבור דרך החור או לעמוד עליו
+                    continue;
+                }
+                visited[neighbor] = dist + 1;
+
+                // --- זיהוי אויבים/לבבות שחוסמים המשך תנועה ---
+                bool blockedByEnemy = tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide();
+                reachable.push_back(tile);
+
+                if (blockedByEnemy)
+                {
+                    // חוק Phobies חשוב: מפלצת קרקע לא יכולה ללכת *מעבר* לאויב, האויב חוסם את המשך הדרך
+                    if (!monster->canFly()) continue;
+                }
+
+                nextFrontier.push_back(neighbor);
+            }
+        }
+        frontier = std::move(nextFrontier);
+    }
+
+    return reachable;
+}
+
+// שכבה 2: wrapper דק - קורא לשאילתה הטהורה למעלה, ורק אחראי על הצביעה (side effect
+// ויזואלי). זו הפונקציה שהקליק האנושי קורא לה. AIPlayer, לעומת זאת, יוכל בעתיד לקרוא
+// ישירות ל-getReachableTiles ולא לצייר כלום - הוא לא צריך צביעה, רק את הרשימה.
+void Board::highlightNeighbors(Monster* monster)
+{
+    if (!monster) return;
+
+    for (Tile* tile : getReachableTiles(monster))
+    {
+        bool isEnemy = tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide();
+        if (isEnemy)
+            tile->setHighlighted(true, sf::Color(255, 90, 90, 180)); // אדום - ניתן לתקוף
+        else
+            tile->setHighlighted(true); // ירוק (ברירת המחדל) - ניתן לזוז
+    }
 }
