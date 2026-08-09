@@ -191,7 +191,7 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
 {
     // 1. מציאת המשבצת עליה לחצו
     //make this not for loop- eith the find function!!!!!!!!!!!!!!!!!!
-    Tile* clickedTile = nullptr;
+    /*Tile* clickedTile = nullptr;
     for (auto& [coords, tile] : m_grid)
     {
         sf::Vector2f tileCenter = tileToScreen(coords.first, coords.second);
@@ -203,7 +203,13 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
             clickedTile = tile.get();
             break;
         }
-    }
+    }*/
+    // 1. מציאת המשבצת עליה לחצו - במקום לסרוק את כל ה-grid ולחשב מרחק לכל tile,
+    // ממירים ישירות פיקסלים -> (q,row) ומחפשים ב-find() (O(log n) במקום O(n)).
+    auto [q, row] = screenToTile(pos);
+    auto tileIt = m_grid.find({ q, row });
+    Tile* clickedTile = (tileIt != m_grid.end()) ? tileIt->second.get() : nullptr;
+
 
     if (!clickedTile) return;
 
@@ -778,14 +784,11 @@ void Board::updateTileEffects()
         tile->applyTileEffect(); // פולימורפיזם בפעולה! משבצת רגילה לא תעשה כלום, לבה תוריד חיים.
 
         // אם המפלצת מתה מהאפקט (למשל מהלבה), ננקה אותה מהמשבצת
-        if (tile->hasEntity())
+        if (auto entity = tile->getEntity())
         {
-            if (auto monster = tile->getEntity())
+            if (!entity->isAlive()) // משתמש במתודה שלכם שבודקת אם המפלצת חיה
             {
-                if (!monster->isAlive()) // משתמש במתודה שלכם שבודקת אם המפלצת חיה
-                {
-                    tile->clearEntity();
-                }
+                tile->clearEntity();
             }
         }
     }
@@ -972,4 +975,45 @@ bool Board::isAnimating() const
         }
     }
     return false; // <--- חסר לך את זה! אם אף אחד לא זז, מחזירים שקר
+}
+
+std::pair<int, int> Board::screenToTile(const sf::Vector2f& pos) const
+{
+    // מזיזים את pos למערכת הצירים שעליה tileToScreen בנוי - מחסירים את נקודת
+    // המוצא (START_X/START_Y) וגם את TILE_RADIUS ש-tileToScreen מוסיף בסוף כדי
+    // למרכז את המשושה (ה-shape עצמו ממוקם לפי הפינה השמאלית-עליונה, לא המרכז).
+    float x = pos.x - START_X - Config::TILE_RADIUS;
+    float y = pos.y - START_Y - Config::TILE_RADIUS;
+
+    // 1. המרה ל-axial שברי (pointy-top hex, size = TILE_RADIUS)
+    float q_axial_frac = (std::sqrt(3.f) / 3.f * x - 1.f / 3.f * y) / Config::TILE_RADIUS;
+    float r_axial_frac = (2.f / 3.f * y) / Config::TILE_RADIUS;
+
+    // 2. עיגול מדויק דרך cube coordinates
+    float x_cube = q_axial_frac;
+    float z_cube = r_axial_frac;
+    float y_cube = -x_cube - z_cube;
+
+    int rx = static_cast<int>(std::round(x_cube));
+    int ry = static_cast<int>(std::round(y_cube));
+    int rz = static_cast<int>(std::round(z_cube));
+
+    float x_diff = std::abs(rx - x_cube);
+    float y_diff = std::abs(ry - y_cube);
+    float z_diff = std::abs(rz - z_cube);
+
+    if (x_diff > y_diff && x_diff > z_diff)
+        rx = -ry - rz;
+    else if (y_diff > z_diff)
+        ry = -rx - rz;
+    else
+        rz = -rx - ry;
+
+    int qAxial = rx;
+    int row = rz; // rz == r_axial המעוגל, שהוא בדיוק ה-row שלנו
+
+    // 3. axial -> doubled coordinates (מערכת ה-q שהפרויקט משתמש בה בפועל)
+    int qDouble = 2 * qAxial + row;
+
+    return { qDouble, row };
 }

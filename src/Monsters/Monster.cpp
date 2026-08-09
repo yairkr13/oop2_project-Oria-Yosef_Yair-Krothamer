@@ -72,7 +72,10 @@ void Monster::drawActionsLeft(sf::RenderWindow& window) const
 
 void Monster::walkTo(const sf::Vector2f& targetScreenPos)
 {
-    m_targetPos = targetScreenPos;
+    // צעד יחיד = תור עם פריט אחד. אין יותר m_targetPos נפרד - front() של התור
+    // *הוא* היעד הנוכחי, מקור אמת יחיד.
+    m_pathQueue.clear();
+    m_pathQueue.push_back(targetScreenPos);
     m_isMoving = true;
 }
 
@@ -97,11 +100,8 @@ void Monster::moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vect
     m_q = finalQ;
     m_row = finalRow;
 
-    m_pathQueue.clear();
-    for (size_t i = 1; i < pathScreenPositions.size(); ++i)
-        m_pathQueue.push_back(pathScreenPositions[i]);
-
-    walkTo(pathScreenPositions[0]); // מתחילים לזוז לעבר הצעד הראשון בנתיב
+    m_pathQueue.assign(pathScreenPositions.begin(), pathScreenPositions.end());
+    m_isMoving = true;
 
     useAction();
 }
@@ -109,29 +109,30 @@ void Monster::moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vect
 void Monster::update(float dt)
 {
     // אם לא זזים כרגע, אין מה לעדכן
-    if (!m_isMoving) return;
+    if (!m_isMoving || m_pathQueue.empty())
+    {
+        m_isMoving = false;
+        return;
+    }
 
-    // 1. וקטור הכיוון והמרחק ליעד הנוכחי (הצעד הבא בנתיב, לא בהכרח היעד הסופי)
-    float dx = m_targetPos.x - m_screenPos.x;
-    float dy = m_targetPos.y - m_screenPos.y;
+    // 1. וקטור הכיוון והמרחק ליעד הנוכחי - front() של התור, לא משתנה נפרד
+    const sf::Vector2f& currentTarget = m_pathQueue.front();
+    float dx = currentTarget.x - m_screenPos.x;
+    float dy = currentTarget.y - m_screenPos.y;
     float distance = std::sqrt(dx * dx + dy * dy);
 
     // 2. הגענו לצעד הנוכחי? (מספיק קרוב - פחות מ-5 פיקסלים)
     if (distance < 5.0f)
     {
-        m_screenPos = m_targetPos; // מיישרים בדיוק לצעד הנוכחי
+        m_screenPos = currentTarget; // מיישרים בדיוק לצעד הנוכחי
+        m_pathQueue.pop_front();     // סיימנו את הצעד הזה
 
-        if (!m_pathQueue.empty())
-        {
-            // עוד יש צעדים בנתיב - שולפים את הבא וממשיכים לזוז (m_isMoving נשאר true)
-            m_targetPos = m_pathQueue.front();
-            m_pathQueue.pop_front();
-        }
-        else
+        if (m_pathQueue.empty())
         {
             // זה היה הצעד האחרון - האנימציה נגמרה
             m_isMoving = false;
         }
+        // אחרת: m_isMoving נשאר true, ו-front() הבא ישמש כיעד ב-frame הבא
     }
     else
     {

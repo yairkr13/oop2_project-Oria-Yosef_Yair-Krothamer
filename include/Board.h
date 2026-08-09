@@ -62,6 +62,7 @@ private:
 	void highlightNeighbors(Monster* monster); // שינוי חתימה
 	Tile* getLeftmostTileInRow(int row) const;
 	Tile* getRightmostTileInRow(int row) const;
+	std::pair<int, int> screenToTile(const sf::Vector2f& pos) const;
 
 	bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
 	// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
@@ -80,7 +81,6 @@ private:
 	std::map<std::pair<int, int>, std::unique_ptr<Tile>> m_grid;
 
 	// Board layout constants
-	static constexpr float TILE_RADIUS = 48.f;
 	static constexpr float START_X = 320.f;
 	static constexpr float START_Y = 30.f;
 };
