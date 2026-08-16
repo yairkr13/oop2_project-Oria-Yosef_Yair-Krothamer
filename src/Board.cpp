@@ -11,11 +11,6 @@ Board::Board()
     createBoard();
 }
 
-
-//void Board::setMonsters(std::vector<Monster*> monsters)
-//{
-//    m_monsters = std::move(monsters);
-//}
 void Board::createBoard()
 {
     float width = std::sqrt(3.f) * Config::TILE_RADIUS;
@@ -185,7 +180,30 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
     }
 }
 
-//choosePlace
+//add later:::::::::::::::::::::::::::
+//template <class T>
+//void Board::choosePlace(const std::vector<std::pair<int, int>>& allCoords, int amount, Heart* p1Heart=nullptr, Heart* p2Heart=nullptr)
+//{
+//    static int first = 0;
+//    int last = amount + first;
+//    for (int i = first;i < last;++i)
+//    {
+//        auto [q, row] = allCoords[i];
+//        m_grid[{q, row}] = std::make_unique<T>(q, row, tileToScreen(q, row), p1Heart, p2Heart);
+//    }
+//}
+//
+//template <>
+//void Board::choosePlace(const std::vector<std::pair<int, int>>& allCoords, int amount, Heart* p1Heart, Heart* p2Heart)
+//{
+//    static int first = 0;
+//    int last = amount + first;
+//    for (int i = first;i < last;++i)
+//    {
+//        auto [q, row] = allCoords[i];
+//        m_grid[{q, row}] = std::make_unique<PanicPoint>(q, row, tileToScreen(q, row), p1Heart, p2Heart);
+//    }
+//}
 
 void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
 {
@@ -275,7 +293,7 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
             {
                 Monster* monster = static_cast<Monster*>(entity);
 
-                if (monster->getSide() != currentSide || monster->getActionsLeft() <= 0) return;
+                if (/*monster->getSide() != currentSide*/monster->isEnemyOf(currentSide) || monster->getActionsLeft() <= 0) return;
 
                 monster->setSelected(true);
                 highlightNeighbors(monster);
@@ -670,7 +688,7 @@ void Board::computeReachability(Monster* monster,
                 // --- בדיקת חור ותעופה ---
                 if (tile->isHole() && !monster->canFly())
                 {
-                    if (tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide())
+                    if (tile->isOccupiedByEnemy(monster->getSide()))
                     {
                         outReachable.push_back(tile); // אויב מעופף מעל הבור - ניתן לתקוף
                         outParent[neighbor] = { cq, cr };
@@ -680,16 +698,30 @@ void Board::computeReachability(Monster* monster,
                 visited[neighbor] = dist + 1;
                 outParent[neighbor] = { cq, cr };
 
+               // // --- בן-ברית תופס משבצת: אי אפשר לעמוד עליו ולא לתקוף אותו,
+               //// ולכן הוא לעולם לא נכנס ל-outReachable. קרקעי לא יכול לעבור
+               //// דרכו (בדיוק כמו אויב) - רק מעופף יכול "לדלג" מעליו הלאה.
+               // if (tile->isOccupiedByAlly(monster->getSide()))
+               // {
+               //     if (monster->canFly())
+               //         nextFrontier.push_back(neighbor);
+               //     continue;
+               // }
+
                 // --- זיהוי אויבים/לבבות שחוסמים המשך תנועה ---
-                bool blockedByEnemy = tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide();
                 outReachable.push_back(tile);
 
-                if (blockedByEnemy)
-                {
-                    if (!monster->canFly()) continue; // האויב חוסם את המשך הדרך
-                }
+                //if (tile->isOccupiedByEnemy(monster->getSide()))
+                //{
+                //    if (!monster->canFly()) continue; // האויב חוסם את המשך הדרך
+                //}
+                //nextFrontier.push_back(neighbor);
 
-                nextFrontier.push_back(neighbor);
+                //did i fix it????????
+                if (!tile->hasEntity())
+                {
+                    nextFrontier.push_back(neighbor);
+                }
             }
         }
         frontier = std::move(nextFrontier);
@@ -712,6 +744,7 @@ std::vector<Tile*> Board::getPathTo(Monster* monster, Tile* target) const
     std::vector<Tile*> path;
     if (!monster || !target) return path;
 
+    //what this do???
     std::vector<Tile*> reachable;
     std::map<std::pair<int, int>, std::pair<int, int>> parent;
     computeReachability(monster, reachable, parent);
@@ -750,8 +783,8 @@ void Board::highlightNeighbors(Monster* monster)
 
     for (Tile* tile : getReachableTiles(monster))
     {
-        bool isEnemy = tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide();
-        if (isEnemy)
+        //bool isEnemy = tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide();
+        if (tile->isOccupiedByEnemy(monster->getSide()))
             tile->setHighlighted(true, sf::Color(255, 90, 90, 180)); // אדום - ניתן לתקוף
         else
             tile->setHighlighted(true); // ירוק (ברירת המחדל) - ניתן לזוז
@@ -863,38 +896,63 @@ Tile* Board::getRightmostTileInRow(int row) const {
 //    //monster->useAction(); // או איך שנקראת אצלך המתודה שמורידה Action (למשל m_actionsLeft--)
 //}
 
-bool Board::AI_SpawnMonster(Monster* monster, PlayerSide side)
+//bool Board::AI_SpawnMonster(Monster* monster, PlayerSide side)
+//{
+//    if (!monster || monster->isOnBoard()) return false;
+//
+//    int minQ = (side == PlayerSide::Left) ? 0 : 12;
+//    int maxQ = (side == PlayerSide::Left) ? 1 : 13;
+//
+//    std::vector<Tile*> availableSpawnTiles;
+//
+//    for (auto& [coords, tile] : m_grid)
+//    {
+//        if (coords.first >= minQ && coords.first <= maxQ)
+//        {
+//            //if (!tile->hasEntity() && tile->isPassable())
+//            if (!tile->hasEntity() && tile->isPassableFor(monster))
+//            {
+//                availableSpawnTiles.push_back(tile.get());
+//            }
+//        }
+//    }
+//
+//    // תוקן: הבדיקה חייבת לקרות *לפני* שמשתמשים ב-size()-1 (אחרת underflow על size_t
+//    // כשהוקטור ריק), וגם הייתה כאן הצהרה כפולה של targetTile שלא מתקמפלת.
+//    if (availableSpawnTiles.empty()) return false;
+//
+//    std::uniform_int_distribution<size_t> dist(0, availableSpawnTiles.size() - 1);
+//    Tile* targetTile = availableSpawnTiles[dist(rng())];
+//
+//    // שורה אחת שמחליפה את כל כפל הקוד הפיזי של הזימון!
+//    return spawnMonsterOnTile(monster, targetTile);
+//}
+
+
+// שאילתה עובדתית בלבד - "אילו tiles פנויים בשטח הזימון של הצד הזה?" Board לא
+// בוחר אף אחת מהן - זו הייתה בדיוק העבודה של AI_SpawnMonster הישנה, שגם אספה
+// מועמדים וגם הגרילה אחד מהם. עכשיו רק החלק הראשון (איסוף) נשאר כאן.
+std::vector<Tile*> Board::getSpawnableTiles(Monster* monster, PlayerSide side) const
 {
-    if (!monster || monster->isOnBoard()) return false;
+    std::vector<Tile*> spawnable;
+    if (!monster || monster->isOnBoard()) return spawnable;
 
     int minQ = (side == PlayerSide::Left) ? 0 : 12;
     int maxQ = (side == PlayerSide::Left) ? 1 : 13;
-
-    std::vector<Tile*> availableSpawnTiles;
 
     for (auto& [coords, tile] : m_grid)
     {
         if (coords.first >= minQ && coords.first <= maxQ)
         {
-            //if (!tile->hasEntity() && tile->isPassable())
             if (!tile->hasEntity() && tile->isPassableFor(monster))
             {
-                availableSpawnTiles.push_back(tile.get());
+                spawnable.push_back(tile.get());
             }
         }
     }
 
-    // תוקן: הבדיקה חייבת לקרות *לפני* שמשתמשים ב-size()-1 (אחרת underflow על size_t
-    // כשהוקטור ריק), וגם הייתה כאן הצהרה כפולה של targetTile שלא מתקמפלת.
-    if (availableSpawnTiles.empty()) return false;
-
-    std::uniform_int_distribution<size_t> dist(0, availableSpawnTiles.size() - 1);
-    Tile* targetTile = availableSpawnTiles[dist(rng())];
-
-    // שורה אחת שמחליפה את כל כפל הקוד הפיזי של הזימון!
-    return spawnMonsterOnTile(monster, targetTile);
+    return spawnable;
 }
-
 bool Board::spawnMonsterOnTile(Monster* monster, Tile* targetTile)
 {
     //if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassable()) return false;
@@ -910,7 +968,9 @@ void Board::performAction(Monster* monster, Tile* targetTile)
     if (!monster || !targetTile) return;
 
     // 1. תקיפה
-    if (targetTile->hasEntity() && targetTile->getEntity()->getSide() != monster->getSide())
+    //change this!!!!!!!!!!!!!!!!!!!!!! put in the player???????????
+    //if (targetTile->hasEntity() && targetTile->getEntity()->getSide() != monster->getSide())
+    if (targetTile->isOccupiedByEnemy(monster->getSide()))
     {
         monster->attack(targetTile->getEntity());
         if (!targetTile->getEntity()->isAlive()) {
@@ -919,12 +979,38 @@ void Board::performAction(Monster* monster, Tile* targetTile)
     }
     // 2. תנועה
     //else if (!targetTile->hasEntity() && targetTile->isPassable())
+    //else if (!targetTile->hasEntity() && targetTile->isPassableFor(monster))
+    //{
+    //    auto sourceIt = m_grid.find({ monster->getQ(), monster->getRow() });
+    //    if (sourceIt != m_grid.end())
+    //    {
+    //        Tile* sourceTile = sourceIt->second.get();
+    //        //targetTile->setMonster(monster);
+    //        targetTile->setEntity(monster);
+    //        sourceTile->clearEntity();
+
+    //        // בונים את המסלול המדורג (משבצת-משבצת) במקום לקפוץ בקו ישר ליעד
+    //        std::vector<Tile*> path = getPathTo(monster, targetTile);
+    //        std::vector<sf::Vector2f> pathScreenPositions;
+    //        pathScreenPositions.reserve(path.size());
+    //        for (Tile* step : path)
+    //            pathScreenPositions.push_back(tileToScreen(step->getQ(), step->getRow()));
+
+    //        // רשת ביטחון: אם משום מה לא נמצא מסלול (לא אמור לקרות, כי targetTile
+    //        // כבר אושר כנגיש), נופלים חזרה על תזוזה ישירה כדי שהמפלצת לא "תיתקע"
+    //        if (pathScreenPositions.empty())
+    //            pathScreenPositions.push_back(tileToScreen(targetTile->getQ(), targetTile->getRow()));
+
+    //        monster->moveAlongPath(targetTile->getQ(), targetTile->getRow(), pathScreenPositions);
+    //    }
+    //}
     else if (!targetTile->hasEntity() && targetTile->isPassableFor(monster))
     {
-        auto sourceIt = m_grid.find({ monster->getQ(), monster->getRow() });
-        if (sourceIt != m_grid.end())
+        // לא צריך יותר m_grid.find({q,row}) - המפלצת יודעת ישירות על איזה Tile
+        // היא נמצאת, בזכות הקשר הדו-כיווני ב-setEntity/clearEntity.
+        Tile* sourceTile = monster->getCurrentTile();
+        if (sourceTile != nullptr)
         {
-            Tile* sourceTile = sourceIt->second.get();
             //targetTile->setMonster(monster);
             targetTile->setEntity(monster);
             sourceTile->clearEntity();

@@ -24,6 +24,9 @@ public:
     virtual bool isAlive() const;
     //virtual int getHealth() const = 0;
     virtual PlayerSide getSide() const = 0;
+    bool isEnemyOf(PlayerSide otherSide) const { return getSide() != otherSide; }
+    bool isAllyOf(PlayerSide otherSide) const { return getSide() == otherSide; }
+
     //virtual EntityType getType() const = 0;
     // 
     virtual bool isSelectable() const { return false; } // ברירת מחדל: לב אי אפשר לבחור
@@ -33,6 +36,9 @@ public:
     //// --- פונקציות חדשות: קשר דו-כיווני עם המשבצת ---
     //void setCurrentTile(Tile* tile) { m_currentTile = tile; }
     //Tile* getCurrentTile() const { return m_currentTile; }
+    void setCurrentTile(Tile* tile) { m_currentTile = tile; }
+    Tile* getCurrentTile() const { return m_currentTile; }
+
 
     // --- פונקציות עזר למיקום (יעזור מאוד ללוח ולמפלצת עצמה) ---
     int getQ() const { return m_q; }
@@ -51,5 +57,5 @@ protected:
     sf::Vector2f m_screenPos;
     int m_health;
     int m_maxHealth;
-    //Tile* m_currentTile;
+    Tile* m_currentTile;
 };

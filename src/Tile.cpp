@@ -62,10 +62,16 @@ void Tile::setEntity(BoardEntity* entity)
     {
         m_entity->setCurrentTile(this);
     }*/
+    if (m_entity != nullptr)
+        m_entity->setCurrentTile(this);
 }
 
 void Tile::clearEntity()
 {
+    if (m_entity != nullptr && m_entity->getCurrentTile() == this)
+    {
+        m_entity->setCurrentTile(nullptr);
+    }
     m_entity = nullptr;
     m_isPassable = true;
 }

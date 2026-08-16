@@ -33,7 +33,14 @@ public:
 	// AI_FindBestTargetForMonster עברה ל-AIPlayer - Board נשאר "טיפש" ומספק
 	// רק שאילתות (getReachableTiles), ההחלטה איזה יעד עדיף היא לא באחריותו.
 	sf::Vector2f tileToScreen(int q, int row) const;
-	bool AI_SpawnMonster(Monster* monster, PlayerSide side);
+
+
+	// באותה רוח: Board לא בוחר איפה לזמן (זו הייתה AI_SpawnMonster הישנה - גם
+	// אם ה"החלטה" היא רק הגרלה, זו עדיין בחירה שלא שייכת ל-Board). הוא רק
+	// מספק את רשימת המשבצות החוקיות לזימון עבור הצד הזה; AIPlayer בוחר מתוכה.
+	std::vector<Tile*> getSpawnableTiles(Monster* monster, PlayerSide side) const;
+
+	//bool AI_SpawnMonster(Monster* monster, PlayerSide side);
 	void performAction(Monster* monster, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
 	// שלב א' של הפירוק: כל ה-tiles שהמפלצת יכולה להגיע/לתקוף אליהם, בלי לצייר
@@ -47,6 +54,14 @@ public:
 	// (כלומר תנועה, לא תקיפה) - אחרת מוחזרת רשימה ריקה.
 	std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
 
+	bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
+
+	// מקור רנדומליות אחד ומשותף לכל הלוח (במקום std::mt19937 מקומי במקום אחד ו-rand() במקום אחר)
+	static std::mt19937& rng()
+	{
+		static std::mt19937 gen(std::random_device{}());
+		return gen;
+	}
 private:
 	// ה-BFS המשותף לשתי השאילתות למעלה - מעבר יחיד, לא משוכפל. בנוסף לרשימת ה-tiles
 	// הנגישים (outReachable, בדיוק כמו ש-getReachableTiles מחזירה), שומר גם "מאיפה
@@ -64,18 +79,13 @@ private:
 	Tile* getRightmostTileInRow(int row) const;
 	std::pair<int, int> screenToTile(const sf::Vector2f& pos) const;
 
-	bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
+	//bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
 	// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
 	void generateSpecialTiles(Heart* p1Heart, Heart* p2Heart);
 	void createBoard();
 
-	// מקור רנדומליות אחד ומשותף לכל הלוח (במקום std::mt19937 מקומי במקום אחד ו-rand() במקום אחר)
-	static std::mt19937& rng()
-	{
-		static std::mt19937 gen(std::random_device{}());
-		return gen;
-	}
+	
 	// ��� public:
 	//std::vector <Monster*> m_monsters;
 	std::map<std::pair<int, int>, std::unique_ptr<Tile>> m_grid;

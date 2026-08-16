@@ -10,6 +10,13 @@
 //    }
 //}
 
+//BoardEntity::~BoardEntity() 
+//{
+//    if (m_currentTile != nullptr && m_currentTile->getEntity() == this)
+//        m_currentTile->clearEntity();
+//    //delete this;
+//}
+
 void BoardEntity::spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) {
     m_q = q;
     m_row = row;
