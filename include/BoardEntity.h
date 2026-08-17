@@ -18,6 +18,7 @@ public:
     // שינוי קריטי: הדיסטרקטור עכשיו וירטואלי אבל לא default, נממש אותו ב-cpp
     virtual ~BoardEntity() = default;
 
+    //virtual int getRange() const { return 0; }
     // התאמה מדוייקת לחתימה שלכם:
     virtual void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const = 0;
     virtual void takeDamage(int damage);
@@ -26,10 +27,15 @@ public:
     virtual PlayerSide getSide() const = 0;
     bool isEnemyOf(PlayerSide otherSide) const { return getSide() != otherSide; }
     bool isAllyOf(PlayerSide otherSide) const { return getSide() == otherSide; }
+    virtual void attack(BoardEntity* target) {}
 
+    virtual void setSelected(bool selected) { m_isSelected = selected; }
+    virtual bool isSelected() const { return m_isSelected; }
+    virtual int getRange() const { return 0; }
     //virtual EntityType getType() const = 0;
     // 
-    virtual bool isSelectable() const { return false; } // ברירת מחדל: לב אי אפשר לבחור
+    //virtual bool isSelectable() const { return false; } // ברירת מחדל: לב אי אפשר לבחור
+    virtual bool canBeSelectedBy(PlayerSide side) const { return false; }
 
     virtual bool isSelected() const { return false; }
     virtual bool isMoving() const { return false; }
@@ -47,6 +53,7 @@ public:
 
     virtual void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos);
     virtual void update(float dt) {}
+    virtual bool canFly() const { return false; }
     /*sf::Vector2f getScreenPosition() const { return m_screenPos; }
     void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }*/
 protected:
@@ -58,4 +65,5 @@ protected:
     int m_health;
     int m_maxHealth;
     Tile* m_currentTile;
+    bool m_isSelected = false;
 };

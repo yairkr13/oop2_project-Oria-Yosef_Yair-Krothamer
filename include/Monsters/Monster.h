@@ -17,16 +17,19 @@ public:
     // bool contains(sf::Vector2f point, sf::Vector2f screenPos) const;
      //void attack(std::shared_ptr<Monster> target); 
     void attack(BoardEntity* target);
-    void setSelected(bool selected) { m_selected = selected; }
-    bool isSelected() const override { return m_selected; }
-    virtual bool isSelectable() const override { return true; } // מפלצת אפשר לבחור!
+    //void setSelected(bool selected) { m_selected = selected; }
+    //bool isSelected() const override { return m_selected; }
+    //virtual bool isSelectable() const override { return true; } // מפלצת אפשר לבחור!
+    bool canBeSelectedBy(PlayerSide side) const override {
+        return !isEnemyOf(side) && m_actionsLeft > 0;
+    }
     //virtual EntityType getType() const override { return EntityType::Monster; }
     bool isOnBoard() const;
     bool isClicked(sf::Vector2f mousePos) const;
     bool isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPosition) const;
 
     int getCost() const { return m_cost; }
-    int getRange() const { return m_range; }
+    int getRange() const override { return m_range; }
     int getActionsLeft() const { return m_actionsLeft; }
     void resetActions() { m_actionsLeft = 2; }
     //const std::string& getName() const { return m_name; }
@@ -44,7 +47,7 @@ public:
 
     void walkTo(const sf::Vector2f& targetScreenPos);//chanfe to animation!!!!!!!!!!!!!!!
     void update(float dt) override;
-    virtual bool canFly() const { return m_flying; } // כברירת מחדל מפלצות הן קרקעיות
+    virtual bool canFly() const override { return m_flying; } // כברירת מחדל מפלצות הן קרקעיות
     bool isMoving() const override { return m_isMoving; }
 protected:
     std::string m_name;
@@ -55,7 +58,7 @@ protected:
     int m_cost;
     //int m_q;
     //int m_row;
-    bool m_selected = false;
+    //bool m_selected = false;
     sf::Color m_color;
     const PlayerSide m_side;  // לא ניתן לשינוי לאחר היצירה - הקומפיילר עצמו "אוכף" את זה
     bool m_flying;

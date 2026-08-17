@@ -40,7 +40,8 @@
 //    std::vector<MenuItem>  m_items;
 //    std::size_t            m_activeIndex;
 //    MenuState              m_menuState;
-//    GameMode               m_selectedGameMode;
+//    GameMode               
+// GameMode;
 //	std::unique_ptr <Button>				 m_playButton;
 //
 //    // Game mode selection screen elements

@@ -36,15 +36,21 @@ public:
     void setEntity(BoardEntity* entity);
     bool hasEntity() const { return m_entity != nullptr; }
 
+    virtual bool isPassableFor(const BoardEntity* entity) const {
+        return m_isPassable;
+    }
+
+	bool isEntityAlive() const { return m_entity != nullptr && m_entity->isAlive(); }
     bool isOccupiedByEnemy(PlayerSide mySide) const { return m_entity != nullptr && m_entity->isEnemyOf(mySide); }
     bool isOccupiedByAlly(PlayerSide mySide) const { return m_entity != nullptr && m_entity->isAllyOf(mySide); }
 
     // עוד עטיפה נוחה - "יש כאן ישות מתה שצריך לפנות?" (משמש ב-updateTileEffects)
     bool hasDeadEntity() const { return m_entity != nullptr && !m_entity->isAlive(); }
 
-    virtual bool isPassableFor(Monster* monster) const {
+    /*virtual bool isPassableFor(Monster* monster) const {
         return m_isPassable;
-    }
+    }*/
+
     //void setMonster(Monster* monster) { setEntity(monster); }
 
     /*bool hasMonster() const {
