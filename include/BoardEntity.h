@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "Constants.h"
+class Monster; // Forward declaration
 
 enum class EntityType {
     Monster,
@@ -37,7 +38,7 @@ public:
     //virtual bool isSelectable() const { return false; } // ברירת מחדל: לב אי אפשר לבחור
     virtual bool canBeSelectedBy(PlayerSide side) const { return false; }
 
-    virtual bool isSelected() const { return false; }
+    //virtual bool isSelected() const { return false; }
     virtual bool isMoving() const { return false; }
     //// --- פונקציות חדשות: קשר דו-כיווני עם המשבצת ---
     //void setCurrentTile(Tile* tile) { m_currentTile = tile; }
@@ -56,6 +57,8 @@ public:
     virtual bool canFly() const { return false; }
     /*sf::Vector2f getScreenPosition() const { return m_screenPos; }
     void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }*/
+    virtual Monster* asMonster() { return nullptr; }
+
 protected:
     void drawHealthBar(sf::RenderWindow& window) const;
     // המשתנים מוגנים כדי שגם מפלצת וגם לב יוכלו לגשת אליהם ישירות במידת הצורך

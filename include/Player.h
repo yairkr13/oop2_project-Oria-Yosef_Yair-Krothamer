@@ -16,7 +16,7 @@ public:
     Player(PlayerSide side);
     virtual ~Player() = default; // <--- ������ �� ����� ���!
 	//bool handleClick(const sf::Vector2f& pos);
-    Card* handleCardClick(sf::Vector2f mousePos);
+    //Card* handleCardClick(sf::Vector2f mousePos);
     bool isDead() const;
     //align right - to delete and use side 
 
@@ -57,6 +57,8 @@ protected:
     int m_keys;
     int m_maxKeys;
     PlayerSide m_side;
+
     //std::vector<std::shared_ptr<Monster>> m_monsters;
     std::vector<std::unique_ptr<Monster>> m_monsters;
+    //std::vector<Card> m_cards;
 };

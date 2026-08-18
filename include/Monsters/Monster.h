@@ -23,9 +23,11 @@ public:
     bool canBeSelectedBy(PlayerSide side) const override {
         return !isEnemyOf(side) && m_actionsLeft > 0;
     }
+    virtual Monster* asMonster() override { return this; }
+
     //virtual EntityType getType() const override { return EntityType::Monster; }
     bool isOnBoard() const;
-    bool isClicked(sf::Vector2f mousePos) const;
+	bool isClicked(sf::Vector2f mousePos) const; //why we dont use this function in the game??????
     bool isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPosition) const;
 
     int getCost() const { return m_cost; }
@@ -50,6 +52,7 @@ public:
     virtual bool canFly() const override { return m_flying; } // כברירת מחדל מפלצות הן קרקעיות
     bool isMoving() const override { return m_isMoving; }
 protected:
+    //virtual void onAttackHook(BoardEntity* target) {}
     std::string m_name;
     //int m_health;
     //int m_maxHealth;
@@ -73,6 +76,7 @@ protected:
 private:
     void drawActionsLeft(sf::RenderWindow& window) const;
     void useAction() { if (m_actionsLeft > 0) m_actionsLeft--; }
+	int m_specialCooldown = 5; // מספר סיבובים עד שהיכולת המיוחדת תהיה זמינה שוב
     //void drawHealthBar(sf::RenderWindow& window) const;
     std::string getCardTextureKey() const { return m_textureKey + "_card"; }
     int m_actionsLeft = 2; // כל מפלצת מתחילה עם 2 פעולות

@@ -83,8 +83,7 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, Monster* select
     for (size_t i = 0; i < m_monsters.size(); ++i)
     {
         // מפלצת שכבר זומנה ללוח (getQ != -1) לא תצויר ביד
-        //if (m_monsters[i]->getQ() != -1) continue;
-        if (m_monsters[i]->isOnBoard()) continue;
+        //if (m_monsters[i]->isOnBoard()) continue;
 
         float startX = alignRight ?
             (Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING)) :
@@ -92,6 +91,7 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, Monster* select
 
         bool isSelected = (selectedFromHand && m_monsters[i].get() == selectedFromHand);
 
+        //change this!!!! be more phol
         m_monsters[i]->drawAsCard(window, { startX, Config::CARD_START_Y }, isSelected, m_monsters[i]->getCost() > m_keys);
         // --- ציור מסגרת זהב אם הקלף נבחר ---
         /*if (isSelected)

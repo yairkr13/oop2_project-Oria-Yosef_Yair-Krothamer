@@ -28,7 +28,7 @@ public:
 	void clearHighlights();
 
 	void updateTileEffects();
-	void initPlayerHearts(Heart* p1Heart, Heart* p2Heart);
+	void initPlayerHearts(Heart* p1Heart, Heart* p2Heart); //change this funciton!!!!! 
 
 	// AI_FindBestTargetForMonster עברה ל-AIPlayer - Board נשאר "טיפש" ומספק
 	// רק שאילתות (getReachableTiles), ההחלטה איזה יעד עדיף היא לא באחריותו.
@@ -41,7 +41,7 @@ public:
 	std::vector<Tile*> getSpawnableTiles(Monster* monster, PlayerSide side) const;
 
 	//bool AI_SpawnMonster(Monster* monster, PlayerSide side);
-	void performAction(Monster* monster, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
+	void performAction(BoardEntity* entity, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
 	// שלב א' של הפירוק: כל ה-tiles שהמפלצת יכולה להגיע/לתקוף אליהם, בלי לצייר
 	// שום דבר. לוגיקה טהורה - אין כאן שום קריאה ל-setHighlighted. גם highlightNeighbors

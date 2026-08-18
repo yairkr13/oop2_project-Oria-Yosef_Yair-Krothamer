@@ -21,7 +21,7 @@ public:
         return entity && entity->canFly();
     }
 
-    bool isHole() const override { return true; } // דורס פונקציה וירטואלית שנצטרך להוסיף ל-Tile.h
+    //bool isHole() const override { return true; } // דורס פונקציה וירטואלית שנצטרך להוסיף ל-Tile.h
     void setHighlighted(bool highlighted, const sf::Color& defaultHighlightColor = sf::Color(150, 220, 150, 180)) override
     {
         if (highlighted) {

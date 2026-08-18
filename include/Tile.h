@@ -45,7 +45,7 @@ public:
     bool isOccupiedByAlly(PlayerSide mySide) const { return m_entity != nullptr && m_entity->isAllyOf(mySide); }
 
     // עוד עטיפה נוחה - "יש כאן ישות מתה שצריך לפנות?" (משמש ב-updateTileEffects)
-    bool hasDeadEntity() const { return m_entity != nullptr && !m_entity->isAlive(); }
+    //bool hasDeadEntity() const { return m_entity != nullptr && !m_entity->isAlive(); }
 
     /*virtual bool isPassableFor(Monster* monster) const {
         return m_isPassable;
@@ -56,7 +56,7 @@ public:
     /*bool hasMonster() const {
         return m_entity != nullptr && m_entity->getType() == EntityType::Monster;
     }*/
-    virtual bool isHole() const { return false; }
+    //virtual bool isHole() const { return false; }
 
     virtual void applyTileEffect() {}
 protected:

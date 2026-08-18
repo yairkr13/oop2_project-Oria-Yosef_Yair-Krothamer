@@ -1,18 +1,25 @@
+// Card.h
 #pragma once
-#include "SFML/Graphics.hpp"
-#include <string>
-#include "StaticObject.h"
+#include "Button.h"
 #include "Monsters/Monster.h"
+#include <memory>
 
-class Card:public StaticObject
+class Card
 {
 public:
-    Card(const sf::Texture& texture, const sf::Vector2f& position);
-    void draw(sf::RenderWindow& window) const override;
+    Card(sf::IntRect rect, std::shared_ptr<Monster> monster, Button::Func onClick);
+
+    void handleEvent(const sf::Event& event);
+    void update(bool enoughKeys, bool isSelected);
+    void draw(sf::RenderWindow& window) const;
+
+    bool canInteract() const;
 
 private:
-    //sf::Sprite m_sprite;
-    int m_cost = 0;
-    //std::unique_ptr<Monster> m_monster;
-    std::string m_monsterName;
+    std::shared_ptr<Monster> m_monster;
+    Button m_button; // 👈 הכפתור הפנימי שמשמש ככלי עזר
+    sf::Vector2f m_position;
+
+    bool m_isSelected = false;
+    bool m_enoughKeys = true;
 };

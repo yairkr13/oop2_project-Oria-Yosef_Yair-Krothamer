@@ -157,9 +157,9 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
         // 2 משבצות לבה
         for (int i = 0; i < 2; ++i) {
             auto [q, row] = allCoords[i];
-            /*float x = START_X + (width / 2.f) * q;
-            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;*///fix the rest later!!!!!
-            m_grid[{q, row}] = std::make_unique<LavaTile>(q, row, tileToScreen(q, row));
+            float x = START_X + (width / 2.f) * q;
+            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;//fix the rest later!!!!!
+            m_grid[{q, row}] = std::make_unique<LavaTile>(q, row, sf::Vector2f(x, y));
         }
 
         // 2 משבצות חור
@@ -205,6 +205,7 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
 //    }
 //}
 
+//try to fix this function!!!!
 void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
 {
     // 1. מציאת המשבצת עליה לחצו
@@ -236,6 +237,7 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
 	BoardEntity* selectedEntity = nullptr;
     for (auto& [coords, tile] : m_grid)
     {
+		//use the m_isSelected flag in the BoardEntity class to check if the entity is selected!!!!!!
         if (auto entity = tile->getEntity()) // שלב א: לוקחים את הישות הכללית
         {
             if (entity->isSelected())//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -307,7 +309,7 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
             if (entity->canBeSelectedBy(currentSide))
             {
                 entity->setSelected(true);
-                highlightNeighbors(entity); // התאימו את highlightNeighbors לקבל *Entity
+                highlightNeighbors(entity->asMonster()); // התאימו את highlightNeighbors לקבל *Entity
             }
         }
         
@@ -481,7 +483,7 @@ void Board::highlightSpawnTiles(PlayerSide side)
 // אותה הערה כמו קודם עדיין רלוונטית: tile של חור עם אויב מעופף עליו לא
 // מסומן ב-visited (רק tiles "רגילים" מסומנים), אז תיאורטית יכול להיכנס
 // לרשימה/למפת ה-parent פעמיים אם הוא נגיש משני כיוונים. זו לא באגה חדשה.
-void Board::computeReachability(BoardEntity* monster,
+void Board::computeReachability(Monster* monster,
     std::vector<Tile*>& outReachable,
     std::map<std::pair<int, int>, std::pair<int, int>>& outParent) const
 {
@@ -582,7 +584,7 @@ void Board::computeReachability(BoardEntity* monster,
     }
 }
 
-std::vector<Tile*> Board::getReachableTiles(BoardEntity* monster) const
+std::vector<Tile*> Board::getReachableTiles(Monster* monster) const
 {
     std::vector<Tile*> reachable;
     std::map<std::pair<int, int>, std::pair<int, int>> parent; // לא בשימוש כאן, רק כי computeReachability דורש אותו
@@ -631,7 +633,7 @@ std::vector<Tile*> Board::getPathTo(Monster* monster, Tile* target) const
 // שכבה 2: wrapper דק - קורא לשאילתה הטהורה למעלה, ורק אחראי על הצביעה (side effect
 // ויזואלי). זו הפונקציה שהקליק האנושי קורא לה. AIPlayer, לעומת זאת, יוכל בעתיד לקרוא
 // ישירות ל-getReachableTiles ולא לצייר כלום - הוא לא צריך צביעה, רק את הרשימה.
-void Board::highlightNeighbors(BoardEntity* monster)
+void Board::highlightNeighbors(Monster* monster)
 {
     if (!monster) return;
 
@@ -671,6 +673,7 @@ void Board::updateTileEffects()
         tile->applyTileEffect(); // פולימורפיזם בפעולה! משבצת רגילה לא תעשה כלום, לבה תוריד חיים.
 
         // אם המפלצת מתה מהאפקט (למשל מהלבה), ננקה אותה מהמשבצת
+		//no need this anymore because the entity has the tile!!!!!!!!
         if (auto entity = tile->getEntity())
         {
             if (!entity->isAlive()) // משתמש במתודה שלכם שבודקת אם המפלצת חיה
@@ -816,17 +819,17 @@ bool Board::spawnMonsterOnTile(Monster* monster, Tile* targetTile)
         tileToScreen(targetTile->getQ(), targetTile->getRow()));
     return true;
 }
-
-bool Board::spawnEntityOnTile(BoardEntity* entity, Tile* targetTile)//FIX THIS!!!!!!
-{
-    if (!entity || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(entity))
-        return false;
-
-    targetTile->setEntity(entity);
-    entity->spawnOnBoard(targetTile->getQ(), targetTile->getRow(),
-        tileToScreen(targetTile->getQ(), targetTile->getRow()));
-    return true;
-}
+//use this later!!!!!!!
+//bool Board::spawnEntityOnTile(BoardEntity* entity, Tile* targetTile)//FIX THIS!!!!!!
+//{
+//    if (!entity || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(entity))
+//        return false;
+//
+//    targetTile->setEntity(entity);
+//    entity->spawnOnBoard(targetTile->getQ(), targetTile->getRow(),
+//        tileToScreen(targetTile->getQ(), targetTile->getRow()));
+//    return true;
+//}
 void Board::performAction(BoardEntity* entity, Tile* targetTile)
 {
     if (!entity || !targetTile) return;
@@ -836,10 +839,12 @@ void Board::performAction(BoardEntity* entity, Tile* targetTile)
     //if (targetTile->hasEntity() && targetTile->getEntity()->getSide() != entity->getSide())
     if (targetTile->isOccupiedByEnemy(entity->getSide()))
     {
+        //no need this!!!!!
         entity->attack(targetTile->getEntity());
         if (!targetTile->isEntityAlive()) { //change this to one function??????
             targetTile->clearEntity();
         }
+        return;
     }
     // 2. תנועה
     //else if (!targetTile->hasEntity() && targetTile->isPassable())
@@ -868,16 +873,24 @@ void Board::performAction(BoardEntity* entity, Tile* targetTile)
     //        monster->moveAlongPath(targetTile->getQ(), targetTile->getRow(), pathScreenPositions);
     //    }
     //}
-    else if (!targetTile->hasEntity() && targetTile->isPassableFor(entity)) //fix!!!!!
+
+    // 2. תנועה - כאן, ורק כאן, אנחנו זקוקים למפלצת קונקרטית: moveAlongPath
+    // היא פעולה שאין לה משמעות הגיונית עבור Heart (בניגוד ל-attack, שיש לה
+    // ברירת מחדל טבעית). ה-downcast הבטוח (asMonster) קורה בדיוק פה, פעם אחת.
+    Monster* monster = entity->asMonster();
+    if (!monster) return; // Heart (או כל BoardEntity שאינו מפלצת) לא יכולה לזוז
+
+
+
+    else if (!targetTile->hasEntity() && targetTile->isPassableFor(monster)) //fix!!!!!
     {
         // לא צריך יותר m_grid.find({q,row}) - המפלצת יודעת ישירות על איזה Tile
         // היא נמצאת, בזכות הקשר הדו-כיווני ב-setEntity/clearEntity.
-        Tile* sourceTile = entity->getCurrentTile();
+        Tile* sourceTile = monster->getCurrentTile();
         if (sourceTile != nullptr)
         {
-            //targetTile->setMonster(monster);
-            targetTile->setEntity(entity);
-            sourceTile->clearEntity();
+            /*targetTile->setEntity(monster);
+            sourceTile->clearEntity();*/
 
             // בונים את המסלול המדורג (משבצת-משבצת) במקום לקפוץ בקו ישר ליעד
             std::vector<Tile*> path = getPathTo(monster, targetTile);
@@ -890,6 +903,8 @@ void Board::performAction(BoardEntity* entity, Tile* targetTile)
             // כבר אושר כנגיש), נופלים חזרה על תזוזה ישירה כדי שהמפלצת לא "תיתקע"
             if (pathScreenPositions.empty())
                 pathScreenPositions.push_back(tileToScreen(targetTile->getQ(), targetTile->getRow()));
+            targetTile->setEntity(monster);
+            sourceTile->clearEntity();
 
             monster->moveAlongPath(targetTile->getQ(), targetTile->getRow(), pathScreenPositions);
         }
@@ -900,6 +915,7 @@ void Board::update(float dt)
 {
     for (auto& [coords, tile] : m_grid)
     {
+		//change this to one function!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if (auto entity = tile->getEntity())
         {
             entity->update(dt);
