@@ -13,3 +13,11 @@ Muffintop::Muffintop(PlayerSide side)
 //{
 //    target.takeDamage(m_attackDamage);
 //}
+bool Muffintop::useSpecialAbility(BoardEntity* target)
+{
+    if (!isSpecialReady() || !target) return false;
+
+    target->takeDamage(m_attackDamage * 2); // דוגמה - יכולת ייחודית
+    m_specialCooldown = 5; // איפוס cooldown
+    return true;
+}

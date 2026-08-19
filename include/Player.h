@@ -2,8 +2,8 @@
 #include <SFML/Graphics.hpp>
 #include "StaticObject.h"
 #include "Heart.h"
-#include "Card.h"
 #include "Constants.h"
+#include "Card.h" // <--- הכללה מלאה במקום class Card;
 #include <vector>
 #include <memory>
 
@@ -21,11 +21,12 @@ public:
     //align right - to delete and use side 
 
     // �����: ���� ������ ���� (���� ����) ���� ������ ������ ���
-    void draw(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;
+    //void draw(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;
+    void draw(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand = nullptr) const;
     void drawKeys(sf::RenderWindow& window, bool alignRight) const;
 
     // �����: �������� ������ ����� ���� (�� �� ����� �� "����" �� ����, ��� �� ���� �����)
-    Monster* handleHandClick(sf::Vector2f mousePos, bool alignRight) const;
+    Card* handleHandClick(sf::Vector2f mousePos, bool alignRight) const;
 
     /*void draw(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand = nullptr) const;
     void drawKeys(sf::RenderWindow& window, bool alignRight) const;
@@ -47,10 +48,13 @@ public:
     virtual void updateTurn(Board& board) {}
     virtual bool isBusy() const { return false; }
 
+    Monster* playCard(Card* card); // כבר לא מוחק מ-m_hand!
+    void removeDeadMonsters();
 //private:
 protected:
-    //void drawHand(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand = nullptr) const;
-    void drawHand(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;
+    //void drawHand(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;
+    void drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand = nullptr) const;
+
 	std::unique_ptr<Heart> m_heart;
     // 
 	//std::vector<std::unique_ptr<Card>> m_cards;
@@ -60,5 +64,5 @@ protected:
 
     //std::vector<std::shared_ptr<Monster>> m_monsters;
     std::vector<std::unique_ptr<Monster>> m_monsters;
-    //std::vector<Card> m_cards;
+    std::vector<std::unique_ptr<Card>> m_hand;
 };

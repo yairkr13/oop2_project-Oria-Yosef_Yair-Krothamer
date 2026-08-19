@@ -10,5 +10,6 @@ public:
     static constexpr int BASE_RANGE = 2;
 
     Muffintop(PlayerSide side);
+	bool useSpecialAbility(BoardEntity* target) override;
     //void attack(Monster& target) override;
 };

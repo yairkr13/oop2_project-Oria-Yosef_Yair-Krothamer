@@ -70,6 +70,13 @@ void Monster::drawActionsLeft(sf::RenderWindow& window) const
     window.draw(actionText);
 }
 
+void Monster::resetActions()
+{
+    m_actionsLeft = 2;
+	if (m_specialCooldown > 0)
+		m_specialCooldown--;
+}
+
 void Monster::walkTo(const sf::Vector2f& targetScreenPos)
 {
     // צעד יחיד = תור עם פריט אחד. אין יותר m_targetPos נפרד - front() של התור
@@ -151,127 +158,127 @@ void Monster::update(float dt)
 bool Monster::isOnBoard() const {
     return m_q != -1 && m_row != -1;
 }
-
-void Monster::drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const
-{
-    const sf::Font& font = AssetsManager::getInstance().getFont("Lilita");
-
-    if (isSelected)
-    {
-        sf::RectangleShape selectionBorder({ Config::CARD_WIDTH + 6.f, Config::CARD_HEIGHT + 6.f });
-        selectionBorder.setPosition({ position.x - 3.f, position.y - 3.f });
-        selectionBorder.setFillColor(sf::Color::Transparent);
-        selectionBorder.setOutlineThickness(3.f);
-        selectionBorder.setOutlineColor(sf::Color(255, 220, 50));
-        window.draw(selectionBorder);
-    }
-
-    std::string texKey = getCardTextureKey();
-    const sf::Texture& monsterTex = AssetsManager::getInstance().getTexture(texKey);
-    sf::Sprite monsterSprite(monsterTex);
-
-    float scaleX = Config::CARD_WIDTH / static_cast<float>(monsterTex.getSize().x);
-    float scaleY = Config::CARD_HEIGHT / static_cast<float>(monsterTex.getSize().y);
-
-    if (isSelected)
-    {
-        float enlarge = 1.08f;
-        scaleX *= enlarge;
-        scaleY *= enlarge;
-        float offsetX = (Config::CARD_WIDTH * (enlarge - 1.f)) / 2.f;
-        float offsetY = (Config::CARD_HEIGHT * (enlarge - 1.f)) / 2.f;
-        position.x -= offsetX;
-        position.y -= offsetY;
-    }
-
-    monsterSprite.setPosition(position);
-    monsterSprite.setScale({ scaleX, scaleY });
-	
-    if(isOnBoard())
-        monsterSprite.setColor(sf::Color(255, 255, 255, 100));
-    //try this:::::
-	//if (isOnBoard())
-	//{
-	//	sf::RectangleShape overlay({ Config::CARD_WIDTH, Config::CARD_HEIGHT });
-	//	overlay.setPosition(position);
-	//	overlay.setFillColor(sf::Color(0, 0, 0, 100)); // חצי שקוף
-	//	window.draw(overlay);
-	//}
-    //end
-    window.draw(monsterSprite);
-
-
-    if (!isOnBoard())
-    {
-        sf::Text costText(font);
-        costText.setString(std::to_string(m_cost));
-        costText.setCharacterSize(22);
-        costText.setFillColor(enoughKeys ? sf::Color(255, 100, 100) : sf::Color::White);
-        costText.setOutlineColor(sf::Color::Black);
-        costText.setOutlineThickness(2.f);
-        costText.setPosition({ position.x + 10.f, position.y + 5.f });
-        window.draw(costText);
-        return;
-    }
-    
-	sf::Text statusText(font);
-	if (m_specialCooldown > 0)
-	{
-		statusText.setString("CD: " + std::to_string(m_specialCooldown));
-		statusText.setFillColor(sf::Color::Yellow);
-	}
-	else
-	{
-		statusText.setString("IN PLAY");
-		statusText.setFillColor(sf::Color(200, 200, 200));
-	}
-	statusText.setCharacterSize(16);
-	statusText.setOutlineColor(sf::Color::Black);
-	statusText.setOutlineThickness(2.f);
-	sf::FloatRect bounds = statusText.getLocalBounds();
-	statusText.setPosition({
-		position.x + (Config::CARD_WIDTH - bounds.size.x) / 2.f,
-		position.y + (Config::CARD_HEIGHT - bounds.size.y) / 2.f
-		});
-	window.draw(statusText);
-    //else
-    //{
-    //    // המפלצת בלוח: מציגים Cooldown או טקסט חיווי
-    //    sf::Text statusText(font);
-
-    //    // אם יש משתנה m_specialCooldown (גדול מ-0) נציג אותו, אחרת נרשום IN PLAY
-    //    if (m_specialCooldown > 0)
-    //    {
-    //        statusText.setString("CD: " + std::to_string(m_specialCooldown));
-    //        statusText.setFillColor(sf::Color::Yellow);
-    //    }
-    //    else
-    //    {
-    //        statusText.setString("IN PLAY");
-    //        statusText.setFillColor(sf::Color(200, 200, 200));
-    //    }
-
-    //    statusText.setCharacterSize(16);
-    //    statusText.setOutlineColor(sf::Color::Black);
-    //    statusText.setOutlineThickness(2.f);
-
-    //    // יישור הטקסט למרכז הקלף
-    //    sf::FloatRect bounds = statusText.getLocalBounds();
-    //    statusText.setPosition({ 
-    //        position.x + (Config::CARD_WIDTH - bounds.width) / 2.f, 
-    //        position.y + (Config::CARD_HEIGHT - bounds.height) / 2.f 
-    //    });
-
-    //    window.draw(statusText);
-    //}
-    //window.draw(costText);
-}
-
-bool Monster::isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPos) const
-{
-    sf::FloatRect cardRect(cardPos, { Config::CARD_WIDTH, Config::CARD_HEIGHT });
-    return cardRect.contains(mousePos);
-}
+//
+//void Monster::drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const
+//{
+//    const sf::Font& font = AssetsManager::getInstance().getFont("Lilita");
+//
+//    if (isSelected)
+//    {
+//        sf::RectangleShape selectionBorder({ Config::CARD_WIDTH + 6.f, Config::CARD_HEIGHT + 6.f });
+//        selectionBorder.setPosition({ position.x - 3.f, position.y - 3.f });
+//        selectionBorder.setFillColor(sf::Color::Transparent);
+//        selectionBorder.setOutlineThickness(3.f);
+//        selectionBorder.setOutlineColor(sf::Color(255, 220, 50));
+//        window.draw(selectionBorder);
+//    }
+//
+//    std::string texKey = getCardTextureKey();
+//    const sf::Texture& monsterTex = AssetsManager::getInstance().getTexture(texKey);
+//    sf::Sprite monsterSprite(monsterTex);
+//
+//    float scaleX = Config::CARD_WIDTH / static_cast<float>(monsterTex.getSize().x);
+//    float scaleY = Config::CARD_HEIGHT / static_cast<float>(monsterTex.getSize().y);
+//
+//    if (isSelected)
+//    {
+//        float enlarge = 1.08f;
+//        scaleX *= enlarge;
+//        scaleY *= enlarge;
+//        float offsetX = (Config::CARD_WIDTH * (enlarge - 1.f)) / 2.f;
+//        float offsetY = (Config::CARD_HEIGHT * (enlarge - 1.f)) / 2.f;
+//        position.x -= offsetX;
+//        position.y -= offsetY;
+//    }
+//
+//    monsterSprite.setPosition(position);
+//    monsterSprite.setScale({ scaleX, scaleY });
+//	
+//    if(isOnBoard())
+//        monsterSprite.setColor(sf::Color(255, 255, 255, 100));
+//    //try this:::::
+//	//if (isOnBoard())
+//	//{
+//	//	sf::RectangleShape overlay({ Config::CARD_WIDTH, Config::CARD_HEIGHT });
+//	//	overlay.setPosition(position);
+//	//	overlay.setFillColor(sf::Color(0, 0, 0, 100)); // חצי שקוף
+//	//	window.draw(overlay);
+//	//}
+//    //end
+//    window.draw(monsterSprite);
+//
+//
+//    if (!isOnBoard())
+//    {
+//        sf::Text costText(font);
+//        costText.setString(std::to_string(m_cost));
+//        costText.setCharacterSize(22);
+//        costText.setFillColor(enoughKeys ? sf::Color(255, 100, 100) : sf::Color::White);
+//        costText.setOutlineColor(sf::Color::Black);
+//        costText.setOutlineThickness(2.f);
+//        costText.setPosition({ position.x + 10.f, position.y + 5.f });
+//        window.draw(costText);
+//        return;
+//    }
+//    
+//	sf::Text statusText(font);
+//	if (m_specialCooldown > 0)
+//	{
+//		statusText.setString("CD: " + std::to_string(m_specialCooldown));
+//		statusText.setFillColor(sf::Color::Yellow);
+//	}
+//	else
+//	{
+//		statusText.setString("IN PLAY");
+//		statusText.setFillColor(sf::Color(200, 200, 200));
+//	}
+//	statusText.setCharacterSize(16);
+//	statusText.setOutlineColor(sf::Color::Black);
+//	statusText.setOutlineThickness(2.f);
+//	sf::FloatRect bounds = statusText.getLocalBounds();
+//	statusText.setPosition({
+//		position.x + (Config::CARD_WIDTH - bounds.size.x) / 2.f,
+//		position.y + (Config::CARD_HEIGHT - bounds.size.y) / 2.f
+//		});
+//	window.draw(statusText);
+//    //else
+//    //{
+//    //    // המפלצת בלוח: מציגים Cooldown או טקסט חיווי
+//    //    sf::Text statusText(font);
+//
+//    //    // אם יש משתנה m_specialCooldown (גדול מ-0) נציג אותו, אחרת נרשום IN PLAY
+//    //    if (m_specialCooldown > 0)
+//    //    {
+//    //        statusText.setString("CD: " + std::to_string(m_specialCooldown));
+//    //        statusText.setFillColor(sf::Color::Yellow);
+//    //    }
+//    //    else
+//    //    {
+//    //        statusText.setString("IN PLAY");
+//    //        statusText.setFillColor(sf::Color(200, 200, 200));
+//    //    }
+//
+//    //    statusText.setCharacterSize(16);
+//    //    statusText.setOutlineColor(sf::Color::Black);
+//    //    statusText.setOutlineThickness(2.f);
+//
+//    //    // יישור הטקסט למרכז הקלף
+//    //    sf::FloatRect bounds = statusText.getLocalBounds();
+//    //    statusText.setPosition({ 
+//    //        position.x + (Config::CARD_WIDTH - bounds.width) / 2.f, 
+//    //        position.y + (Config::CARD_HEIGHT - bounds.height) / 2.f 
+//    //    });
+//
+//    //    window.draw(statusText);
+//    //}
+//    //window.draw(costText);
+//}
+//
+//bool Monster::isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPos) const
+//{
+//    sf::FloatRect cardRect(cardPos, { Config::CARD_WIDTH, Config::CARD_HEIGHT });
+//    return cardRect.contains(mousePos);
+//}
 
 void Monster::attack(BoardEntity* target)
 {

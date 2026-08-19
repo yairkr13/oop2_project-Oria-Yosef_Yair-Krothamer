@@ -4,6 +4,8 @@
 #include "AIPlayer.h"
 #include "SpriteUtils.h"
 #include "AssetsManager.h"
+#include "Card.h"
+#include <iostream>
 #include "Constants.h"
 
 namespace
@@ -105,6 +107,52 @@ void GameplayState::handleEvent(const sf::Event& event)
     event.visit([this](const auto& e) { handle(e); });
 }
 
+void GameplayState::handleSpawnAttempt(const sf::Vector2f& pos, Player& current)
+{
+    // בודקים תקינות *לפני* playCard - Board לא יודע כלום על Card, רק על geometry
+    if (!m_selectedFromHand)
+        return;
+    if (!m_board.isSpawnPositionValid(pos))
+        return;
+
+    Monster* monster = current.playCard(m_selectedFromHand); // Player מטפל בcost+ownership
+    if (!monster)
+        return; // לא אמור לקרות אם הבדיקה למעלה עברה, אבל בטיחות לא מזיקה
+    
+    if (m_board.trySpawnMonster(pos, monster)) // Board מקבל Monster מוכן, לא Card
+    {
+        m_selectedFromHand = nullptr; // clearHighlights כבר קורה בתוך trySpawnMonster בהצלחה
+        m_board.clearHighlights();
+    }
+}
+
+void GameplayState::handleSpecialAbilityClick(Card* card)
+{
+    Monster* monster = card->getLinkedMonster();
+    if (!monster || !monster->isSpecialReady())
+        return;
+
+    m_pendingSpecialCard = card;
+    m_selectedFromHand = nullptr;
+    m_board.clearHighlights();
+    // TODO: highlightSpecialTargets(monster) - להוסיף ב-Board כשתחליטו איך יכולות
+    // מיוחדות בוחרות מטרה (כל הלוח? רק אויבים בטווח? tile ריק?)
+}
+
+void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
+{
+    if (!m_pendingSpecialCard) return;
+
+    Monster* monster = m_pendingSpecialCard->getLinkedMonster();
+    if (!monster) { m_pendingSpecialCard = nullptr; return; }
+
+    // TODO: כרגע אין ל-Board getTileAt/isValidSpecialTarget פומביים.
+    // כשתוסיפו יכולת מיוחדת קונקרטית, זה המקום למצוא את ה-Tile שנלחץ
+    // ולקרוא monster->useSpecialAbility(target) עליו, בדומה ל-handleSpawnAttempt.
+    m_pendingSpecialCard = nullptr;
+    m_board.clearHighlights();
+}
+
 void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
 {
     if (event.button != sf::Mouse::Button::Left)
@@ -114,13 +162,34 @@ void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
         return;
 
     sf::Vector2f pos = m_window.mapPixelToCoords(event.position);
+
     Player& current = m_turnManager.getCurrentPlayer();
 
     if (pos.y > Config::BOTTOM_PANEL_Y)
     {
         bool isPlayer2 = (&current == m_player2.get());
 
-        auto clickedMonster = current.handleHandClick(pos, isPlayer2);
+        Card* clickedCard = current.handleHandClick(pos, isPlayer2);
+
+        if (clickedCard)
+        {
+            if (clickedCard->isPlayed())
+            {
+                handleSpecialAbilityClick(clickedCard);
+            }
+            else if (m_selectedFromHand == clickedCard)
+            {
+                m_selectedFromHand = nullptr;
+                m_board.clearHighlights();
+            }
+            else
+            {
+                m_selectedFromHand = clickedCard;
+                m_pendingSpecialCard = nullptr;
+                m_board.highlightSpawnTiles(current.getSide());
+            }
+        }
+        /*auto clickedMonster = current.handleHandClick(pos, isPlayer2);
         if (clickedMonster)
         {
             if (m_selectedFromHand == clickedMonster)
@@ -133,10 +202,26 @@ void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
                 m_selectedFromHand = clickedMonster;
                 m_board.highlightSpawnTiles(current.getSide());
             }
-        }
+        }*/
     }
     else
     {
+        if (m_pendingSpecialCard)
+        {
+            handleSpecialTargetClick(pos);
+        }
+        else if (m_selectedFromHand)
+        {
+            handleSpawnAttempt(pos, current);
+        }
+        else
+        {
+            m_board.handleClick(pos, current.getSide());
+        }
+    }
+   /* else
+    {
+
         if (m_selectedFromHand)
         {
             bool success = m_board.trySpawnMonster(pos, m_selectedFromHand);
@@ -151,7 +236,7 @@ void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
         {
             m_board.handleClick(pos, current.getSide());
         }
-    }
+    }*/
 }
 
 void GameplayState::handle(const sf::Event::KeyPressed& event)
@@ -164,7 +249,11 @@ void GameplayState::handle(const sf::Event::KeyPressed& event)
 
     if (event.code == sf::Keyboard::Key::Space && m_turnManager.canAcceptInput())
     {
+        if (m_board.isAnimating())
+            return;
         m_turnManager.requestEndTurn();
+        m_pendingSpecialCard = nullptr;
         m_selectedFromHand = nullptr;
+        m_board.clearHighlights();
     }
 }

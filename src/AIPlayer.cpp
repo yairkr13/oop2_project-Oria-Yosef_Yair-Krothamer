@@ -104,7 +104,7 @@ Tile* AIPlayer::findBestTarget(Board& board, Monster* monster) const
     for (Tile* tile : reachable)
     {
         // עדיפות א': אויב בטווח - תוקפים אותו
-        if (tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide())
+        if (tile->hasEntity() && tile->isOccupiedByEnemy(getSide()))
         {
             bestAttackTarget = tile;
             break; // מצאנו מטרה, אין צורך להמשיך לחפש
@@ -117,36 +117,100 @@ Tile* AIPlayer::findBestTarget(Board& board, Monster* monster) const
             {
                 bestMoveTarget = tile;
             }
+            //if (!bestMoveTarget)
+            //{
+            //    bestMoveTarget = tile;
+            //}
+            //else
+            //{
+            //    // Player1 מתקדם ימינה (Q גדל), Player2 מתקדם שמאלה (Q קטן)
+            //    bool isBetter = (getSide() == PlayerSide::Player1)
+            //        ? (tile->getQ() > bestMoveTarget->getQ())
+            //        : (tile->getQ() < bestMoveTarget->getQ());
+
+            //    if (isBetter)
+            //        bestMoveTarget = tile;
+            //}
         }
     }
 
     // נחזיר קודם כל תקיפה, ואם אין - תנועה
     return bestAttackTarget ? bestAttackTarget : bestMoveTarget;
 }
-
+//void AIPlayer::onTurnStart(Board& board)
+//{
+//    for (auto& cardPtr : m_hand) // range-based, בטוח כי אין erase
+//    {
+//        Card* card = cardPtr.get();
+//        if (card->isPlayed() || card->getCost() > m_keys)
+//            continue;
+//
+//        // Board חושף רק עובדה: "אילו tiles פנויים לצד הזה" - לא מכיר Card בכלל
+//        std::vector<Tile*> candidates = board.getSpawnableTiles(getSide());
+//        if (candidates.empty())
+//            break;
+//
+//        std::uniform_int_distribution<size_t> dist(0, candidates.size() - 1);
+//        Tile* chosenTile = candidates[dist(Board::rng())];
+//
+//        Monster* monster = playCard(card); // AIPlayer עצמו - לא Board
+//        if (monster)
+//        {
+//            //monster->spawnOnBoard(chosenTile->getQ(), chosenTile->getRow(), chosenTile->getScreenPos());
+//            monster->spawnOnBoard(chosenTile->getQ(), chosenTile->getRow(), board.tileToScreen(chosenTile->getQ(), chosenTile->getRow()));
+//            chosenTile->setEntity(monster);
+//        }
+//    }
+//
+//    m_phase = AITurnPhase::Acting;
+//    m_currentMonsterIdx = 0;
+//    m_safetyCounter = 0;
+//}
 void AIPlayer::onTurnStart(Board& board)
 {
     // Phase 1: Spawn all affordable monsters immediately (spawning is instant, no animation)
-    for (auto& monsterPtr : m_monsters)
+    for (auto& cardPtr : m_hand)
     {
-        Monster* monster = monsterPtr.get();
-        if (monster->isOnBoard() || !monster->isAlive() || monster->getCost() > m_keys)
+        Card* card = cardPtr.get();
+        
+        if (!card || card->isPlayed() || card->getCost() > m_keys)
             continue;
 
-        std::vector<Tile*> candidates = board.getSpawnableTiles(monster, getSide());
+        Monster* monster = playCard(card);
+        std::vector<Tile*> candidates = board.getSpawnableTiles(monster,getSide());
         if (candidates.empty())
-            break; // אין יותר מקום לזמן - אין טעם להמשיך לבדוק מפלצות נוספות
+            break;
 
         std::uniform_int_distribution<size_t> dist(0, candidates.size() - 1);
         Tile* chosenTile = candidates[dist(Board::rng())];
 
-        if (board.spawnMonsterOnTile(monster, chosenTile))
+        // playCard מוריד מפתחות, מייצר Monster ומכניס ל-m_monsters
+        
+        if (monster)
         {
-            reduceKeys(monster->getCost());
+            board.spawnMonsterOnTile(monster, chosenTile);
         }
-        
-        
     }
+    //for (auto& monsterPtr : m_monsters)
+    //{
+    //    Monster* monster = monsterPtr.get();
+    //    if (monster->isOnBoard() || !monster->isAlive() || monster->getCost() > m_keys)
+    //        continue;
+
+    //    std::vector<Tile*> candidates = board.getSpawnableTiles(monster, getSide());
+    //    if (candidates.empty())
+    //        break; // אין יותר מקום לזמן - אין טעם להמשיך לבדוק מפלצות נוספות
+
+    //    std::uniform_int_distribution<size_t> dist(0, candidates.size() - 1);
+    //    Tile* chosenTile = candidates[dist(Board::rng())];
+
+    //    if (board.spawnMonsterOnTile(monster, chosenTile))
+    //    {
+    //        reduceKeys(monster->getCost());
+    //    }
+    //    
+    //    
+    //}
 
     // שלב 2: הכנה לשלב הפעולה - נתחיל מהמפלצת הראשונה
     m_phase = AITurnPhase::Acting;

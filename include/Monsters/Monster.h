@@ -10,7 +10,8 @@ public:
     Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
     virtual ~Monster() = default;
     void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const override;
-    void drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const;
+    //void drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const;
+    // 
     //void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos);
    /* void takeDamage(int damage) override;
     bool isAlive() const;*/
@@ -28,12 +29,12 @@ public:
     //virtual EntityType getType() const override { return EntityType::Monster; }
     bool isOnBoard() const;
 	bool isClicked(sf::Vector2f mousePos) const; //why we dont use this function in the game??????
-    bool isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPosition) const;
+    /*bool isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPosition) const;*/
 
     int getCost() const { return m_cost; }
     int getRange() const override { return m_range; }
     int getActionsLeft() const { return m_actionsLeft; }
-    void resetActions() { m_actionsLeft = 2; }
+    void resetActions();
     //const std::string& getName() const { return m_name; }
     //std::string getTextureKey() const { return m_textureKey ; }
     //std::string getCardTextureKey() const { return m_textureKey + "_card" ; }
@@ -51,6 +52,11 @@ public:
     void update(float dt) override;
     virtual bool canFly() const override { return m_flying; } // כברירת מחדל מפלצות הן קרקעיות
     bool isMoving() const override { return m_isMoving; }
+
+    int getSpecialCooldown() const { return m_specialCooldown; }
+    bool isSpecialReady() const { return m_specialCooldown <= 0; }
+    virtual bool useSpecialAbility(BoardEntity* target) { return false; }
+
 protected:
     //virtual void onAttackHook(BoardEntity* target) {}
     std::string m_name;
@@ -73,11 +79,11 @@ protected:
     bool m_hasTexture = true;
     float m_baseScale = 1.0f;
     mutable sf::Sprite m_sprite;
+    int m_specialCooldown = 5; // מספר סיבובים עד שהיכולת המיוחדת תהיה זמינה שוב
 private:
     void drawActionsLeft(sf::RenderWindow& window) const;
     void useAction() { if (m_actionsLeft > 0) m_actionsLeft--; }
-	int m_specialCooldown = 5; // מספר סיבובים עד שהיכולת המיוחדת תהיה זמינה שוב
     //void drawHealthBar(sf::RenderWindow& window) const;
-    std::string getCardTextureKey() const { return m_textureKey + "_card"; }
+    //std::string getCardTextureKey() const { return m_textureKey + "_card"; }
     int m_actionsLeft = 2; // כל מפלצת מתחילה עם 2 פעולות
 };

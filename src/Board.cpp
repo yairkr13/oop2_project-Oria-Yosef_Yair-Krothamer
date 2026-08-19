@@ -3,6 +3,7 @@
 #include "Hole.h"
 #include "PanicPoint.h"
 #include <random>
+#include <iostream>
 #include "Constants.h"
 //HEY2
 //hiiiiiiiii
@@ -333,7 +334,6 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
 bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
 {
     if (!monster) return false;
-
     for (auto& [coords, tile] : m_grid)
     {
         if (tile->isHighlighted() &&
@@ -982,4 +982,19 @@ std::pair<int, int> Board::screenToTile(const sf::Vector2f& pos) const
     int qDouble = 2 * qAxial + row;
 
     return { qDouble, row };
+}
+//
+//// Board.cpp - הוספה, לא נוגעת ב-Card בכלל, רק ב-Tile/geometry
+bool Board::isSpawnPositionValid(const sf::Vector2f& pos) const
+{
+    for (auto& [coords, tile] : m_grid)
+    {
+        if (tile->isHighlighted() &&
+            std::hypot(pos.x - tileToScreen(coords.first, coords.second).x,
+                pos.y - tileToScreen(coords.first, coords.second).y) < Config::TILE_RADIUS)
+        {
+            return !tile->hasEntity();
+        }
+    }
+    return false;
 }

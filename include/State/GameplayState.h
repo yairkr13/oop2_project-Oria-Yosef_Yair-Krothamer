@@ -7,6 +7,9 @@
 #include "Button.h"
 #include <optional>
 
+class Card;
+class Monster;
+
 // The active match screen: owns the board and both players for one game,
 // renders them, drives the per-frame update loop, and routes gameplay
 // input (board/hand clicks, Space to end turn, Escape to quit to menu).
@@ -58,7 +61,20 @@ private:
 
     // Hand-selected monster awaiting placement. UI/gameplay-input state,
     // not board state.
-    Monster* m_selectedFromHand = nullptr;
+    //Monster* m_selectedFromHand = nullptr;
+
+    Card* m_selectedFromHand = nullptr;   // קלף שנבחר ליד, טרם שוחק - ממתין ל-tile להנחה
+    Card* m_pendingSpecialCard = nullptr; // קלף ששוחק, יכולת מיוחדת שלו ממתינה לבחירת מטרה
 
     std::optional<Button> m_miniMenuButton;
+
+    // מטפל בלחיצה על קלף ששוחק כבר (מציג "READY"/"CD: X") - מפעיל מצב בחירת מטרה ליכולת
+    void handleSpecialAbilityClick(Card* card);
+
+    // מטפל בלחיצה על tile כשיש קלף נבחר להנחה - בודק תקינות לפני שקוראים ל-playCard
+    void handleSpawnAttempt(const sf::Vector2f& pos, Player& current);
+
+    // מטפל בלחיצה על tile כשיש יכולת מיוחדת ממתינה למטרה
+    void handleSpecialTargetClick(const sf::Vector2f& pos);
+
 };

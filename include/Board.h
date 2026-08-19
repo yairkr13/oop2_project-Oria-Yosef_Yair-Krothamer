@@ -62,6 +62,8 @@ public:
 		static std::mt19937 gen(std::random_device{}());
 		return gen;
 	}
+	// Board.h - להוסיף תחת public:
+	bool isSpawnPositionValid(const sf::Vector2f& pos) const;
 private:
 	// ה-BFS המשותף לשתי השאילתות למעלה - מעבר יחיד, לא משוכפל. בנוסף לרשימת ה-tiles
 	// הנגישים (outReachable, בדיוק כמו ש-getReachableTiles מחזירה), שומר גם "מאיפה
