@@ -57,6 +57,8 @@ configure_file("Monster/Muffintop/Muffintop_R.png" ${CMAKE_BINARY_DIR}/resources
 configure_file("Monster/Muffintop/Muffintop_card_L.png" ${CMAKE_BINARY_DIR}/resources/Monster/Muffintop/Muffintop_card_L.png COPYONLY)
 configure_file("Monster/Muffintop/Muffintop_card_R.png" ${CMAKE_BINARY_DIR}/resources/Monster/Muffintop/Muffintop_card_R.png COPYONLY)
 
+configure_file("Attacks/AcidSplash.png" ${CMAKE_BINARY_DIR}/resources/Attacks/AcidSplash.png COPYONLY)
+
 configure_file("StaticObject/CrystalSpike.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/CrystalSpike.png COPYONLY)
 configure_file("StaticObject/DeadTree.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/DeadTree.png COPYONLY)
 configure_file("StaticObject/RockPillar.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/RockPillar.png COPYONLY)
