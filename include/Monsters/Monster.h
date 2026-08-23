@@ -1,5 +1,4 @@
 #pragma once
-#include "GameObject.h"
 #include "Constants.h"
 #include "BoardEntity.h"
 #include <string>

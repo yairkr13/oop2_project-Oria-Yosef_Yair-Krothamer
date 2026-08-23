@@ -1,6 +1,5 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "StaticObject.h"
 #include "Heart.h"
 #include "Constants.h"
 #include "Card.h" // <--- הכללה מלאה במקום class Card;
