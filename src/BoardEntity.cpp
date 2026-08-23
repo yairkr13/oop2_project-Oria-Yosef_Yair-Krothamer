@@ -1,11 +1,12 @@
 #include "BoardEntity.h"
-#include "Tile.h" // д-include джд оеъш лап!
+#include "Tile.h" // пїЅ-include пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ!
+#include "Attacks/AttackAnimation.h" // complete type needed for the unique_ptr default below
 //
 //BoardEntity::~BoardEntity() {
-//     чсн д-OOP даеиеоий: 
-//     швт мфрй щдйщеъ розчъ мвошй оджйлшеп, ан дйа йещбъ тм ощбцъ...
+//     пїЅпїЅпїЅ пїЅ-OOP пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: 
+//     пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ...
 //    if (m_currentTile != nullptr) {
-//         дйа орчд аъ тцод одощбцъ лгй щма ййщаш щн Dangling Pointer
+//         пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ Dangling Pointer
 //        m_currentTile->clearEntity();
 //    }
 //}
@@ -21,6 +22,11 @@ void BoardEntity::spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) {
     m_q = q;
     m_row = row;
     m_screenPos = screenPos;
+}
+
+std::unique_ptr<AttackAnimation> BoardEntity::createAttackAnimation(BoardEntity* target) const
+{
+    return nullptr;
 }
 
 bool BoardEntity::isAlive() const
@@ -40,28 +46,28 @@ void BoardEntity::drawHealthBar(sf::RenderWindow& window) const
     if (!isAlive()) return;
     /*if (m_side == currentPlayer)
         return;*/
-        // 1. двгшъ ойгеъ мог дзййн (мощм, 80% ошезб ощбцъ дмез)
+        // 1. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ, 80% пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ)
     float barWidth = Config::MONSTER_BOARD_SIZE * 0.8f;
     float barHeight = 6.f;
 
-    // 2. зйщеб ойчен отм шащ дофмцъ (бдрзд щ-m_screenPos деа ошлж дгоеъ)
+    // 2. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ пїЅ-m_screenPos пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)
     float x = m_screenPos.x - (barWidth / 2.f);
-    float y = m_screenPos.y - (Config::MONSTER_BOARD_SIZE / 2.f) - 12.f; // 12 фйчсмйн отм дгоеъ
+    float y = m_screenPos.y - (Config::MONSTER_BOARD_SIZE / 2.f) - 12.f; // 12 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
-    // 3. цйеш шчт ог дзййн (аген лдд ае афеш)
+    // 3. пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ)
     sf::RectangleShape bgBar({ barWidth, barHeight });
     bgBar.setPosition({ x, y });
-    bgBar.setFillColor(sf::Color(80, 20, 20)); // аген тоеч
+    bgBar.setFillColor(sf::Color(80, 20, 20)); // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 
-    // 4. зйщеб йзс дзййн щреъше ецйеш дог дйшеч
+    // 4. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
     float healthRatio = static_cast<float>(m_health) / m_maxHealth;
     if (healthRatio < 0.f) healthRatio = 0.f;
 
     sf::RectangleShape fgBar({ barWidth * healthRatio, barHeight });
     fgBar.setPosition({ x, y });
-    fgBar.setFillColor(sf::Color(50, 220, 50)); // йшеч бдйш
+    fgBar.setFillColor(sf::Color(50, 220, 50)); // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 
-    // 5. шйщен тм доск
+    // 5. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
     window.draw(bgBar);
     window.draw(fgBar);
 }

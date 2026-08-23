@@ -13,4 +13,6 @@ public:
 
     Mozzy(PlayerSide side);
     //void attack(Monster& target) override;
+
+    std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
 };

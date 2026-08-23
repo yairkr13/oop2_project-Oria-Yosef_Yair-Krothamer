@@ -43,6 +43,8 @@ void AssetsManager::loadAllAssets()
 
     loadTexture("mozzy", "resources/Monster/Mozzy/Mozzy_R.png");
     loadTexture("mozzy_card", "resources/Monster/Mozzy/Mozzy_card_R.png");
+
+    loadTexture("acid_splash", "resources/Attacks/AcidSplash.png");
 }
 
 void AssetsManager::loadTexture(const std::string& name, const std::string& filePath)

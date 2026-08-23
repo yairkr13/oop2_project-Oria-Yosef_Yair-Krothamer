@@ -109,6 +109,13 @@ void Board::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
     //        monster->draw(window, currentTurnSide);
     //    }
     //}
+
+    // 3. ציור אנימציות תקיפה פעילות (למשל acid splash של Mozzy) - מעל
+    // המשבצות/הישויות, כדי שהאפקט יהיה גלוי.
+    for (auto const& animation : m_activeAnimations)
+    {
+        animation->draw(window);
+    }
 }
 
 // בתוך Board.cpp
@@ -841,12 +848,24 @@ void Board::performAction(BoardEntity* entity, Tile* targetTile)
 
     if (targetTile->isOccupiedByEnemy(entity->getSide()))
     {
-        //no need this!!!!!
-		targetTile->receiveAttackFrom(entity);
-        //entity->attack(targetTile->getEntity());
-        //if (!targetTile->isEntityAlive()) { //change this to one function?????? in the tile?
-        //    targetTile->clearEntity();
-        //}
+        // Give the attacker a chance to supply an animated attack (see
+        // BoardEntity::createAttackAnimation). Most entities don't override
+        // it, so this is nullptr and the attack resolves immediately below,
+        // exactly as before. An entity that does provide one (e.g. Mozzy)
+        // gets its damage deferred until the animation reports impact -
+        // Board never needs to know which concrete entity/animation this is.
+        BoardEntity* target = targetTile->getEntity();
+        if (std::unique_ptr<AttackAnimation> animation = entity->createAttackAnimation(target))
+        {
+            animation->setOnImpact([targetTile, entity]() {
+                targetTile->receiveAttackFrom(entity);
+            });
+            m_activeAnimations.push_back(std::move(animation));
+        }
+        else
+        {
+            targetTile->receiveAttackFrom(entity);
+        }
         return;
     }
 
@@ -926,10 +945,27 @@ void Board::update(float dt)
 
         }
     }
+
+    // Advance in-flight attack animations (e.g. Mozzy's acid splash), then
+    // drop the ones that finished this frame - same "update then sweep"
+    // rhythm as Player::removeDeadMonsters uses for its own owned collection.
+    for (auto& animation : m_activeAnimations)
+        animation->update(dt);
+
+    m_activeAnimations.erase(
+        std::remove_if(m_activeAnimations.begin(), m_activeAnimations.end(),
+            [](const std::unique_ptr<AttackAnimation>& animation) { return animation->isFinished(); }),
+        m_activeAnimations.end());
 }
 
 bool Board::isAnimating() const
 {
+    // A playing attack animation blocks input/turn-advance exactly like a
+    // moving monster does - this is the only line every existing gate
+    // (TurnManager, GameplayState, AIPlayer) needed to respect it, since
+    // they all already ask isAnimating() rather than "is a monster moving".
+    if (!m_activeAnimations.empty()) return true;
+
     for (auto const& [coords, tile] : m_grid)
     {
         if (auto entity = tile->getEntity())

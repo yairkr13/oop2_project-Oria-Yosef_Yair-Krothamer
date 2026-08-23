@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "Constants.h"
+#include <memory>
 class Monster; // Forward declaration
 
 enum class EntityType {
@@ -9,6 +10,7 @@ enum class EntityType {
 };
 
 class Tile; // Forward declaration
+class AttackAnimation; // Forward declaration
 
 class BoardEntity {
 public:
@@ -16,11 +18,11 @@ public:
         : m_q(q), m_row(row), m_screenPos(position), m_health(health), m_maxHealth(health)/*, m_currentTile(nullptr)*/ {
     }
 
-    // щйрей чшйий: дгйсишчиеш тлщйе ейшиеамй абм ма default, роощ аеъе б-cpp
+    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ default, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ-cpp
     virtual ~BoardEntity() = default;
 
     //virtual int getRange() const { return 0; }
-    // дъаод огеййчъ мзъйод щмлн:
+    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ:
     virtual void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const = 0;
     virtual void takeDamage(int damage);
     virtual bool isAlive() const;
@@ -35,19 +37,19 @@ public:
     virtual int getRange() const { return 0; }
     //virtual EntityType getType() const = 0;
     // 
-    //virtual bool isSelectable() const { return false; } // бшйшъ озгм: мб ай афщш мбзеш
+    //virtual bool isSelectable() const { return false; } // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ: пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
     virtual bool canBeSelectedBy(PlayerSide side) const { return false; }
 
     //virtual bool isSelected() const { return false; }
     virtual bool isMoving() const { return false; }
-    //// --- ферчцйеъ згщеъ: чщш ге-лйеерй тн дощбцъ ---
+    //// --- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅ пїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ ---
     //void setCurrentTile(Tile* tile) { m_currentTile = tile; }
     //Tile* getCurrentTile() const { return m_currentTile; }
     void setCurrentTile(Tile* tile) { m_currentTile = tile; }
     Tile* getCurrentTile() const { return m_currentTile; }
 
 
-    // --- ферчцйеъ тжш мойчен (йтжеш оаег ммез емофмцъ тцод) ---
+    // --- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ) ---
     int getQ() const { return m_q; }
     int getRow() const { return m_row; }
     void setCoords(int q, int row) { m_q = q; m_row = row; }
@@ -55,13 +57,24 @@ public:
     virtual void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos);
     virtual void update(float dt) {}
     virtual bool canFly() const { return false; }
-    /*sf::Vector2f getScreenPosition() const { return m_screenPos; }
-    void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }*/
+    sf::Vector2f getScreenPosition() const { return m_screenPos; }
     virtual Monster* asMonster() { return nullptr; }
+
+    // Optional visual for this entity's attack: nullptr (the default, used
+    // by every entity that doesn't override this) means "no animation" -
+    // Board falls back to resolving the attack immediately, exactly as it
+    // does today. An entity that wants an animated attack (see Mozzy)
+    // overrides this to return one instead; Board never needs to know which
+    // concrete entity - or which concrete animation - it got back.
+    // (Defined out-of-line in BoardEntity.cpp: AttackAnimation is only
+    // forward-declared here, and MSVC instantiates unique_ptr<T>'s
+    // destructor at the point an inline body is defined, which needs T
+    // complete even for a body as simple as `return nullptr;`.)
+    virtual std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const;
 
 protected:
     void drawHealthBar(sf::RenderWindow& window) const;
-    // дощърйн оеврйн лгй щвн офмцъ евн мб йелме мвщъ амйдн йщйшеъ бойгъ дцешк
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
     int m_q;
     int m_row;
     sf::Vector2f m_screenPos;

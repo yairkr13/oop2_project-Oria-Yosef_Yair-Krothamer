@@ -5,10 +5,12 @@
 #include "Monsters/Monster.h"
 #include "Constants.h"
 #include "Heart.h"
+#include "Attacks/AttackAnimation.h"
 #include <cmath>
 #include <map>
 #include <random>
 #include <algorithm>
+#include <memory>
 //try
 class Board
 {
@@ -91,6 +93,14 @@ private:
 	// ��� public:
 	//std::vector <Monster*> m_monsters;
 	std::map<std::pair<int, int>, std::unique_ptr<Tile>> m_grid;
+
+	// In-flight attack animations (e.g. Mozzy's acid splash). Board owns and
+	// drives them purely through the AttackAnimation interface - it never
+	// knows which monster or which concrete animation is playing. Kept in
+	// the same isAnimating()/update()/draw() rhythm as entity movement so
+	// every existing turn/input gate (TurnManager, GameplayState, AIPlayer)
+	// already respects it without any changes on their side.
+	std::vector<std::unique_ptr<AttackAnimation>> m_activeAnimations;
 
 	// Board layout constants
 	static constexpr float START_X = 320.f;
