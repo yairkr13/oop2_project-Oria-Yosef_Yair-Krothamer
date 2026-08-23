@@ -29,6 +29,14 @@ std::unique_ptr<AttackAnimation> BoardEntity::createAttackAnimation(BoardEntity*
     return nullptr;
 }
 
+void BoardEntity::playAttackAnimation(std::unique_ptr<AttackAnimation> animation)
+{
+    // No-op default: an entity that never produces an animation (see
+    // createAttackAnimation above) never receives a non-null one here
+    // either. Kept for entities (Heart) that have no animation state to
+    // own.
+}
+
 bool BoardEntity::isAlive() const
 {
     return m_health > 0;

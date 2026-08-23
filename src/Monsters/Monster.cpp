@@ -1,6 +1,12 @@
 #include "Monsters/Monster.h"
 #include "Constants.h"
 #include "AssetsManager.h"
+#include "Attacks/AttackAnimation.h" // complete type needed for the destructor and m_attackAnimation below
+
+// Defined here (not "= default" inline in the header): destroying
+// m_attackAnimation (a unique_ptr<AttackAnimation>) requires the complete
+// AttackAnimation type, which is only forward-declared in Monster.h.
+Monster::~Monster() = default;
 
 Monster::Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range/*, int cost*/, int q, int row, sf::Color color, const std::string& textureKey, bool flying)
     : BoardEntity(q, row, {}, health),
@@ -57,6 +63,13 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
     }
     else
         drawActionsLeft(window);
+
+    // This monster draws its own in-flight attack animation, if any -
+    // ownership mirrors movement (see m_pathQueue/m_isMoving): Board never
+    // draws this directly, it only draws entities, and this is part of how
+    // this entity draws itself.
+    if (m_attackAnimation)
+        m_attackAnimation->draw(window);
 }
 void Monster::drawActionsLeft(sf::RenderWindow& window) const
 {
@@ -115,6 +128,18 @@ void Monster::moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vect
 
 void Monster::update(float dt)
 {
+    // Advance this monster's own attack animation (if any) independently of
+    // movement - it must keep progressing even while this monster itself
+    // isn't moving (the usual case: attacker stands still while its splash
+    // travels to the target), so this runs before the movement early-return
+    // below, not after it.
+    if (m_attackAnimation)
+    {
+        m_attackAnimation->update(dt);
+        if (m_attackAnimation->isFinished())
+            m_attackAnimation.reset();
+    }
+
     // אם לא זזים כרגע, אין מה לעדכן
     if (!m_isMoving || m_pathQueue.empty())
     {
@@ -295,4 +320,9 @@ void Monster::attack(BoardEntity* target)
 {
     target->takeDamage(m_attackDamage);
     useAction();
+}
+
+void Monster::playAttackAnimation(std::unique_ptr<AttackAnimation> animation)
+{
+    m_attackAnimation = std::move(animation);
 }

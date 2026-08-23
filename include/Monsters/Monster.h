@@ -8,7 +8,11 @@ class Monster :public BoardEntity
 {
 public:
     Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range/*, int cost,*/ ,int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
-    virtual ~Monster() = default;
+    // Declared here, defined "= default" out-of-line in Monster.cpp: m_attackAnimation
+    // below is a unique_ptr<AttackAnimation>, and AttackAnimation is only
+    // forward-declared in this header (via BoardEntity.h) - same reason
+    // BoardEntity::createAttackAnimation's body had to move out-of-line.
+    virtual ~Monster();
     void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const override;
     //void drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const;
     // 
@@ -20,7 +24,7 @@ public:
     void attack(BoardEntity* target);
     //void setSelected(bool selected) { m_selected = selected; }
     //bool isSelected() const override { return m_selected; }
-    //virtual bool isSelectable() const override { return true; } // офмцъ афщш мбзеш!
+    //virtual bool isSelectable() const override { return true; } // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ!
     bool canBeSelectedBy(PlayerSide side) const override {
         return !isEnemyOf(side) && m_actionsLeft > 0;
     }
@@ -43,15 +47,21 @@ public:
     PlayerSide getSide() const override { return m_side; }
     void moveTo(int q, int row, const sf::Vector2f& screenPos);
 
-    // згщ: лое moveTo, абм бочен мжеж бче йщш мйтг дсефй, демлйн гшк лм ощбцъ
-    // щбръйб (pathScreenPositions) бшцу. finalQ/finalRow оътглрйн оййгйъ (бгйеч
-    // лое б-moveTo дочешй) - шч дцйеш жж бдгшвд гшк дъеш.
+    // пїЅпїЅпїЅ: пїЅпїЅпїЅ moveTo, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+    // пїЅпїЅпїЅпїЅпїЅпїЅ (pathScreenPositions) пїЅпїЅпїЅпїЅ. finalQ/finalRow пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ
+    // пїЅпїЅпїЅ пїЅ-moveTo пїЅпїЅпїЅпїЅпїЅпїЅ) - пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ.
     void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions);
 
     void walkTo(const sf::Vector2f& targetScreenPos);//chanfe to animation!!!!!!!!!!!!!!!
     void update(float dt) override;
-    virtual bool canFly() const override { return m_flying; } // лбшйшъ озгм офмцеъ дп чшчтйеъ
+    virtual bool canFly() const override { return m_flying; } // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     bool isMoving() const override { return m_isMoving; }
+
+    // True exactly while m_attackAnimation is set - no separate bool flag
+    // needed (unlike m_isMoving/m_pathQueue): the pointer's presence already
+    // is the state.
+    bool isAttacking() const override { return m_attackAnimation != nullptr; }
+    void playAttackAnimation(std::unique_ptr<AttackAnimation> animation) override;
 
     int getSpecialCooldown() const { return m_specialCooldown; }
     bool isSpecialReady() const { return m_specialCooldown <= 0; }
@@ -70,22 +80,29 @@ protected:
     //int m_row;
     //bool m_selected = false;
     sf::Color m_color;
-    const PlayerSide m_side;  // ма рйъп мщйрей мазш дйцйшд - дчеофйймш тцое "аелу" аъ жд
+    const PlayerSide m_side;  // пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅ" пїЅпїЅ пїЅпїЅ
     bool m_flying;
     std::string m_textureKey;
     //sf::Vector2f m_targetPos;//private od protected??????????????????????????????
-    std::deque<sf::Vector2f> m_pathQueue; // згщ: щаш дцтгйн босмем, азшй m_targetPos дрелзй
+    std::deque<sf::Vector2f> m_pathQueue; // пїЅпїЅпїЅ: пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ m_targetPos пїЅпїЅпїЅпїЅпїЅпїЅ
     bool m_isMoving = false;
+
+    // This monster's own in-flight attack animation (see createAttackAnimation/
+    // playAttackAnimation) - owned, updated and drawn here, the same
+    // ownership model as m_pathQueue/m_isMoving above for movement. Null
+    // whenever no attack animation is playing.
+    std::unique_ptr<AttackAnimation> m_attackAnimation;
+
     float m_speed = 300.f;
     bool m_hasTexture = true;
     float m_baseScale = 1.0f;
     mutable sf::Sprite m_sprite;
-    int m_specialCooldown = 5; // осфш сйбебйн тг щдйлемъ дойезгъ ъдйд жойрд щеб
+    int m_specialCooldown = 5; // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
     int m_actionsLeft = 2;
 private:
     void drawActionsLeft(sf::RenderWindow& window) const;
     void useAction() { if (m_actionsLeft > 0) m_actionsLeft--; }
     //void drawHealthBar(sf::RenderWindow& window) const;
     //std::string getCardTextureKey() const { return m_textureKey + "_card"; }
-     // лм офмцъ оъзймд тн 2 фтемеъ
+     // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ 2 пїЅпїЅпїЅпїЅпїЅпїЅ
 };

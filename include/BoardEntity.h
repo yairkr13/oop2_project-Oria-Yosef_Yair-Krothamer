@@ -42,6 +42,12 @@ public:
 
     //virtual bool isSelected() const { return false; }
     virtual bool isMoving() const { return false; }
+
+    // True while this entity is playing its own attack animation (see
+    // createAttackAnimation/playAttackAnimation below). Board aggregates
+    // this alongside isMoving() in isAnimating() - it never needs to know
+    // *which* entity or *which* animation, only whether one is in flight.
+    virtual bool isAttacking() const { return false; }
     //// --- �������� �����: ��� ��-������ �� ������ ---
     //void setCurrentTile(Tile* tile) { m_currentTile = tile; }
     //Tile* getCurrentTile() const { return m_currentTile; }
@@ -71,6 +77,15 @@ public:
     // destructor at the point an inline body is defined, which needs T
     // complete even for a body as simple as `return nullptr;`.)
     virtual std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const;
+
+    // Hands ownership of an in-flight attack animation to this entity - it
+    // owns/updates/draws it from here on, exactly like a Monster already
+    // owns its own movement animation. Default is a no-op (the animation is
+    // simply dropped): only entities that can attack (Monster) override
+    // this; Board calls it polymorphically without knowing that. (Also
+    // defined out-of-line - same incomplete-type reason as above: the
+    // parameter itself is destroyed at the end of the default body.)
+    virtual void playAttackAnimation(std::unique_ptr<AttackAnimation> animation);
 
 protected:
     void drawHealthBar(sf::RenderWindow& window) const;

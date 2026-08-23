@@ -2,6 +2,7 @@
 #include "LavaTile.h"
 #include "Hole.h"
 #include "PanicPoint.h"
+#include "Attacks/AttackAnimation.h"
 #include <random>
 #include <iostream>
 #include "Constants.h"
@@ -109,13 +110,9 @@ void Board::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
     //        monster->draw(window, currentTurnSide);
     //    }
     //}
-
-    // 3. ציור אנימציות תקיפה פעילות (למשל acid splash של Mozzy) - מעל
-    // המשבצות/הישויות, כדי שהאפקט יהיה גלוי.
-    for (auto const& animation : m_activeAnimations)
-    {
-        animation->draw(window);
-    }
+    // (tile->draw() above already calls entity->draw() for the occupied
+    // tiles - and a Monster now draws its own in-flight attack animation as
+    // part of that call, so there is nothing left for Board to draw here.)
 }
 
 // בתוך Board.cpp
@@ -860,7 +857,12 @@ void Board::performAction(BoardEntity* entity, Tile* targetTile)
             animation->setOnImpact([targetTile, entity]() {
                 targetTile->receiveAttackFrom(entity);
             });
-            m_activeAnimations.push_back(std::move(animation));
+
+            // Board's job ends at deciding the attack happens and wiring
+            // how it eventually resolves - from here the attacker owns and
+            // drives its own animation (update/draw/isAttacking), the same
+            // ownership split it already has for its own movement.
+            entity->playAttackAnimation(std::move(animation));
         }
         else
         {
@@ -941,36 +943,31 @@ void Board::update(float dt)
 		//change this to one function!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if (auto entity = tile->getEntity())
         {
+            // Advances this entity's own animation state, whatever it may
+            // be - movement (Monster::m_pathQueue) and, now, an in-flight
+            // attack animation (Monster::m_attackAnimation) are both driven
+            // from the entity's own update() override. Board just relays
+            // the per-frame tick; it owns none of that state itself.
             entity->update(dt);
 
         }
     }
-
-    // Advance in-flight attack animations (e.g. Mozzy's acid splash), then
-    // drop the ones that finished this frame - same "update then sweep"
-    // rhythm as Player::removeDeadMonsters uses for its own owned collection.
-    for (auto& animation : m_activeAnimations)
-        animation->update(dt);
-
-    m_activeAnimations.erase(
-        std::remove_if(m_activeAnimations.begin(), m_activeAnimations.end(),
-            [](const std::unique_ptr<AttackAnimation>& animation) { return animation->isFinished(); }),
-        m_activeAnimations.end());
 }
 
 bool Board::isAnimating() const
 {
-    // A playing attack animation blocks input/turn-advance exactly like a
-    // moving monster does - this is the only line every existing gate
-    // (TurnManager, GameplayState, AIPlayer) needed to respect it, since
-    // they all already ask isAnimating() rather than "is a monster moving".
-    if (!m_activeAnimations.empty()) return true;
-
+    // "Is the board busy" is answered purely by asking each occupied tile's
+    // entity about its own state - Board aggregates, it doesn't own any
+    // animation itself. A playing attack animation (isAttacking()) blocks
+    // input/turn-advance exactly like a moving monster (isMoving()) does,
+    // through this one shared query - every existing gate (TurnManager,
+    // GameplayState, AIPlayer) already calls only isAnimating(), so neither
+    // of them needs to know these are two different kinds of animation.
     for (auto const& [coords, tile] : m_grid)
     {
         if (auto entity = tile->getEntity())
         {
-            if (entity->isMoving()) return true;
+            if (entity->isMoving() || entity->isAttacking()) return true;
             //if (entity->getType() == EntityType::Monster)
             //{
             //    // עכשיו אנחנו בטוחים שזו מפלצת, אז אפשר להמיר בבטחה
