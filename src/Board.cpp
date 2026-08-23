@@ -957,17 +957,16 @@ void Board::update(float dt)
 bool Board::isAnimating() const
 {
     // "Is the board busy" is answered purely by asking each occupied tile's
-    // entity about its own state - Board aggregates, it doesn't own any
-    // animation itself. A playing attack animation (isAttacking()) blocks
-    // input/turn-advance exactly like a moving monster (isMoving()) does,
-    // through this one shared query - every existing gate (TurnManager,
-    // GameplayState, AIPlayer) already calls only isAnimating(), so neither
-    // of them needs to know these are two different kinds of animation.
+    // entity whether *it* is animating - Board aggregates, it doesn't own
+    // any animation itself and doesn't know or care why an entity says yes
+    // (movement, an attack animation, or anything added later). Every
+    // existing gate (TurnManager, GameplayState, AIPlayer) already calls
+    // only this method, so none of them need to change either.
     for (auto const& [coords, tile] : m_grid)
     {
         if (auto entity = tile->getEntity())
         {
-            if (entity->isMoving() || entity->isAttacking()) return true;
+            if (entity->isAnimating()) return true;
             //if (entity->getType() == EntityType::Monster)
             //{
             //    // עכשיו אנחנו בטוחים שזו מפלצת, אז אפשר להמיר בבטחה

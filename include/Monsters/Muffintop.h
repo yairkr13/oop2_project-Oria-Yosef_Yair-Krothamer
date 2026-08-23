@@ -11,6 +11,8 @@ public:
 
     Muffintop(PlayerSide side);
 	//bool useSpecialAbility(BoardEntity* target) override;
+
+    std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
 private:
     void onSpecialAbility(BoardEntity* target) override;
 };
