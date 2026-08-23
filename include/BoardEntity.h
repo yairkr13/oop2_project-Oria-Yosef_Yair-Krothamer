@@ -25,6 +25,14 @@ public:
     // ����� ������� ������ ����:
     virtual void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const = 0;
     virtual void takeDamage(int damage);
+
+    // Heals this entity, capped at its own max HP - mirrors takeDamage as
+    // the other half of the same encapsulated health API, so callers (e.g.
+    // Muffintop's heal ability) never manipulate another entity's health
+    // fields directly.
+    void heal(int amount);
+    int getMaxHealth() const { return m_maxHealth; }
+
     virtual bool isAlive() const;
     //virtual int getHealth() const = 0;
     virtual PlayerSide getSide() const = 0;
@@ -35,6 +43,23 @@ public:
     virtual void setSelected(bool selected) { m_isSelected = selected; }
     virtual bool isSelected() const { return m_isSelected; }
     virtual int getRange() const { return 0; }
+
+    // Encapsulated "cannot currently receive damage" state (see Henrietta's
+    // Protection). Deliberately checked *inside* takeDamage() itself, not
+    // by callers - Tile::receiveAttackFrom, tile effects, everything that
+    // already just calls takeDamage() respects this automatically, with no
+    // `if (isProtected())` anywhere else in the codebase.
+    bool isProtected() const { return m_protected; }
+    void applyProtection();
+
+    // Generic per-turn-boundary tick for turn-scoped status state (currently:
+    // Protection's countdown). Called once per player switch from
+    // Board::updateTileEffects() - the same existing per-switch tick point
+    // tile effects already use - so entities never need Board or TurnManager
+    // to know their status effects exist. Entities with their own turn-scoped
+    // state (see Barzilla's empowered attack) override this and chain to the
+    // base implementation.
+    virtual void onTurnBoundary();
     //virtual EntityType getType() const = 0;
     // 
     //virtual bool isSelectable() const { return false; } // ����� ����: �� �� ���� �����
@@ -108,4 +133,6 @@ protected:
     int m_maxHealth;
     Tile* m_currentTile;
     bool m_isSelected = false;
+    bool m_protected = false;
+    int m_protectionTurnsRemaining = 0;
 };

@@ -8,10 +8,11 @@
 // AttackAnimation type, which is only forward-declared in Monster.h.
 Monster::~Monster() = default;
 
-Monster::Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range/*, int cost*/, int q, int row, sf::Color color, const std::string& textureKey, bool flying)
+Monster::Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int baseCooldown/*, int cost*/, int q, int row, sf::Color color, const std::string& textureKey, bool flying)
     : BoardEntity(q, row, {}, health),
     m_side(side), m_name(name), m_attackDamage(attackPower),
     m_range(range)/*, m_cost(cost)*/, m_color(color), m_textureKey(textureKey), m_flying(flying),
+    m_baseCooldown(baseCooldown), m_specialCooldown(baseCooldown),
     m_sprite(AssetsManager::getInstance().getTexture(m_textureKey))
 {
     try
@@ -85,9 +86,22 @@ void Monster::drawActionsLeft(sf::RenderWindow& window) const
 
 void Monster::resetActions()
 {
+    // Whether or not this monster was frozen, its blocked turn (if any) has
+    // now concluded - clear the flag and restore normal actions. See
+    // applyFreeze()/isFrozen() for why this alone is sufficient: freeze
+    // itself already zeroed m_actionsLeft immediately at cast time, and
+    // resetActions() only ever runs again once per owner-turn-end, which is
+    // exactly when that one blocked turn is over.
+    m_frozen = false;
     m_actionsLeft = 2;
 	if (m_specialCooldown > 0)
 		m_specialCooldown--;
+}
+
+void Monster::applyFreeze()
+{
+    m_frozen = true;
+    m_actionsLeft = 0;
 }
 
 void Monster::walkTo(const sf::Vector2f& targetScreenPos)
@@ -184,14 +198,22 @@ bool Monster::isOnBoard() const {
     return m_q != -1 && m_row != -1;
 }
 
-bool Monster::useSpecialAbility(BoardEntity* target)
+bool Monster::useSpecialAbility(Board& board, BoardEntity* target)
 {
     if (!isSpecialReady() || m_actionsLeft <= 0)
         return false;
 
-    onSpecialAbility(target); // הפעלת הבונוס הייחודי של המפלצת
-    useAction();              // צריכת נקודת פעולה
-    m_specialCooldown = 3;    // הגדרת Cooldown ל-3 תורות
+    onSpecialAbility(board, target); // הפעלת הבונוס הייחודי של המפלצת
+
+    if (specialAbilityCommitsOnSelect())
+    {
+        useAction();              // צריכת נקודת פעולה
+        m_specialCooldown = m_baseCooldown; // כל מפלצת מתאפסת ל-cooldown הבסיסי שלה
+    }
+    // else: onSpecialAbility() only armed monster-specific state (see
+    // Barzilla) - the action/cooldown bookkeeping is deferred until that
+    // monster itself decides its Special has actually been used.
+
     return true;
 }
 //

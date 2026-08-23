@@ -19,7 +19,7 @@ namespace
 }
 
 Mozzy::Mozzy(PlayerSide side)
-    : Monster(side, "Mozzy", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, -1, -1, sf::Color::Cyan, "mozzy",true)
+    : Monster(side, "Mozzy", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Cyan, "mozzy",true)
 {
     //TextureManager::getInstance().loadTexture("mozzy_r", "resources/Monster/Mozzy/Mozzy_R.png");
     //TextureManager::getInstance().loadTexture("mozzy_l", "resources/Monster/Mozzy/Mozzy_L.png");
@@ -39,4 +39,10 @@ std::unique_ptr<AttackAnimation> Mozzy::createAttackAnimation(BoardEntity* targe
     const sf::Texture& acidSplashTexture = AssetsManager::getInstance().getTexture("acid_splash");
     return std::make_unique<SplashAttackAnimation>(
         acidSplashTexture, m_screenPos, target->getScreenPosition(), ACID_SPLASH_DURATION, ACID_SPLASH_THICKNESS);
+}
+
+void Mozzy::onSpecialAbility(Board& board, BoardEntity* target)
+{
+    if (Monster* targetMonster = target ? target->asMonster() : nullptr)
+        targetMonster->applyFreeze();
 }

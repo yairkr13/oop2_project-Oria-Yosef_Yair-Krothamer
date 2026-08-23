@@ -1,6 +1,7 @@
 #include "BoardEntity.h"
 #include "Tile.h" // �-include ��� ���� ���!
 #include "Attacks/AttackAnimation.h" // complete type needed for the unique_ptr default below
+#include <algorithm>
 //
 //BoardEntity::~BoardEntity() {
 //     ��� �-OOP ��������: 
@@ -44,8 +45,33 @@ bool BoardEntity::isAlive() const
 
 void BoardEntity::takeDamage(int damage)
 {
+    if (m_protected) return; // encapsulated here so no caller ever needs to ask first
     m_health -= damage;
     if (m_health < 0) m_health = 0;
+}
+
+void BoardEntity::heal(int amount)
+{
+    m_health = std::min(m_health + amount, m_maxHealth);
+}
+
+void BoardEntity::applyProtection()
+{
+    m_protected = true;
+    // Survives the immediate switch away from the caster's turn, then the
+    // whole of the opposing turn, expiring on the switch back - see
+    // onTurnBoundary().
+    m_protectionTurnsRemaining = 2;
+}
+
+void BoardEntity::onTurnBoundary()
+{
+    if (m_protectionTurnsRemaining > 0)
+    {
+        --m_protectionTurnsRemaining;
+        if (m_protectionTurnsRemaining == 0)
+            m_protected = false;
+    }
 }
 
 

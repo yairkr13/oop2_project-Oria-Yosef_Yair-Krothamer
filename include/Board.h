@@ -65,6 +65,15 @@ public:
 	}
 	// Board.h - להוסיף תחת public:
 	bool isSpawnPositionValid(const sf::Vector2f& pos) const;
+
+	// Board-fact lookups reused by anything that needs "what tile is at
+	// this coordinate/screen position" - e.g. Blue's knockback (coordinate
+	// arithmetic -> Tile) and special-ability target selection (a screen
+	// click -> Tile). Board is the Information Expert for tile occupancy;
+	// these are the two genuinely-missing general primitives, not
+	// duplicates of the range/reachability/occupancy queries above.
+	Tile* getTileAt(int q, int row) const;
+	Tile* getTileAtScreenPosition(const sf::Vector2f& pos) const;
 private:
 	// ה-BFS המשותף לשתי השאילתות למעלה - מעבר יחיד, לא משוכפל. בנוסף לרשימת ה-tiles
 	// הנגישים (outReachable, בדיוק כמו ש-getReachableTiles מחזירה), שומר גם "מאיפה

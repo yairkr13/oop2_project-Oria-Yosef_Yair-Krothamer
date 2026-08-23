@@ -8,9 +8,20 @@ public:
     static constexpr int BASE_HEALTH = 100;
     static constexpr int BASE_ATTACK = 20;
     static constexpr int BASE_RANGE = 3;
+    static constexpr int BASE_COOLDOWN = 5;
 
     Henrietta(PlayerSide side);
+
+    std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
+
+    bool specialAbilityNeedsTarget() const override { return true; }
+
+    // Protection targets a friendly Monster - flips the base (enemy) default.
+    bool isValidSpecialTarget(BoardEntity& candidate) const override
+    {
+        return candidate.asMonster() != nullptr && candidate.isAllyOf(getSide());
+    }
 private:
-    void onSpecialAbility(BoardEntity* target) override;
+    void onSpecialAbility(Board& board, BoardEntity* target) override;
     //void attack(Monster& target) override;
 };

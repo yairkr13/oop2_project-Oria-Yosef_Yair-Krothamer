@@ -47,6 +47,8 @@ void AssetsManager::loadAllAssets()
     loadTexture("acid_splash", "resources/Attacks/AcidSplash.png");
     loadTexture("fire_blast", "resources/Attacks/FireBlast.png");
     loadTexture("muffin_shot", "resources/Attacks/MuffinShot.png");
+    loadTexture("wind_blast", "resources/Attacks/WindBlast.png");
+    loadTexture("flame_web", "resources/Attacks/FlameWeb.png");
 }
 
 void AssetsManager::loadTexture(const std::string& name, const std::string& filePath)

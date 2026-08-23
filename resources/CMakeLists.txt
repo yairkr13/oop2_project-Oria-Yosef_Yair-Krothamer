@@ -63,6 +63,8 @@ configure_file("Attacks/MuffinShot.png" ${CMAKE_BINARY_DIR}/resources/Attacks/Mu
 configure_file("Attacks/WindBlast.png" ${CMAKE_BINARY_DIR}/resources/Attacks/WindBlast.png COPYONLY)
 configure_file("Attacks/FlameWeb.png" ${CMAKE_BINARY_DIR}/resources/Attacks/FlameWeb.png COPYONLY)
 
+configure_file("SpecialAttack/HealEffect.png" ${CMAKE_BINARY_DIR}/resources/SpecialAttack/HealEffect.png COPYONLY)
+
 configure_file("StaticObject/CrystalSpike.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/CrystalSpike.png COPYONLY)
 configure_file("StaticObject/DeadTree.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/DeadTree.png COPYONLY)
 configure_file("StaticObject/RockPillar.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/RockPillar.png COPYONLY)

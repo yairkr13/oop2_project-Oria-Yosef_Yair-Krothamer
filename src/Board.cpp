@@ -230,9 +230,7 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
     }*/
     // 1. מציאת המשבצת עליה לחצו - במקום לסרוק את כל ה-grid ולחשב מרחק לכל tile,
     // ממירים ישירות פיקסלים -> (q,row) ומחפשים ב-find() (O(log n) במקום O(n)).
-    auto [q, row] = screenToTile(pos);
-    auto tileIt = m_grid.find({ q, row });
-    Tile* clickedTile = (tileIt != m_grid.end()) ? tileIt->second.get() : nullptr;
+    Tile* clickedTile = getTileAtScreenPosition(pos);
 
 
     if (!clickedTile) return;
@@ -680,6 +678,14 @@ void Board::updateTileEffects()
 		//no need this anymore because the entity has the tile!!!!!!!!
         if (auto entity = tile->getEntity())
         {
+            // Generic per-turn-boundary tick (see BoardEntity::onTurnBoundary) -
+            // this is the one existing place a "a player switch just
+            // happened" event already reaches every occupied tile, so
+            // turn-scoped status effects (Henrietta's Protection, Barzilla's
+            // empowered attack) piggyback on it instead of a new timer.
+            // Board never learns what any status effect means.
+            entity->onTurnBoundary();
+
             if (!entity->isAlive()) // משתמש במתודה שלכם שבודקת אם המפלצת חיה
             {
                 tile->clearEntity();
@@ -1033,4 +1039,16 @@ bool Board::isSpawnPositionValid(const sf::Vector2f& pos) const
         }
     }
     return false;
+}
+
+Tile* Board::getTileAt(int q, int row) const
+{
+    auto it = m_grid.find({ q, row });
+    return (it != m_grid.end()) ? it->second.get() : nullptr;
+}
+
+Tile* Board::getTileAtScreenPosition(const sf::Vector2f& pos) const
+{
+    auto [q, row] = screenToTile(pos);
+    return getTileAt(q, row);
 }

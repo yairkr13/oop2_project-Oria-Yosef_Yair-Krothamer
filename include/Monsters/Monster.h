@@ -4,10 +4,11 @@
 #include "BoardEntity.h"
 #include <string>
 #include <deque>
+class Board; // Forward declaration - only ever used by reference in Special Ability hooks below
 class Monster :public BoardEntity
 {
 public:
-    Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range/*, int cost,*/ ,int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
+    Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int baseCooldown/*, int cost,*/ ,int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
     // Declared here, defined "= default" out-of-line in Monster.cpp: m_attackAnimation
     // below is a unique_ptr<AttackAnimation>, and AttackAnimation is only
     // forward-declared in this header (via BoardEntity.h) - same reason
@@ -65,10 +66,61 @@ public:
 
     int getSpecialCooldown() const { return m_specialCooldown; }
     bool isSpecialReady() const { return m_specialCooldown <= 0; }
-    virtual bool useSpecialAbility(BoardEntity* target = nullptr);
+
+    // True while frozen (see Mozzy). Kept as its own explicit, named state -
+    // deliberately NOT inferred from m_actionsLeft == 0, since "frozen" and
+    // "already spent my actions this turn" are different domain concepts
+    // that happen to look the same in that one field; collapsing them would
+    // make it impossible to ever query "is this monster frozen specifically"
+    // (for a UI indicator, or a future ability that cares) later.
+    bool isFrozen() const { return m_frozen; }
+
+    // Applied by an external Freeze-style ability. Fits the existing turn
+    // system rather than a new timer: it zeroes this monster's actions
+    // immediately (so it cannot act during its own owner's very next turn,
+    // which is the only turn that hasn't had resetActions() called on it
+    // yet since the freeze), and resetActions() - already called exactly
+    // once per owner-turn-end - clears m_frozen the next time it runs,
+    // which is precisely when that one blocked turn has concluded.
+    void applyFreeze();
+
+    // Whether this monster's Special requires the player to select a
+    // target before it can commit (see GameplayState). False (the default)
+    // covers self-only Specials.
+    virtual bool specialAbilityNeedsTarget() const { return false; }
+
+    // Whether useSpecialAbility() commits (consumes the action, resets the
+    // cooldown) at the moment it's called - true (the default) is correct
+    // for every Special where being selected/targeted IS using it. A
+    // monster whose Special is instead armed now and actually used at some
+    // later, separate event overrides this to false - see Barzilla, whose
+    // Card click only arms its next attack; the attack itself is what
+    // commits (see Barzilla::attack()).
+    virtual bool specialAbilityCommitsOnSelect() const { return true; }
+
+    // Un-arms a Special that was armed (see specialAbilityCommitsOnSelect())
+    // but never reached its own commit event - e.g. the player clicked the
+    // Card again, picked a different Card, or ended the turn without
+    // attacking. Default: no-op, correct for every Special that commits on
+    // select (nothing was ever armed, so there is nothing to undo).
+    virtual void cancelSpecialAbility() {}
+
+    // Whether `candidate` is a legal target for this monster's Special,
+    // once one is required. Default: any on-board enemy Monster - covers
+    // Mozzy's Freeze and Blue's Knockback without either needing to
+    // override this. Ally-targeted Specials (Muffintop's Heal, Henrietta's
+    // Protection) override this to require the same side instead.
+    // GameplayState calls only this - it never hardcodes "ally" or "enemy"
+    // for a specific monster.
+    virtual bool isValidSpecialTarget(BoardEntity& candidate) const
+    {
+        return candidate.asMonster() != nullptr && candidate.isEnemyOf(m_side);
+    }
+
+    virtual bool useSpecialAbility(Board& board, BoardEntity* target = nullptr);
 protected:
     //virtual void onAttackHook(BoardEntity* target) {}
-    virtual void onSpecialAbility(BoardEntity* target) {}
+    virtual void onSpecialAbility(Board& board, BoardEntity* target) {}
 
     std::string m_name;
     //int m_health;
@@ -82,6 +134,7 @@ protected:
     sf::Color m_color;
     const PlayerSide m_side;  // �� ���� ������ ���� ������ - ��������� ���� "����" �� ��
     bool m_flying;
+    bool m_frozen = false;
     std::string m_textureKey;
     //sf::Vector2f m_targetPos;//private od protected??????????????????????????????
     std::deque<sf::Vector2f> m_pathQueue; // ���: ��� ������ ������, ���� m_targetPos ������
@@ -97,11 +150,25 @@ protected:
     bool m_hasTexture = true;
     float m_baseScale = 1.0f;
     mutable sf::Sprite m_sprite;
-    int m_specialCooldown = 5; // ���� ������� �� ������� ������� ���� ����� ���
+
+    // Per-monster Special cooldown duration (see BASE_COOLDOWN on each
+    // concrete monster) and the current countdown - both instance state,
+    // owned here, never by Card or Player. m_specialCooldown starts at the
+    // monster's own base value (set in the constructor init list) rather
+    // than a fixed literal, so a freshly-spawned monster's Special isn't
+    // ready any sooner or later than its own BASE_COOLDOWN says.
+    int m_baseCooldown;
+    int m_specialCooldown;
     int m_actionsLeft = 2;
+
+    // useAction() is protected (not private): concrete monsters that
+    // override attack() (see Barzilla, to apply its empowered-attack
+    // multiplier) still need to consume an action exactly like the base
+    // Monster::attack() does.
+protected:
+    void useAction() { if (m_actionsLeft > 0) m_actionsLeft--; }
 private:
     void drawActionsLeft(sf::RenderWindow& window) const;
-    void useAction() { if (m_actionsLeft > 0) m_actionsLeft--; }
     //void drawHealthBar(sf::RenderWindow& window) const;
     //std::string getCardTextureKey() const { return m_textureKey + "_card"; }
      // �� ����� ������ �� 2 ������

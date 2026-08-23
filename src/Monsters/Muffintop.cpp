@@ -16,7 +16,7 @@ namespace
 }
 
 Muffintop::Muffintop(PlayerSide side)
-    : Monster(side, "Muffintop", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, -1, -1, sf::Color::Magenta, "muffintop")
+    : Monster(side, "Muffintop", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Magenta, "muffintop")
 {
     //TextureManager::getInstance().loadTexture("muffintop_r", "resources/Monster/Muffintop/Muffintop_R.png");
     //TextureManager::getInstance().loadTexture("muffintop_l", "resources/Monster/Muffintop/Muffintop_L.png");
@@ -25,19 +25,14 @@ Muffintop::Muffintop(PlayerSide side)
 }
 
 
-//bool Muffintop::useSpecialAbility(BoardEntity* target)
-//{
-//    if (!isSpecialReady() || !target) return false;
-//
-//    target->takeDamage(m_attackDamage * 2); // דוגמה - יכולת ייחודית
-//    m_specialCooldown = 5; // איפוס cooldown
-//    return true;
-//}
-
-void Muffintop::onSpecialAbility(BoardEntity* target)
+// Heal Ally: 25% of the target's own MAX HP (not current HP - a flat,
+// predictable heal, not one that shrinks in value the more it's needed).
+// heal() itself (BoardEntity) already clamps to max HP, so no separate cap
+// check is needed here.
+void Muffintop::onSpecialAbility(Board& board, BoardEntity* target)
 {
-    // דוגמה לחיזוק עצמי: תוספת כוח התקפה לתור הנוכחי
-    m_attackDamage += m_attackDamage*0.5; // או שדה מסוים של המפלצת
+    if (Monster* targetMonster = target ? target->asMonster() : nullptr)
+        targetMonster->heal(static_cast<int>(targetMonster->getMaxHealth() * 0.25f));
 }
 
 std::unique_ptr<AttackAnimation> Muffintop::createAttackAnimation(BoardEntity* target) const

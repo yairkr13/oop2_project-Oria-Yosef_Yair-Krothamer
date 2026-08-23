@@ -77,4 +77,13 @@ private:
     // מטפל בלחיצה על tile כשיש יכולת מיוחדת ממתינה למטרה
     void handleSpecialTargetClick(const sf::Vector2f& pos);
 
+    // The one place m_pendingSpecialCard is abandoned before it reached its
+    // own commit event (toggled off, superseded by a different selection,
+    // or the turn ended). Un-arms whatever the pending Card's monster may
+    // have armed (see Monster::cancelSpecialAbility - a no-op for any
+    // Special that hadn't armed anything yet) before clearing the pointer,
+    // so a Special can never stay silently armed once its Card stops
+    // showing as selected.
+    void clearPendingSpecial();
+
 };
