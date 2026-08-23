@@ -1,7 +1,8 @@
 #include "Monsters/Blue.h"
+//#include <algorithm>
 
 Blue::Blue(PlayerSide side)
-    : Monster(side, "Blue", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, COST, -1, -1, sf::Color::Magenta, "blue")
+    : Monster(side, "Blue", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, -1, -1, sf::Color::Magenta, "blue")
 {
     //TextureManager::getInstance().loadTexture("blue_r", "resources/Monster/Blue/Blue_R.png");
     //TextureManager::getInstance().loadTexture("blue_l", "resources/Monster/Blue/Blue_L.png");
@@ -13,3 +14,8 @@ Blue::Blue(PlayerSide side)
 //{
 //    target.takeDamage(m_attackDamage);
 //}
+
+void Blue::onSpecialAbility(BoardEntity* target)
+{
+    m_health = std::min(m_health + m_health * 0.3, (double)m_maxHealth);
+}

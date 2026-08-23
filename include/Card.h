@@ -28,6 +28,10 @@ public:
     void clearLink() { m_linkedMonster = nullptr; }
 
 private:
+    void drawBoarder(sf::RenderWindow& window, sf::Vector2f position, sf::Color color) const;
+    void drawCostText(sf::RenderWindow& window, sf::Vector2f drawPos, const sf::Font& font, bool enoughKeys) const;
+    void drawStatusText(sf::RenderWindow& window, sf::Vector2f drawPos, const sf::Font& font) const;
+
     std::string getCardTextureKey() const { return m_textureKey + "_card"; }
 
     std::string m_monsterId;

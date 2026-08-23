@@ -1,7 +1,7 @@
 #include "Monsters/Henrietta.h"
 
 Henrietta::Henrietta(PlayerSide side)
-    : Monster(side, "Henrietta", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, COST, -1, -1, sf::Color::Green, "henrietta")
+    : Monster(side, "Henrietta", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, -1, -1, sf::Color::Green, "henrietta")
 {
     //TextureManager::getInstance().loadTexture("henrietta_r", "resources/Monster/Henrietta/Henrietta_R.png");
     //TextureManager::getInstance().loadTexture("henrietta_l", "resources/Monster/Henrietta/Henrietta_L.png");
@@ -13,3 +13,10 @@ Henrietta::Henrietta(PlayerSide side)
 //{
 //    target.takeDamage(m_attackDamage);
 //}
+
+
+void Henrietta::onSpecialAbility(BoardEntity* target)
+{
+    //add one action point
+    m_actionsLeft += 2;
+}

@@ -75,3 +75,18 @@ void Tile::clearEntity()
     m_entity = nullptr;
     m_isPassable = true;
 }
+
+void Tile::receiveAttackFrom(BoardEntity* attacker)
+{
+    if (!attacker || m_entity == nullptr) return;
+
+    BoardEntity* defender = m_entity;
+    attacker->attack(defender);
+
+    if (!defender->isAlive())
+    {
+        //attacker->onKill(defender);
+        //defender->onDeath();
+        clearEntity();
+    }
+}

@@ -128,13 +128,21 @@ void GameplayState::handleSpawnAttempt(const sf::Vector2f& pos, Player& current)
 
 void GameplayState::handleSpecialAbilityClick(Card* card)
 {
-    Monster* monster = card->getLinkedMonster();
+    if (card->isPlayed() && card->getLinkedMonster())
+    {
+        Monster* monster = card->getLinkedMonster();
+        if (monster->useSpecialAbility())
+        {
+            std::cout << "[ABILITY] " << " activated Self-Buff!\n";
+        }
+    }
+    /*Monster* monster = card->getLinkedMonster();
     if (!monster || !monster->isSpecialReady())
         return;
 
     m_pendingSpecialCard = card;
     m_selectedFromHand = nullptr;
-    m_board.clearHighlights();
+    m_board.clearHighlights();*/
     // TODO: highlightSpecialTargets(monster) - להוסיף ב-Board כשתחליטו איך יכולות
     // מיוחדות בוחרות מטרה (כל הלוח? רק אויבים בטווח? tile ריק?)
 }
@@ -149,6 +157,7 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
     // TODO: כרגע אין ל-Board getTileAt/isValidSpecialTarget פומביים.
     // כשתוסיפו יכולת מיוחדת קונקרטית, זה המקום למצוא את ה-Tile שנלחץ
     // ולקרוא monster->useSpecialAbility(target) עליו, בדומה ל-handleSpawnAttempt.
+    
     m_pendingSpecialCard = nullptr;
     m_board.clearHighlights();
 }

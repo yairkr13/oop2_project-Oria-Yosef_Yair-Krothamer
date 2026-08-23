@@ -2,10 +2,10 @@
 #include "Constants.h"
 #include "AssetsManager.h"
 
-Monster::Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey, bool flying)
+Monster::Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range/*, int cost*/, int q, int row, sf::Color color, const std::string& textureKey, bool flying)
     : BoardEntity(q, row, {}, health),
     m_side(side), m_name(name), m_attackDamage(attackPower),
-    m_range(range), m_cost(cost), m_color(color), m_textureKey(textureKey), m_flying(flying),
+    m_range(range)/*, m_cost(cost)*/, m_color(color), m_textureKey(textureKey), m_flying(flying),
     m_sprite(AssetsManager::getInstance().getTexture(m_textureKey))
 {
     try
@@ -157,6 +157,17 @@ void Monster::update(float dt)
 
 bool Monster::isOnBoard() const {
     return m_q != -1 && m_row != -1;
+}
+
+bool Monster::useSpecialAbility(BoardEntity* target)
+{
+    if (!isSpecialReady() || m_actionsLeft <= 0)
+        return false;
+
+    onSpecialAbility(target); // הפעלת הבונוס הייחודי של המפלצת
+    useAction();              // צריכת נקודת פעולה
+    m_specialCooldown = 3;    // הגדרת Cooldown ל-3 תורות
+    return true;
 }
 //
 //void Monster::drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const

@@ -44,6 +44,8 @@ public:
     bool isOccupiedByEnemy(PlayerSide mySide) const { return m_entity != nullptr && m_entity->isEnemyOf(mySide); }
     bool isOccupiedByAlly(PlayerSide mySide) const { return m_entity != nullptr && m_entity->isAllyOf(mySide); }
 
+    void receiveAttackFrom(BoardEntity* attacker);
+
     // עוד עטיפה נוחה - "יש כאן ישות מתה שצריך לפנות?" (משמש ב-updateTileEffects)
     //bool hasDeadEntity() const { return m_entity != nullptr && !m_entity->isAlive(); }
 

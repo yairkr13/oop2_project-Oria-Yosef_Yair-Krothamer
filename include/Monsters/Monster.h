@@ -7,7 +7,7 @@
 class Monster :public BoardEntity
 {
 public:
-    Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int cost, int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
+    Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range/*, int cost,*/ ,int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
     virtual ~Monster() = default;
     void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const override;
     //void drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const;
@@ -31,7 +31,7 @@ public:
 	bool isClicked(sf::Vector2f mousePos) const; //why we dont use this function in the game??????
     /*bool isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPosition) const;*/
 
-    int getCost() const { return m_cost; }
+    //int getCost() const { return m_cost; }
     int getRange() const override { return m_range; }
     int getActionsLeft() const { return m_actionsLeft; }
     void resetActions();
@@ -55,16 +55,17 @@ public:
 
     int getSpecialCooldown() const { return m_specialCooldown; }
     bool isSpecialReady() const { return m_specialCooldown <= 0; }
-    virtual bool useSpecialAbility(BoardEntity* target) { return false; }
-
+    virtual bool useSpecialAbility(BoardEntity* target = nullptr);
 protected:
     //virtual void onAttackHook(BoardEntity* target) {}
+    virtual void onSpecialAbility(BoardEntity* target) {}
+
     std::string m_name;
     //int m_health;
     //int m_maxHealth;
     int m_attackDamage;
     int m_range;
-    int m_cost;
+    //int m_cost;
     //int m_q;
     //int m_row;
     //bool m_selected = false;
@@ -80,10 +81,11 @@ protected:
     float m_baseScale = 1.0f;
     mutable sf::Sprite m_sprite;
     int m_specialCooldown = 5; // מספר סיבובים עד שהיכולת המיוחדת תהיה זמינה שוב
+    int m_actionsLeft = 2;
 private:
     void drawActionsLeft(sf::RenderWindow& window) const;
     void useAction() { if (m_actionsLeft > 0) m_actionsLeft--; }
     //void drawHealthBar(sf::RenderWindow& window) const;
     //std::string getCardTextureKey() const { return m_textureKey + "_card"; }
-    int m_actionsLeft = 2; // כל מפלצת מתחילה עם 2 פעולות
+     // כל מפלצת מתחילה עם 2 פעולות
 };

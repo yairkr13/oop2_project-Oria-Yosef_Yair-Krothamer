@@ -584,7 +584,7 @@ void Board::computeReachability(Monster* monster,
     }
 }
 
-std::vector<Tile*> Board::getReachableTiles(Monster* monster) const
+std::vector<Tile*> Board::getReachableTiles(Monster* monster) const //std::vector<Tile*> Board::getTilesInRadius(Tile* center, int radius) const;
 {
     std::vector<Tile*> reachable;
     std::map<std::pair<int, int>, std::pair<int, int>> parent; // לא בשימוש כאן, רק כי computeReachability דורש אותו
@@ -837,15 +837,19 @@ void Board::performAction(BoardEntity* entity, Tile* targetTile)
     // 1. תקיפה
     //change this!!!!!!!!!!!!!!!!!!!!!! put in the player???????????
     //if (targetTile->hasEntity() && targetTile->getEntity()->getSide() != entity->getSide())
+
+
     if (targetTile->isOccupiedByEnemy(entity->getSide()))
     {
         //no need this!!!!!
-        entity->attack(targetTile->getEntity());
-        if (!targetTile->isEntityAlive()) { //change this to one function??????
-            targetTile->clearEntity();
-        }
+		targetTile->receiveAttackFrom(entity);
+        //entity->attack(targetTile->getEntity());
+        //if (!targetTile->isEntityAlive()) { //change this to one function?????? in the tile?
+        //    targetTile->clearEntity();
+        //}
         return;
     }
+
     // 2. תנועה
     //else if (!targetTile->hasEntity() && targetTile->isPassable())
     //else if (!targetTile->hasEntity() && targetTile->isPassableFor(monster))
@@ -882,7 +886,7 @@ void Board::performAction(BoardEntity* entity, Tile* targetTile)
 
 
 
-    else if (!targetTile->hasEntity() && targetTile->isPassableFor(monster)) //fix!!!!!
+    if (!targetTile->hasEntity() && targetTile->isPassableFor(monster)) //fix!!!!!
     {
         // לא צריך יותר m_grid.find({q,row}) - המפלצת יודעת ישירות על איזה Tile
         // היא נמצאת, בזכות הקשר הדו-כיווני ב-setEntity/clearEntity.

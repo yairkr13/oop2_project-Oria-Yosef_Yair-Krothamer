@@ -4,7 +4,7 @@
 class Barzilla : public Monster
 {
 public:
-    static constexpr int COST = 4;
+    //static constexpr int COST = 4;
     static constexpr int BASE_HEALTH = 150;
     static constexpr int BASE_ATTACK = 30;
     static constexpr int BASE_RANGE = 2;
