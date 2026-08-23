@@ -72,18 +72,26 @@ public:
     // createAttackAnimation/playAttackAnimation below).
     virtual bool isAttacking() const { return false; }
 
+    // True while this entity is playing an incoming Special Ability's visual
+    // effect (see playSpecialAbilityAnimation below - e.g. Muffintop's Heal
+    // effect playing on the healed ally). Kept as its own predicate rather
+    // than folded into isAttacking(): an entity that's the passive subject
+    // of a Special effect is not attacking or being attacked, and collapsing
+    // the two would make isAttacking() lie about what's actually happening.
+    virtual bool isUsingSpecialAnimation() const { return false; }
+
     // The single aggregate query callers like Board should use: "is this
     // entity currently doing anything visual that should block the game."
     // Callers never need to know *why* - this entity decides what counts.
-    // Declared once here (not overridden per-subclass): because isMoving()
-    // and isAttacking() are themselves virtual, this automatically picks up
-    // whatever the most-derived class does for both, with zero extra code
-    // in Monster. When a new reason to be busy is added later (a special-
-    // ability animation, a death animation, ...), it's added the same way -
-    // a new virtual predicate here, defaulted to false, ORed into this one
-    // line - so only this class (where the new state actually lives) needs
+    // Declared once here (not overridden per-subclass): because isMoving(),
+    // isAttacking() and isUsingSpecialAnimation() are themselves virtual,
+    // this automatically picks up whatever the most-derived class does for
+    // each, with zero extra code in Monster. When a new reason to be busy is
+    // added later (a death animation, ...), it's added the same way - a new
+    // virtual predicate here, defaulted to false, ORed into this one line -
+    // so only this class (where the new state actually lives) needs
     // editing, never Board.
-    virtual bool isAnimating() const { return isMoving() || isAttacking(); }
+    virtual bool isAnimating() const { return isMoving() || isAttacking() || isUsingSpecialAnimation(); }
     //// --- �������� �����: ��� ��-������ �� ������ ---
     //void setCurrentTile(Tile* tile) { m_currentTile = tile; }
     //Tile* getCurrentTile() const { return m_currentTile; }
@@ -122,6 +130,15 @@ public:
     // defined out-of-line - same incomplete-type reason as above: the
     // parameter itself is destroyed at the end of the default body.)
     virtual void playAttackAnimation(std::unique_ptr<AttackAnimation> animation);
+
+    // Hands ownership of a Special Ability's visual effect to this entity -
+    // symmetric with playAttackAnimation, but a separate slot (see
+    // isUsingSpecialAnimation above for why). The caster decides what the
+    // effect looks like and builds it (see Muffintop::onSpecialAbility);
+    // this only ever receives it and takes over owning/updating/drawing it,
+    // exactly like playAttackAnimation already does for outgoing attacks.
+    // Default is a no-op, same reasoning as playAttackAnimation's default.
+    virtual void playSpecialAbilityAnimation(std::unique_ptr<AttackAnimation> animation);
 
 protected:
     void drawHealthBar(sf::RenderWindow& window) const;

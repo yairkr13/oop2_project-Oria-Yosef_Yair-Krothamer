@@ -21,6 +21,10 @@ public:
     // default (enemy + Monster) already expresses exactly that, so no
     // override is needed here.
     bool specialAbilityNeedsTarget() const override { return true; }
+
+    // White - matches the base default too, but declared explicitly so a
+    // reader never has to wonder whether that's deliberate or coincidental.
+    sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(255, 255, 255, 180); }
 private:
     void onSpecialAbility(Board& board, BoardEntity* target) override;
 };

@@ -74,6 +74,14 @@ public:
 	// duplicates of the range/reachability/occupancy queries above.
 	Tile* getTileAt(int q, int row) const;
 	Tile* getTileAtScreenPosition(const sf::Vector2f& pos) const;
+
+	// Every currently-occupied Tile - a plain board-occupancy fact, exactly
+	// like the queries above. This is what lets GameplayState discover
+	// candidate Special-ability targets (by pairing each Tile's entity with
+	// the pending monster's own isValidSpecialTarget()) without Board ever
+	// needing to know ally/enemy rules, Special abilities, or highlight
+	// colors - it only ever answers "what's occupied," never "what's valid."
+	std::vector<Tile*> getOccupiedTiles() const;
 private:
 	// ה-BFS המשותף לשתי השאילתות למעלה - מעבר יחיד, לא משוכפל. בנוסף לרשימת ה-tiles
 	// הנגישים (outReachable, בדיוק כמו ש-getReachableTiles מחזירה), שומר גם "מאיפה

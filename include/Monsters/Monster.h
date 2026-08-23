@@ -64,6 +64,11 @@ public:
     bool isAttacking() const override { return m_attackAnimation != nullptr; }
     void playAttackAnimation(std::unique_ptr<AttackAnimation> animation) override;
 
+    // Same ownership model, separate slot - see BoardEntity::isUsingSpecialAnimation
+    // for why this isn't just reusing m_attackAnimation.
+    bool isUsingSpecialAnimation() const override { return m_specialAnimation != nullptr; }
+    void playSpecialAbilityAnimation(std::unique_ptr<AttackAnimation> animation) override;
+
     int getSpecialCooldown() const { return m_specialCooldown; }
     bool isSpecialReady() const { return m_specialCooldown <= 0; }
 
@@ -117,6 +122,14 @@ public:
         return candidate.asMonster() != nullptr && candidate.isEnemyOf(m_side);
     }
 
+    // The Tile-highlight color for this monster's valid Special targets,
+    // shown while target-selection is pending (see GameplayState). Only
+    // exercised for monsters where specialAbilityNeedsTarget() is true - a
+    // presentation detail belonging to the ability itself, not to Board or
+    // GameplayState, which is why it's exposed here rather than decided
+    // externally by checking which monster this is.
+    virtual sf::Color getSpecialTargetHighlightColor() const { return sf::Color(255, 255, 255, 180); }
+
     virtual bool useSpecialAbility(Board& board, BoardEntity* target = nullptr);
 protected:
     //virtual void onAttackHook(BoardEntity* target) {}
@@ -145,6 +158,15 @@ protected:
     // ownership model as m_pathQueue/m_isMoving above for movement. Null
     // whenever no attack animation is playing.
     std::unique_ptr<AttackAnimation> m_attackAnimation;
+
+    // This monster's own in-flight Special Ability effect animation (see
+    // playSpecialAbilityAnimation above) - e.g. the Heal effect playing on
+    // an ally that Muffintop just targeted. Separate from m_attackAnimation
+    // above: a monster can be the passive subject of an incoming Special
+    // effect without attacking or being attacked, and the two are entirely
+    // unrelated events that happen to share the same AttackAnimation
+    // interface (update/draw/isFinished/onImpact), not the same slot.
+    std::unique_ptr<AttackAnimation> m_specialAnimation;
 
     float m_speed = 300.f;
     bool m_hasTexture = true;

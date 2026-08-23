@@ -1052,3 +1052,14 @@ Tile* Board::getTileAtScreenPosition(const sf::Vector2f& pos) const
     auto [q, row] = screenToTile(pos);
     return getTileAt(q, row);
 }
+
+std::vector<Tile*> Board::getOccupiedTiles() const
+{
+    std::vector<Tile*> occupied;
+    for (auto const& [coords, tile] : m_grid)
+    {
+        if (tile->hasEntity())
+            occupied.push_back(tile.get());
+    }
+    return occupied;
+}

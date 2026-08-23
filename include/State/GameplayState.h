@@ -86,4 +86,12 @@ private:
     // showing as selected.
     void clearPendingSpecial();
 
+    // Highlights every currently-valid target Tile for `caster`'s pending
+    // Special - derived fresh from Board::getOccupiedTiles() and
+    // caster.isValidSpecialTarget() each time selection begins, not stored
+    // anywhere new. Which Tiles qualify and what color they get are both
+    // decided entirely by `caster` (see Monster::isValidSpecialTarget /
+    // getSpecialTargetHighlightColor); this only ever iterates and paints.
+    void highlightValidSpecialTargets(Monster& caster);
+
 };

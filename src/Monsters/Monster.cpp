@@ -71,6 +71,11 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
     // this entity draws itself.
     if (m_attackAnimation)
         m_attackAnimation->draw(window);
+
+    // Same reasoning, separate slot: an incoming Special Ability effect
+    // (e.g. Muffintop's Heal effect playing on this monster).
+    if (m_specialAnimation)
+        m_specialAnimation->draw(window);
 }
 void Monster::drawActionsLeft(sf::RenderWindow& window) const
 {
@@ -152,6 +157,17 @@ void Monster::update(float dt)
         m_attackAnimation->update(dt);
         if (m_attackAnimation->isFinished())
             m_attackAnimation.reset();
+    }
+
+    // Same independence as the attack animation above: an incoming Special
+    // effect must keep progressing regardless of this monster's own
+    // movement/attack state (e.g. Muffintop's Heal effect plays on an ally
+    // that is otherwise doing nothing at all).
+    if (m_specialAnimation)
+    {
+        m_specialAnimation->update(dt);
+        if (m_specialAnimation->isFinished())
+            m_specialAnimation.reset();
     }
 
     // אם לא זזים כרגע, אין מה לעדכן
@@ -347,4 +363,9 @@ void Monster::attack(BoardEntity* target)
 void Monster::playAttackAnimation(std::unique_ptr<AttackAnimation> animation)
 {
     m_attackAnimation = std::move(animation);
+}
+
+void Monster::playSpecialAbilityAnimation(std::unique_ptr<AttackAnimation> animation)
+{
+    m_specialAnimation = std::move(animation);
 }

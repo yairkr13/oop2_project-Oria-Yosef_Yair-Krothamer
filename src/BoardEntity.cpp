@@ -38,6 +38,11 @@ void BoardEntity::playAttackAnimation(std::unique_ptr<AttackAnimation> animation
     // own.
 }
 
+void BoardEntity::playSpecialAbilityAnimation(std::unique_ptr<AttackAnimation> animation)
+{
+    // No-op default, same reasoning as playAttackAnimation above.
+}
+
 bool BoardEntity::isAlive() const
 {
     return m_health > 0;

@@ -187,6 +187,7 @@ void GameplayState::handleSpecialAbilityClick(Card* card)
         m_pendingSpecialCard = card;
         m_selectedFromHand = nullptr;
         m_board.clearHighlights();
+        highlightValidSpecialTargets(*monster);
     }
     else if (monster->useSpecialAbility(m_board))
     {
@@ -233,6 +234,17 @@ void GameplayState::clearPendingSpecial()
     if (m_pendingSpecialCard)
         m_pendingSpecialCard->getLinkedMonster()->cancelSpecialAbility();
     m_pendingSpecialCard = nullptr;
+}
+
+void GameplayState::highlightValidSpecialTargets(Monster& caster)
+{
+    const sf::Color highlightColor = caster.getSpecialTargetHighlightColor();
+    for (Tile* tile : m_board.getOccupiedTiles())
+    {
+        BoardEntity* candidate = tile->getEntity();
+        if (candidate && caster.isValidSpecialTarget(*candidate))
+            tile->setHighlighted(true, highlightColor);
+    }
 }
 
 void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
