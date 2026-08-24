@@ -1,6 +1,9 @@
 #pragma once
 #include "Attacks/AttackAnimation.h"
 
+// Used by Muffintop (normal attack, muffin shot) and Blue (special ability,
+// the WindEffect that travels through the target during Knockback).
+
 // A projectile-style attack animation: a sprite that flies in a straight
 // line from the attacker to the target, spinning continuously while it
 // travels, then triggers the impact callback the instant it arrives.

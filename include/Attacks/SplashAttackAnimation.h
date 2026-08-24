@@ -1,6 +1,9 @@
 #pragma once
 #include "Attacks/AttackAnimation.h"
 
+// Used by Mozzy (normal attack, AcidSplash) and Barzilla (normal attack,
+// FireBlast - his Empowered Attack uses BurstProjectileAnimation instead).
+
 // A "splash" style attack animation: a sprite anchored at the attacker,
 // rotated to face the target, that visually grows/reveals from the
 // attacker toward the target over its duration, then triggers the impact

@@ -1,5 +1,7 @@
 #include "Monsters/Barzilla.h"
 #include "Attacks/SplashAttackAnimation.h"
+#include "Attacks/BurstProjectileAnimation.h"
+#include "Attacks/GrowingEffectAnimation.h"
 #include "AssetsManager.h"
 #include "Constants.h"
 
@@ -11,6 +13,28 @@ namespace
     // Config::MONSTER_BOARD_SIZE (the project's existing on-board sizing
     // reference) rather than FireBlast.png's raw pixel height.
     constexpr float FIRE_BLAST_THICKNESS = Config::MONSTER_BOARD_SIZE * 0.5f;
+
+    // Empowered Attack's projectile: several FireBlast copies traveling
+    // together with only a small stagger between them, reusing
+    // BurstProjectileAnimation exactly as Blue/Henrietta already do for
+    // their own normal attacks - only the texture/count/timing differ. The
+    // short interval (vs. e.g. Blue's 0.08s) is what keeps the 3 copies
+    // reading as one grouped burst rather than three separate shots.
+    constexpr int EMPOWERED_FIRE_BLAST_COUNT = 3;
+    constexpr float EMPOWERED_FIRE_BLAST_LAUNCH_INTERVAL = 0.04f;
+    constexpr float EMPOWERED_FIRE_BLAST_TRAVEL_DURATION = 0.4f;
+    constexpr float EMPOWERED_FIRE_BLAST_SIZE = Config::MONSTER_BOARD_SIZE * 0.55f;
+
+    // Empowered Attack's impact flash: reuses GrowingEffectAnimation (built
+    // for Henrietta's Protection shield) and the existing fire_blast
+    // texture - a quick, prominent grow-and-fade on the target, so landing
+    // an empowered hit visibly reads as stronger than a normal one. No
+    // fade-in hold needed for an impact flash - it grows, sits for a
+    // beat, then is gone.
+    constexpr float EMPOWERED_IMPACT_SIZE = Config::MONSTER_BOARD_SIZE * 1.3f;
+    constexpr float EMPOWERED_IMPACT_GROW_DURATION = 0.12f;
+    constexpr float EMPOWERED_IMPACT_HOLD_DURATION = 0.08f;
+    constexpr float EMPOWERED_IMPACT_FADE_DURATION = 0.15f;
 }
 
 Barzilla::Barzilla(PlayerSide side)
@@ -34,12 +58,28 @@ Barzilla::Barzilla(PlayerSide side)
 // two different events instead of one.
 void Barzilla::attack(BoardEntity* target)
 {
-    int damage = m_empoweredAttack ? m_attackDamage * 2 : m_attackDamage;
+    bool empowered = m_empoweredAttack;
+    int damage = empowered ? m_attackDamage * 2 : m_attackDamage;
 
-    if (m_empoweredAttack)
+    if (empowered)
     {
         m_empoweredAttack = false;
         m_specialCooldown = m_baseCooldown;
+
+        // Stronger impact flash so an empowered hit visibly reads as
+        // different from a normal one - played on the TARGET via the same
+        // playSpecialAbilityAnimation slot Henrietta's shield/Mozzy's
+        // freeze/Muffintop's heal already use for an incoming effect.
+        // attack() only ever runs here as the animation's own onImpact
+        // callback (see Board::performAction), so this fires at exactly
+        // the same synchronized moment the grouped FireBlast burst
+        // (createAttackAnimation, below) actually lands - the target is
+        // never hit before the projectiles visually arrive.
+        const sf::Texture& impactTexture = AssetsManager::getInstance().getTexture("fire_blast");
+        auto impactFlash = std::make_unique<GrowingEffectAnimation>(
+            impactTexture, target->getScreenPosition(), EMPOWERED_IMPACT_SIZE,
+            EMPOWERED_IMPACT_GROW_DURATION, EMPOWERED_IMPACT_HOLD_DURATION, EMPOWERED_IMPACT_FADE_DURATION);
+        target->playSpecialAbilityAnimation(std::move(impactFlash));
     }
 
     target->takeDamage(damage);
@@ -65,10 +105,25 @@ std::unique_ptr<AttackAnimation> Barzilla::createAttackAnimation(BoardEntity* ta
 {
     if (!target) return nullptr;
 
-    // Same "grows/reveals from attacker toward target" mechanism as Mozzy's
-    // acid splash - only the texture (and its proportions) differ, so this
-    // reuses SplashAttackAnimation as-is rather than duplicating it.
     const sf::Texture& fireBlastTexture = AssetsManager::getInstance().getTexture("fire_blast");
+
+    // Empowered Attack gets a visibly different projectile - several
+    // FireBlast copies traveling together (reusing BurstProjectileAnimation
+    // exactly as Blue/Henrietta's own normal attacks already do, just with
+    // a much shorter stagger so they read as one grouped burst) - instead
+    // of the normal single reveal-band. The normal attack (below) is
+    // completely untouched.
+    if (m_empoweredAttack)
+    {
+        return std::make_unique<BurstProjectileAnimation>(
+            fireBlastTexture, m_screenPos, target->getScreenPosition(),
+            EMPOWERED_FIRE_BLAST_COUNT, EMPOWERED_FIRE_BLAST_LAUNCH_INTERVAL,
+            EMPOWERED_FIRE_BLAST_TRAVEL_DURATION, EMPOWERED_FIRE_BLAST_SIZE);
+    }
+
+    // Normal attack - unchanged: "grows/reveals from attacker toward
+    // target" mechanism, same as Mozzy's acid splash, reusing
+    // SplashAttackAnimation as-is rather than duplicating it.
     return std::make_unique<SplashAttackAnimation>(
         fireBlastTexture, m_screenPos, target->getScreenPosition(), FIRE_BLAST_DURATION, FIRE_BLAST_THICKNESS);
 }

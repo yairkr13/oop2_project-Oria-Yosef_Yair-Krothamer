@@ -37,6 +37,15 @@ public:
 
     //int getCost() const { return m_cost; }
     int getRange() const override { return m_range; }
+
+    // How far this monster can ATTACK - separate from getRange() (which
+    // Board's reachability BFS also uses for movement), so a monster whose
+    // Special temporarily extends its reach (see Barzilla's Empowered
+    // Attack) can do so for attacking only, without also letting it move
+    // farther. Defaults to getRange() - i.e. no difference at all - which
+    // is correct for every monster that doesn't override this.
+    virtual int getAttackRange() const { return getRange(); }
+
     int getActionsLeft() const { return m_actionsLeft; }
     void resetActions();
     //const std::string& getName() const { return m_name; }

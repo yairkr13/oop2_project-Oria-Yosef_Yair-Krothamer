@@ -52,6 +52,8 @@ void AssetsManager::loadAllAssets()
 
     loadTexture("heal_effect", "resources/SpecialAttack/HealEffect.png");
     loadTexture("freeze_effect", "resources/SpecialAttack/FreezeEffect.png");
+    loadTexture("wind_effect", "resources/SpecialAttack/WindEffect.png");
+    loadTexture("shield_effect", "resources/SpecialAttack/ShieldEffect.png");
 }
 
 void AssetsManager::loadTexture(const std::string& name, const std::string& filePath)

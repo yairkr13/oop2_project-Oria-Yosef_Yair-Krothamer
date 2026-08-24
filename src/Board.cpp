@@ -309,11 +309,7 @@ void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
         if (auto entity = clickedTile->getEntity())
         {
             // פולימורפיזם מלא: הלוח לא יודע שזו מפלצת, רק שזו ישות שניתן לבחור כרגע
-            if (entity->canBeSelectedBy(currentSide))
-            {
-                entity->setSelected(true);
-                highlightNeighbors(entity->asMonster()); // התאימו את highlightNeighbors לקבל *Entity
-            }
+            selectEntity(entity, currentSide);
         }
         
         //if (auto monster = clickedTile->getMonster())
@@ -487,15 +483,19 @@ void Board::highlightSpawnTiles(PlayerSide side)
 // לרשימה/למפת ה-parent פעמיים אם הוא נגיש משני כיוונים. זו לא באגה חדשה.
 void Board::computeReachability(Monster* monster,
     std::vector<Tile*>& outReachable,
-    std::map<std::pair<int, int>, std::pair<int, int>>& outParent) const
+    std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
+    std::vector<Tile*>* outExtendedAttackOnly) const
 {
     outReachable.clear();
     outParent.clear();
+    if (outExtendedAttackOnly) outExtendedAttackOnly->clear();
     if (!monster) return;
 
     int q = monster->getQ();
     int row = monster->getRow();
     int range = monster->getRange();
+    int attackRange = monster->getAttackRange(); // == range for every monster except an empowered Barzilla
+    int bfsLimit = std::max(range, attackRange); // walk far enough to find extended-only enemies too
 
     std::pair<int, int> offsets[] = {
         {-2,  0}, {+2,  0},
@@ -514,7 +514,7 @@ void Board::computeReachability(Monster* monster,
         for (auto [cq, cr] : frontier)
         {
             int dist = visited[{cq, cr}];
-            if (dist >= range)
+            if (dist >= bfsLimit)
                 continue;
 
             for (auto [dq, dr] : offsets)
@@ -527,6 +527,7 @@ void Board::computeReachability(Monster* monster,
                     continue;
 
                 Tile* tile = it->second.get();
+                int neighborDist = dist + 1;
 
                 // --- בדיקת חור ותעופה ---
                 // בדיקת עבירות פולימורפית: המשבצת מחליטה בעצמה אם הישות יכולה לעבור
@@ -535,14 +536,29 @@ void Board::computeReachability(Monster* monster,
                     // אם המשבצת לא עבירה לתנועה, עדיין נבדוק אם יש עליה אויב שניתן לתקוף מרחוק/באוויר
                     if (tile->isOccupiedByEnemy(monster->getSide()))
                     {
-                        outReachable.push_back(tile);
-                        outParent[neighbor] = { cq, cr };
+                        if (neighborDist <= range)
+                        {
+                            outReachable.push_back(tile);
+                            outParent[neighbor] = { cq, cr };
+                        }
+                        else if (outExtendedAttackOnly && neighborDist <= attackRange)
+                        {
+                            // Beyond normal range, still within the extended attack
+                            // range - attackable, but deliberately given no
+                            // outParent entry: never path-able-to, never movement-legal.
+                            outExtendedAttackOnly->push_back(tile);
+                        }
                     }
                     continue; // הישות לא יכולה להמשיך לנוע דרך המשבצת הזו
                 }
 
-                visited[neighbor] = dist + 1;
-                outParent[neighbor] = { cq, cr };
+                visited[neighbor] = neighborDist; // always - needed so the BFS keeps
+                // walking through this tile (e.g. to find an extended-range enemy
+                // farther out) even when it's beyond `range` itself.
+                if (neighborDist <= range)
+                    outParent[neighbor] = { cq, cr }; // only within normal range - see
+                    // getPathTo: an entry here means "movement can legally end here",
+                    // so an extended-only tile must never get one.
                 //if (tile->isHole() && !monster->canFly())
                 //{
                 //    if (tile->isOccupiedByEnemy(monster->getSide()))
@@ -567,7 +583,20 @@ void Board::computeReachability(Monster* monster,
                // }
 
                 // --- זיהוי אויבים/לבבות שחוסמים המשך תנועה ---
-                outReachable.push_back(tile);
+                if (neighborDist <= range)
+                {
+                    outReachable.push_back(tile);
+                }
+                else if (outExtendedAttackOnly && neighborDist <= attackRange)
+                {
+                    // Passable but beyond normal range: not movement-legal (never
+                    // added to outReachable/outParent-as-a-destination-reason),
+                    // but still walked through above so the BFS can keep
+                    // searching past it for an extended-range enemy, and shown
+                    // here so the whole extended band highlights, not just
+                    // occupied tiles within it.
+                    outExtendedAttackOnly->push_back(tile);
+                }
 
                 //if (tile->isOccupiedByEnemy(monster->getSide()))
                 //{
@@ -592,6 +621,14 @@ std::vector<Tile*> Board::getReachableTiles(Monster* monster) const //std::vecto
     std::map<std::pair<int, int>, std::pair<int, int>> parent; // לא בשימוש כאן, רק כי computeReachability דורש אותו
     computeReachability(monster, reachable, parent);
     return reachable;
+}
+
+std::vector<Tile*> Board::getExtendedAttackOnlyTiles(Monster* monster) const
+{
+    std::vector<Tile*> reachable, extended;
+    std::map<std::pair<int, int>, std::pair<int, int>> parent; // unused here, same as above
+    computeReachability(monster, reachable, parent, &extended);
+    return extended;
 }
 
 // שחזור המסלול: הולכים אחורה מה-target דרך outParent עד שמגיעים למקור, ואז
@@ -647,6 +684,35 @@ void Board::highlightNeighbors(Monster* monster)
         else
             tile->setHighlighted(true); // ירוק (ברירת המחדל) - ניתן לזוז
     }
+
+    // Extended attack-only band (see getExtendedAttackOnlyTiles) - empty for
+    // every monster except an empowered Barzilla. Distinct purple, clearly
+    // different from both the red attack and green move colors above:
+    // "Barzilla can strike here, but cannot move here."
+    for (Tile* tile : getExtendedAttackOnlyTiles(monster))
+        tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
+}
+
+void Board::selectEntity(BoardEntity* entity, PlayerSide side)
+{
+    if (!entity || !entity->canBeSelectedBy(side)) return;
+
+    // A fresh selection always replaces whatever was selected before.
+    // Board clicks already guarantee this can't happen (handleClick only
+    // ever reaches the "select a new entity" branch when its own scan just
+    // found nothing selected) - this loop only matters for a caller like
+    // GameplayState that can select an entity from outside that flow, so a
+    // stale selection left over from an earlier board click can never end
+    // up with two entities marked selected at once.
+    for (auto& [coords, tile] : m_grid)
+    {
+        if (auto occupant = tile->getEntity())
+            occupant->setSelected(false);
+    }
+    clearHighlights();
+
+    entity->setSelected(true);
+    highlightNeighbors(entity->asMonster());
 }
 
 void Board::clearHighlights()
@@ -911,9 +977,18 @@ void Board::performAction(BoardEntity* entity, Tile* targetTile)
     Monster* monster = entity->asMonster();
     if (!monster) return; // Heart (או כל BoardEntity שאינו מפלצת) לא יכולה לזוז
 
+    // Movement is only ever legal onto a tile within this monster's NORMAL
+    // range - an extended attack-only range (see Monster::getAttackRange,
+    // Barzilla's Empowered Attack) lets it strike farther, never walk
+    // farther. Checked explicitly against getReachableTiles here rather
+    // than relying on getPathTo coming back empty for such a tile, since
+    // the no-path fallback a few lines below would otherwise still
+    // teleport the monster there directly.
+    std::vector<Tile*> reachable = getReachableTiles(monster);
+    bool isMoveLegal = !targetTile->hasEntity() && targetTile->isPassableFor(monster)
+        && std::find(reachable.begin(), reachable.end(), targetTile) != reachable.end();
 
-
-    if (!targetTile->hasEntity() && targetTile->isPassableFor(monster)) //fix!!!!!
+    if (isMoveLegal)
     {
         // לא צריך יותר m_grid.find({q,row}) - המפלצת יודעת ישירות על איזה Tile
         // היא נמצאת, בזכות הקשר הדו-כיווני ב-setEntity/clearEntity.

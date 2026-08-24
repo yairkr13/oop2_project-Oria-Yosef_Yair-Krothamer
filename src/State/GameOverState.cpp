@@ -30,9 +30,8 @@ void GameOverState::buildMenu()
 
     //m_menu.addButton(buttonTexture, [this]() { onResumeClicked(); }, font, "Resume");
     //m_menu.addButton(buttonTexture, [this]() { onInstructionsClicked(); }, font, "Instructions");
-    m_menu.addButton(buttonTexture, [this]() { onRestartClicked(); }, font, "Try Again");
+    m_menu.addButton(buttonTexture, [this]() { onRestartClicked(); }, font, "Play Again");
     m_menu.addButton(buttonTexture, [this]() { onMainMenuClicked(); }, font, "Main Menu");
-    m_menu.addButton(buttonTexture, [this]() { onExitClicked(); }, font, "Give Up");
 }
 
 void GameOverState::onRestartClicked()

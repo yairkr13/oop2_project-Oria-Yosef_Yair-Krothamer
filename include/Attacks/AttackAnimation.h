@@ -2,6 +2,9 @@
 #include <SFML/Graphics.hpp>
 #include <functional>
 
+// Abstract base only - not used directly by any monster. Every concrete
+// animation below (and its per-monster usage) derives from this.
+
 // Base class for a monster attack's visual effect: something that plays for
 // a short time between "attack initiated" and "damage applied", then goes
 // away. Board owns/updates/draws these polymorphically through this

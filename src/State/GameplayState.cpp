@@ -202,6 +202,25 @@ void GameplayState::handleSpecialAbilityClick(Card* card)
             m_pendingSpecialCard = card;
             m_selectedFromHand = nullptr;
         }
+
+        // Immediately reflect whatever the Special just changed about this
+        // monster's own move/attack options (e.g. Barzilla's Empowered
+        // Attack extending his attack range) - equivalent to the player
+        // clicking the monster on the board right after activating the
+        // Special, without requiring that extra click. Board::selectEntity
+        // is the exact same select-and-highlight flow a direct board click
+        // already uses, so nothing about range/highlighting is re-derived
+        // here. Only when there's still an action left to use it with -
+        // otherwise there's nothing this monster could still do this turn.
+        if (monster->getActionsLeft() > 0)
+        {
+            // A pending hand-spawn selection would otherwise be left
+            // dangling: selectEntity() below repaints the whole board's
+            // highlights, which would silently wipe the spawn-tile
+            // highlighting out from under it without this.
+            m_selectedFromHand = nullptr;
+            m_board.selectEntity(monster, monster->getSide());
+        }
     }
 }
 

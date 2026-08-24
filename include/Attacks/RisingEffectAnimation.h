@@ -2,6 +2,9 @@
 #include "Attacks/AttackAnimation.h"
 #include <vector>
 
+// Used by Muffintop for its special ability (the HealEffect that plays on
+// the healed ally).
+
 // A "rising effect" animation: one or more copies of a sprite, arranged
 // horizontally around a fixed board position, that rise straight up over
 // their duration, then trigger the impact callback once every copy has

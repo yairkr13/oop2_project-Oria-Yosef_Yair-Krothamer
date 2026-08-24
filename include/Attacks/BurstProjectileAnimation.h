@@ -2,6 +2,10 @@
 #include "Attacks/AttackAnimation.h"
 #include <vector>
 
+// Used by Blue (normal attack, WindBlast), Henrietta (normal attack,
+// FlameWeb), and Barzilla (special ability, the grouped FireBlast
+// projectile for his Empowered Attack).
+
 // A "burst" style attack animation: several identical copies of one texture,
 // launched one after another (staggered) from the attacker toward the
 // target, each then flying independently in a straight line. Visually

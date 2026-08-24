@@ -1,6 +1,9 @@
 #pragma once
 #include "Attacks/AttackAnimation.h"
 
+// Used by Mozzy for its special ability (the FreezeEffect that forms over
+// the frozen target).
+
 // An effect that gradually "forms" over its target in place: a sprite
 // anchored at a fixed position that reveals top-to-bottom via a growing
 // texture-rect clip (no sideways movement, no attacker->target travel),

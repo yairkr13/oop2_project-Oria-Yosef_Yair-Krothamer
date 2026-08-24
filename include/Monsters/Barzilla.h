@@ -19,6 +19,12 @@ public:
 
     std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
 
+    // Empowered Attack also doubles how far Barzilla can strike (not how
+    // far he can move - see Monster::getAttackRange/Board's reachability
+    // handling of it). Tied to the exact same flag as the damage bonus, so
+    // both appear and disappear together with zero extra bookkeeping.
+    int getAttackRange() const override { return m_empoweredAttack ? m_range * 2 : m_range; }
+
     // Self/no-target Special - the base Monster::specialAbilityNeedsTarget()
     // default (false) already fits, no override needed.
 
