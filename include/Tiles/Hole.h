@@ -1,34 +1,34 @@
 #pragma once
-#include "Tile.h"
+#include "Tiles/Tile.h"
 
 class Hole : public Tile
 {
 public:
     Hole(int q, int row, const sf::Vector2f& position)
-        : Tile(q, row, position, sf::Color(30, 30, 30, 200)) // цбт лдд оаег, ршад лое ъден
+        : Tile(q, row, position, sf::Color(30, 30, 30, 200)) // пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
     {
-        // жд лм дчсн! оерт оотшлъ д-Pathfinding мафщш дмйлд млап
+        // пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ! пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ-Pathfinding пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
         m_isPassable = false;
     }
     //bool isPassableFor(Monster* monster) const override
     //{
     //    if (monster && monster->canFly()) {
-    //        return true; // отеффйн йлемйн мтбеш!
+    //        return true; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ!
     //    }
-    //    return false; // офмцеъ чшчт зсеоеъ
+    //    return false; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     //}
     bool isPassableFor(const BoardEntity* entity) const override {
         return entity && entity->canFly();
     }
 
-    //bool isHole() const override { return true; } // гешс ферчцйд ейшиеамйъ щрцишк мдесйу м-Tile.h
+    //bool isHole() const override { return true; } // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ-Tile.h
     void setHighlighted(bool highlighted, const sf::Color& defaultHighlightColor = sf::Color(150, 220, 150, 180)) override
     {
         if (highlighted) {
             Tile::setHighlighted(true, sf::Color(30, 30, 30, 200));
         }
         else {
-            // ан олбйн аъ ддашд, рчша мферчцййъ дан щъзжйш аъ дцбт м-m_color дшвйм щм дмбд
+            // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ-m_color пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
             Tile::setHighlighted(false, sf::Color::Transparent);
         }
     }

@@ -1,9 +1,9 @@
-#include "MonsterFactory.h"
+#include "Monsters/MonsterFactory.h"
 #include "Card.h"
 #include <iostream>
 
-// аме д-includes дйзйгйн блм дфшейчи щолйшйн аъ дозмчеъ дчерчшийеъ.
-// ан ъшцд мдесйу офмцъ згщд - жд дочен дйзйг щцшйк мвтъ бе (зех омйцеш аъ дчебх тцое).
+// пїЅпїЅпїЅ пїЅ-includes пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+// пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ - пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ).
 #include "Monsters/Muffintop.h"
 #include "Monsters/Blue.h"
 #include "Monsters/Barzilla.h"
@@ -26,7 +26,7 @@ std::map<std::string, MonsterFactory::Creator>& MonsterFactory::getRegistry()
 }
 //std::map<std::string, MonsterFactory::Creator>& MonsterFactory::getRegistry()
 //{
-//    // static бъек ферчцйд -> оаеъзм фтн азъ, мма ъмеъ бсгш аъзем вмебмй
+//    // static пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ -> пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 //    static std::map<std::string, Creator> registry;
 //    return registry;
 //}
@@ -53,7 +53,7 @@ std::unique_ptr<Monster> MonsterFactory::create(const std::string& monsterName, 
 //    auto& registry = getRegistry();
 //    auto it = registry.find(monsterName);
 //    if (it == registry.end())
-//        return nullptr; // щн ма оелш - ма чешсйн, озжйшйн nullptr
+//        return nullptr; // пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ - пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ nullptr
 //
 //    return it->second();
 //}

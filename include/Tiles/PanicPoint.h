@@ -1,6 +1,6 @@
 #pragma once
 #include "Heart.h"
-#include "Tile.h"
+#include "Tiles/Tile.h"
 
 class PanicPoint : public Tile
 {
@@ -10,13 +10,13 @@ public:
         m_p1Heart(p1Heart), m_p2Heart(p2Heart)
     {
     }
-    void applyTileEffect() override // дферчцйд рщашъ шйчд офшоишйн!
+    void applyTileEffect() override // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!
     {
         if (hasEntity())
         {
             auto entity = getEntity();
 
-            // ощъощйн боцбйтйн щщошре ошащ:
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ:
             if (entity->getSide() == PlayerSide::Left && m_p2Heart)
                 m_p2Heart->takeDamage(10);
             else if (entity->getSide() == PlayerSide::Right && m_p1Heart)
@@ -30,11 +30,11 @@ public:
             Tile::setHighlighted(true, sf::Color(200, 100, 250, 180));
         }
         else {
-            // ан олбйн аъ ддашд, рчша мферчцййъ дан щъзжйш аъ дцбт м-m_color дшвйм щм дмбд
+            // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ-m_color пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
             Tile::setHighlighted(false, sf::Color::Transparent);
         }
     }
 private:
-    Heart* m_p1Heart; // щеош чйщеш йщйш ммб щм щзчп 1
+    Heart* m_p1Heart; // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ 1
     Heart* m_p2Heart;
 };

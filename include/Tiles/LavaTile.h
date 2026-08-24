@@ -1,5 +1,5 @@
 #pragma once
-#include "Tile.h"
+#include "Tiles/Tile.h"
 
 class LavaTile : public Tile
 {
@@ -14,18 +14,18 @@ public:
         if (hasEntity())
         {
             if (auto entity = getEntity())
-                entity->takeDamage(20); // дмбд оешйгд 20 зййн мофмцъ щтеогъ тмйд
+                entity->takeDamage(20); // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 20 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
         }
     }
 
     void setHighlighted(bool highlighted, const sf::Color& defaultHighlightColor = sf::Color(150, 220, 150, 180)) override
     {
         if (highlighted) {
-            // ан дощбцъ оеашъ мотбш, рцбт аеъд блъен/аген зжч бочен дйшеч дшвйм
+            // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
             Tile::setHighlighted(true, sf::Color(255, 120, 80, 180));
         }
         else {
-            // ан олбйн аъ ддашд, рчша мферчцййъ дан щъзжйш аъ дцбт м-m_color дшвйм щм дмбд
+            // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ-m_color пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
             Tile::setHighlighted(false, sf::Color::Transparent);
         }
     }

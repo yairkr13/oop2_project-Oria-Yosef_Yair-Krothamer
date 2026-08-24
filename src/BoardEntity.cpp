@@ -1,5 +1,5 @@
 #include "BoardEntity.h"
-#include "Tile.h" // �-include ��� ���� ���!
+#include "Tiles/Tile.h" // �-include ��� ���� ���!
 #include "Attacks/AttackAnimation.h" // complete type needed for the unique_ptr default below
 #include <algorithm>
 //

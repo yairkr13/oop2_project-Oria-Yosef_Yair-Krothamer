@@ -1,6 +1,6 @@
 #pragma once
 #include "SFML/Graphics.hpp"
-#include "Tile.h"
+#include "Tiles/Tile.h"
 #include <vector>
 #include "Monsters/Monster.h"
 #include "Constants.h"

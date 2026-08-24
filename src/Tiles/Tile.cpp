@@ -1,4 +1,4 @@
-#include "Tile.h"
+#include "Tiles/Tile.h"
 
 
 Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)// <--- ��� ����� ������ ����� �� ����� ���!

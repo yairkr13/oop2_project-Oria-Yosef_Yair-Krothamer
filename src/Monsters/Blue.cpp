@@ -3,7 +3,7 @@
 #include "AssetsManager.h"
 #include "Constants.h"
 #include "Board.h"
-#include "Tile.h"
+#include "Tiles/Tile.h"
 #include <limits>
 #include <utility>
 

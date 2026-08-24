@@ -1,7 +1,7 @@
 #include "Player.h"
-#include "MonsterFactory.h"
+#include "Monsters/MonsterFactory.h"
 #include "Constants.h"
-#include "Tile.h"
+#include "Tiles/Tile.h"
 #include "AssetsManager.h"
 
 Player::Player(PlayerSide side)

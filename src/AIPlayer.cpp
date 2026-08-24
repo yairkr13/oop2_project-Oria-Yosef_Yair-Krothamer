@@ -1,5 +1,5 @@
 #include "AIPlayer.h"
-#include "Tile.h"
+#include "Tiles/Tile.h"
 #include <iostream>
 
 AIPlayer::AIPlayer(PlayerSide side)

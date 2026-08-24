@@ -1,7 +1,7 @@
 #include "Board.h"
-#include "LavaTile.h"
-#include "Hole.h"
-#include "PanicPoint.h"
+#include "Tiles/LavaTile.h"
+#include "Tiles/Hole.h"
+#include "Tiles/PanicPoint.h"
 #include "Attacks/AttackAnimation.h"
 #include <random>
 #include <iostream>
