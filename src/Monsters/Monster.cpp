@@ -37,16 +37,109 @@ Monster::Monster(PlayerSide side, const std::string& name, int health, int attac
     }
 }
 
+MonsterSpriteSheet Monster::configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration) const
+{
+    const sf::Texture& texture = AssetsManager::getInstance().getTexture(textureKey);
+
+    MonsterSpriteSheet sheet;
+    sheet.texture = &texture;
+    sheet.animation = std::make_unique<SpriteSheetAnimation>(columns, rows, frameDuration);
+
+    // One frame's real pixel size - not the whole sheet's - is what
+    // origin/scale need to be based on, so a sheet-driven frame centers and
+    // sizes the same way the static sprite does (see draw()).
+    sf::Vector2u sheetSize = texture.getSize();
+    float frameWidth = static_cast<float>(sheetSize.x) / static_cast<float>(std::max(columns, 1));
+    float frameHeight = static_cast<float>(sheetSize.y) / static_cast<float>(std::max(rows, 1));
+    sheet.frameOrigin = { frameWidth / 2.f, frameHeight / 2.f };
+
+    float maxFrameDim = std::max(frameWidth, frameHeight);
+    sheet.baseScale = (maxFrameDim > 0.f) ? (Config::MONSTER_BOARD_SIZE / maxFrameDim) : m_baseScale;
+
+    return sheet;
+}
+
+void Monster::setWalkAnimation(const std::string& walkTextureKey, int columns, int rows, float frameDuration)
+{
+    m_walkSheet = configureSpriteSheet(walkTextureKey, columns, rows, frameDuration);
+}
+
+void Monster::setAttackSpriteAnimation(const std::string& attackTextureKey, int columns, int rows, float frameDuration)
+{
+    m_attackSheet = configureSpriteSheet(attackTextureKey, columns, rows, frameDuration);
+}
+
+void Monster::setIdleSpriteAnimation(const std::string& idleTextureKey, int columns, int rows, float frameDuration)
+{
+    m_idleSheet = configureSpriteSheet(idleTextureKey, columns, rows, frameDuration);
+}
+
+void Monster::updateSpriteSheet(MonsterSpriteSheet& sheet, bool active, float dt)
+{
+    if (!sheet.isConfigured()) return;
+
+    if (active)
+        sheet.animation->update(dt);
+    else
+        sheet.animation->reset();
+}
+
 void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
 {
     if (m_q == -1 && m_row == -1) return;
 
     if (m_hasTexture)
     {
-        m_sprite.setPosition(m_screenPos);
+        // Whichever configured sprite-sheet's own condition currently holds
+        // wins, in priority order attack > walk > idle - attacking beats
+        // walking though in practice a monster is never mid-attack and
+        // mid-move at once (Board::performAction only ever triggers one
+        // action per click); idle is the lowest priority, applying only
+        // once neither of the other two does. Only monsters that opted
+        // into at least one sheet (see setWalkAnimation/
+        // setAttackSpriteAnimation/setIdleSpriteAnimation) ever touch
+        // texture/origin here at all - a monster with none configured
+        // never enters this block, so its draw() is exactly what it always
+        // was.
+        const MonsterSpriteSheet* activeSheet = nullptr;
+        if (m_attackSheet.isConfigured() && isAttacking())
+            activeSheet = &m_attackSheet;
+        else if (m_walkSheet.isConfigured() && m_isMoving)
+            activeSheet = &m_walkSheet;
+        else if (m_idleSheet.isConfigured() && !m_isMoving && !isAttacking())
+            activeSheet = &m_idleSheet;
 
-        float currentScaleX = (m_side == PlayerSide::Right) ? -m_baseScale : m_baseScale;
-        m_sprite.setScale({ currentScaleX, m_baseScale });
+        if (activeSheet)
+        {
+            // Same texture, different visible rect each frame - the
+            // sprite's own screen position/scale below never changes
+            // because of this, only which pixels of which texture it
+            // shows, so switching frames can't make it jump around.
+            m_sprite.setTexture(*activeSheet->texture, false);
+            m_sprite.setTextureRect(activeSheet->animation->getCurrentFrameRect(activeSheet->texture->getSize()));
+            m_sprite.setOrigin(activeSheet->frameOrigin); // center of ONE frame, not the whole sheet
+        }
+        else if (m_walkSheet.isConfigured() || m_attackSheet.isConfigured() || m_idleSheet.isConfigured())
+        {
+            // At least one sheet is configured but none applies right now
+            // (e.g. a monster with only a walk sheet, currently standing
+            // still with no idle sheet of its own) - fall back to the
+            // static sprite/origin explicitly, since the sprite's texture/
+            // rect/origin were left however the last active sheet set them.
+            const sf::Texture& idleTexture = AssetsManager::getInstance().getTexture(m_textureKey);
+            m_sprite.setTexture(idleTexture, true); // reset rect back to the full static image
+            m_sprite.setOrigin({ idleTexture.getSize().x / 2.f, idleTexture.getSize().y / 2.f });
+        }
+
+        // A sheet in use draws with its own base scale (derived from one of
+        // its frames' real pixel size in configureSpriteSheet) rather than
+        // m_baseScale (derived from the static image's size), so a monster
+        // reads as the same on-board size whether idle or sheet-animated,
+        // even though the textures aren't the same native resolution.
+        float scale = activeSheet ? activeSheet->baseScale : m_baseScale;
+        float currentScaleX = (m_side == PlayerSide::Right) ? -scale : scale;
+        m_sprite.setPosition(m_screenPos);
+        m_sprite.setScale({ currentScaleX, scale });
 
         window.draw(m_sprite);
     }
@@ -169,6 +262,18 @@ void Monster::update(float dt)
         if (m_specialAnimation->isFinished())
             m_specialAnimation.reset();
     }
+
+    // State-driven sprite-sheet animations (see setWalkAnimation/
+    // setAttackSpriteAnimation/setIdleSpriteAnimation): each only advances
+    // while its own condition holds, and resets to frame 0 the rest of the
+    // time, so whichever one becomes active next always starts fresh -
+    // draw() falls back to the static sprite once none of the three
+    // conditions hold. No-op for any sheet a monster hasn't configured.
+    // Idle's condition is just "neither of the other two" - no separate
+    // resume logic needed for it to pick back up once Walk/Attack ends.
+    updateSpriteSheet(m_walkSheet, m_isMoving, dt);
+    updateSpriteSheet(m_attackSheet, isAttacking(), dt);
+    updateSpriteSheet(m_idleSheet, !m_isMoving && !isAttacking(), dt);
 
     // אם לא זזים כרגע, אין מה לעדכן
     if (!m_isMoving || m_pathQueue.empty())

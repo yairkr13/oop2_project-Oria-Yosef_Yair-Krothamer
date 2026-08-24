@@ -21,15 +21,20 @@ namespace
     constexpr float SHIELD_EFFECT_GROW_DURATION = 0.35f;
     constexpr float SHIELD_EFFECT_HOLD_DURATION = 0.3f;
     constexpr float SHIELD_EFFECT_FADE_DURATION = 0.25f;
+
+    // Walking sprite sheet: 6 columns x 4 rows (24 frames total), read row
+    // by row left-to-right - verified against the actual file, same layout
+    // as Muffintop's working sheet. Same frame duration as Muffintop for a
+    // consistent pace across monsters.
+    constexpr int WALK_SHEET_COLUMNS = 6;
+    constexpr int WALK_SHEET_ROWS = 4;
+    constexpr float WALK_FRAME_DURATION = 0.06f;
 }
 
 Henrietta::Henrietta(PlayerSide side)
     : Monster(side, "Henrietta", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Green, "henrietta")
 {
-    //TextureManager::getInstance().loadTexture("henrietta_r", "resources/Monster/Henrietta/Henrietta_R.png");
-    //TextureManager::getInstance().loadTexture("henrietta_l", "resources/Monster/Henrietta/Henrietta_L.png");
-    //TextureManager::getInstance().loadTexture("henrietta_card_r", "resources/Monster/Henrietta/Henrietta_card_R.png");
-    //TextureManager::getInstance().loadTexture("henrietta_card_l", "resources/Monster/Henrietta/Henrietta_card_L.png");
+    setWalkAnimation("henrietta_walk", WALK_SHEET_COLUMNS, WALK_SHEET_ROWS, WALK_FRAME_DURATION);
 }
 
 std::unique_ptr<AttackAnimation> Henrietta::createAttackAnimation(BoardEntity* target) const

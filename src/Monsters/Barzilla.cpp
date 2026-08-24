@@ -35,15 +35,20 @@ namespace
     constexpr float EMPOWERED_IMPACT_GROW_DURATION = 0.12f;
     constexpr float EMPOWERED_IMPACT_HOLD_DURATION = 0.08f;
     constexpr float EMPOWERED_IMPACT_FADE_DURATION = 0.15f;
+
+    // Walking sprite sheet: 6 columns x 4 rows (24 frames total), read row
+    // by row left-to-right - verified against the actual file, same layout
+    // as Muffintop's working sheet. Same frame duration as Muffintop for a
+    // consistent pace across monsters.
+    constexpr int WALK_SHEET_COLUMNS = 6;
+    constexpr int WALK_SHEET_ROWS = 4;
+    constexpr float WALK_FRAME_DURATION = 0.06f;
 }
 
 Barzilla::Barzilla(PlayerSide side)
     : Monster(side, "Barzilla", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Red, "barzilla")
 {
-    //TextureManager::getInstance().loadTexture("barzilla_r", "resources/Monster/Barzilla/Barzilla_R.png");
-    //TextureManager::getInstance().loadTexture("barzilla_l", "resources/Monster/Barzilla/Barzilla_L.png");
-    //TextureManager::getInstance().loadTexture("barzilla_card_r", "resources/Monster/Barzilla/Barzilla_card_R.png");
-    //TextureManager::getInstance().loadTexture("barzilla_card_l", "resources/Monster/Barzilla/Barzilla_card_L.png");
+    setWalkAnimation("barzilla_walk", WALK_SHEET_COLUMNS, WALK_SHEET_ROWS, WALK_FRAME_DURATION);
 }
 
 // Empowered Attack: doubles the damage of the next successful attack only.

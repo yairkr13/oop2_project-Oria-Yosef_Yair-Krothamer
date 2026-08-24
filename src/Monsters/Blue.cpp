@@ -29,6 +29,16 @@ namespace
     constexpr float WIND_EFFECT_DURATION = 0.4f;
     constexpr float WIND_EFFECT_SIZE = Config::MONSTER_BOARD_SIZE * 0.9f;
 
+    // Walking/movement sprite sheet: Blue is a flying monster, so its
+    // BlueFly.png sheet is used for its board-travel animation instead of a
+    // ground walk cycle - same mechanism either way (Monster::setWalkAnimation
+    // doesn't care what the motion depicts, only that it loops while moving).
+    // 6 columns x 4 rows (24 frames), verified against the actual file, same
+    // layout as Muffintop's working sheet.
+    constexpr int WALK_SHEET_COLUMNS = 6;
+    constexpr int WALK_SHEET_ROWS = 4;
+    constexpr float WALK_FRAME_DURATION = 0.06f;
+
     // Knockback direction math: Blue's Special can target ANY enemy Monster
     // on the Board (Monster::isValidSpecialTarget's default is "any enemy",
     // not "adjacent enemy" - see Monster.h), so (target.q - Blue.q, target.row
@@ -91,10 +101,7 @@ namespace
 Blue::Blue(PlayerSide side)
     : Monster(side, "Blue", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Magenta, "blue")
 {
-    //TextureManager::getInstance().loadTexture("blue_r", "resources/Monster/Blue/Blue_R.png");
-    //TextureManager::getInstance().loadTexture("blue_l", "resources/Monster/Blue/Blue_L.png");
-    //TextureManager::getInstance().loadTexture("blue_card_r", "resources/Monster/Blue/Blue_card_R.png");
-    //TextureManager::getInstance().loadTexture("blue_card_l", "resources/Monster/Blue/Blue_card_L.png");
+    setWalkAnimation("blue_fly", WALK_SHEET_COLUMNS, WALK_SHEET_ROWS, WALK_FRAME_DURATION);
 }
 
 std::unique_ptr<AttackAnimation> Blue::createAttackAnimation(BoardEntity* target) const

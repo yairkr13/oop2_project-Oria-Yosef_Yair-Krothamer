@@ -1,9 +1,29 @@
 #pragma once
 #include "Constants.h"
 #include "BoardEntity.h"
+#include "SpriteSheetAnimation.h"
 #include <string>
 #include <deque>
+#include <memory>
 class Board; // Forward declaration - only ever used by reference in Special Ability hooks below
+
+// One state-driven sprite-sheet slot: the frame-cycling logic
+// (SpriteSheetAnimation), the sheet's own texture, and the per-frame
+// origin/scale needed to keep it centered and sized consistently with a
+// monster's static sprite. Bundled once here so a second state (attacking)
+// reuses exactly the same centering/scaling math a first state (walking)
+// already needed, instead of a second hand-copied implementation - see
+// Monster::configureSpriteSheet(), the one place that math lives.
+struct MonsterSpriteSheet
+{
+    std::unique_ptr<SpriteSheetAnimation> animation;
+    const sf::Texture* texture = nullptr;
+    sf::Vector2f frameOrigin;
+    float baseScale = 1.f;
+
+    bool isConfigured() const { return animation != nullptr; }
+};
+
 class Monster :public BoardEntity
 {
 public:
@@ -143,6 +163,32 @@ protected:
     //virtual void onAttackHook(BoardEntity* target) {}
     virtual void onSpecialAbility(Board& board, BoardEntity* target) {}
 
+    // Opt-in: gives this monster a looping sprite-sheet animation, shown
+    // only while isMoving() is true (see update()/draw()) - swapped back to
+    // the normal static sprite the instant movement stops. `columns`/`rows`
+    // describe the sheet's uniform grid (frame size is derived from the
+    // real loaded texture, never hardcoded); `frameDuration` is how long
+    // each frame is shown, in seconds - the one knob for animation speed.
+    void setWalkAnimation(const std::string& walkTextureKey, int columns, int rows, float frameDuration);
+
+    // Same idea, tied to isAttacking() instead - i.e. shown only while this
+    // monster's own m_attackAnimation (the projectile/VFX built by
+    // createAttackAnimation) is in flight, swapped back to the static
+    // sprite the instant it resolves. Not called by any monster's
+    // constructor yet except Muffintop's; every other monster simply never
+    // calls this (or setWalkAnimation), so both sheets stay unconfigured
+    // and their update()/draw() behave exactly as before, unchanged.
+    void setAttackSpriteAnimation(const std::string& attackTextureKey, int columns, int rows, float frameDuration);
+
+    // Same idea again, this time the lowest-priority of the three - shown
+    // only while neither the walk sheet nor the attack sheet applies (see
+    // draw()'s activeSheet selection: attack beats walk beats idle), i.e.
+    // whenever this monster is on the board and not currently moving or
+    // attacking. A monster that hasn't called this keeps falling back to
+    // its static sprite while idle, exactly as before Idle existed at all -
+    // so adding Idle for one monster never affects any other.
+    void setIdleSpriteAnimation(const std::string& idleTextureKey, int columns, int rows, float frameDuration);
+
     std::string m_name;
     //int m_health;
     //int m_maxHealth;
@@ -161,6 +207,16 @@ protected:
     std::deque<sf::Vector2f> m_pathQueue; // ���: ��� ������ ������, ���� m_targetPos ������
     bool m_isMoving = false;
 
+    // Optional sprite-sheet-driven states (see setWalkAnimation/
+    // setAttackSpriteAnimation above) - unconfigured (isConfigured()
+    // false) for every monster that hasn't opted into that particular one,
+    // which is every monster except Muffintop for now. Each texture
+    // pointer is non-owning, into AssetsManager's own texture (same
+    // lifetime assumption m_sprite already relies on for m_textureKey).
+    MonsterSpriteSheet m_walkSheet;
+    MonsterSpriteSheet m_attackSheet;
+    MonsterSpriteSheet m_idleSheet;
+
     // This monster's own in-flight attack animation (see createAttackAnimation/
     // playAttackAnimation) - owned, updated and drawn here, the same
     // ownership model as m_pathQueue/m_isMoving above for movement. Null
@@ -176,7 +232,12 @@ protected:
     // interface (update/draw/isFinished/onImpact), not the same slot.
     std::unique_ptr<AttackAnimation> m_specialAnimation;
 
-    float m_speed = 300.f;
+    // Board travel speed, pixels/second, shared by every monster (see
+    // Monster::update()'s movement interpolation) - no subclass overrides
+    // this. Lowered from the original 300.f so a tile-to-tile move takes
+    // noticeably longer, giving the walking sprite-sheet animation (see
+    // setWalkAnimation) enough time on screen to actually read.
+    float m_speed = 180.f;
     bool m_hasTexture = true;
     float m_baseScale = 1.0f;
     mutable sf::Sprite m_sprite;
@@ -201,5 +262,20 @@ private:
     void drawActionsLeft(sf::RenderWindow& window) const;
     //void drawHealthBar(sf::RenderWindow& window) const;
     //std::string getCardTextureKey() const { return m_textureKey + "_card"; }
+
+    // Shared by setWalkAnimation/setAttackSpriteAnimation: builds a
+    // MonsterSpriteSheet's texture pointer, per-frame origin (the center of
+    // ONE frame, not the whole sheet) and base scale (from one frame's real
+    // pixel size against Config::MONSTER_BOARD_SIZE - the same reference
+    // the static sprite's own m_baseScale already uses) - the one place
+    // this math lives, regardless of how many sheet-driven states a
+    // monster ends up configuring.
+    MonsterSpriteSheet configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration) const;
+
+    // Advances `sheet`'s animation while `active` is true, otherwise resets
+    // it to frame 0 (so whichever state becomes active next always starts
+    // fresh) - a no-op for an unconfigured sheet. Shared by update() for
+    // both m_walkSheet/m_isMoving and m_attackSheet/isAttacking().
+    static void updateSpriteSheet(MonsterSpriteSheet& sheet, bool active, float dt);
      // �� ����� ������ �� 2 ������
 };

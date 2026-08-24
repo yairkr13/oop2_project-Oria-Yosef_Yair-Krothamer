@@ -29,20 +29,27 @@ void AssetsManager::loadAllAssets()
     loadTexture("game_bg", "resources/Background/Background1.png");
     loadTexture("BonePile", "resources/StaticObject/BonePile.png");
 
-    loadTexture("muffintop", "resources/Monster/Muffintop/Muffintop_R.png");
-    loadTexture("muffintop_card", "resources/Monster/Muffintop/Muffintop_card_R.png");
+    loadTexture("muffintop", "resources/Monster/Muffintop/Muffintop.png");
+    loadTexture("muffintop_card", "resources/Monster/Muffintop/Muffintop_Card.png");
+    loadTexture("muffintop_walk", "resources/Monster/Muffintop/Muffintop_Walk.png");
+    loadTexture("muffintop_attack", "resources/Monster/Muffintop/Muffintop_Attack.png");
+    loadTexture("muffintop_idle", "resources/Monster/Muffintop/Muffintop_Idle.png");
 
-    loadTexture("blue", "resources/Monster/Blue/Blue_R.png");
-    loadTexture("blue_card", "resources/Monster/Blue/Blue_card_R.png");
+    loadTexture("blue", "resources/Monster/Blue/Blue.png");
+    loadTexture("blue_card", "resources/Monster/Blue/Blue_Card.png");
+    loadTexture("blue_fly", "resources/Monster/Blue/Blue_Fly.png"); // flying monster's movement animation
 
-    loadTexture("barzilla", "resources/Monster/Barzilla/Barzilla_R.png");
-    loadTexture("barzilla_card", "resources/Monster/Barzilla/Barzilla_card_R.png");
+    loadTexture("barzilla", "resources/Monster/Barzilla/Barzilla.png");
+    loadTexture("barzilla_card", "resources/Monster/Barzilla/Barzilla_Card.png");
+    loadTexture("barzilla_walk", "resources/Monster/Barzilla/Barzilla_Walk.png");
 
-    loadTexture("henrietta", "resources/Monster/Henrietta/Henrietta_R.png");
-    loadTexture("henrietta_card", "resources/Monster/Henrietta/Henrietta_card_R.png");
+    loadTexture("henrietta", "resources/Monster/Henrietta/Henrietta.png");
+    loadTexture("henrietta_card", "resources/Monster/Henrietta/Henrietta_Card.png");
+    loadTexture("henrietta_walk", "resources/Monster/Henrietta/Henrietta_Walk.png");
 
-    loadTexture("mozzy", "resources/Monster/Mozzy/Mozzy_R.png");
-    loadTexture("mozzy_card", "resources/Monster/Mozzy/Mozzy_card_R.png");
+    loadTexture("mozzy", "resources/Monster/Mozzy/Mozzy.png");
+    loadTexture("mozzy_card", "resources/Monster/Mozzy/Mozzy_Card.png");
+    loadTexture("mozzy_fly", "resources/Monster/Mozzy/Mozzy_Fly.png"); // flying monster's movement animation
 
     loadTexture("acid_splash", "resources/Attacks/AcidSplash.png");
     loadTexture("fire_blast", "resources/Attacks/FireBlast.png");

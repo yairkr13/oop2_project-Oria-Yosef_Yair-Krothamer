@@ -22,5 +22,11 @@ namespace Config
     inline constexpr float CARD_HEIGHT = 100.f;
     inline constexpr float CARD_SPACING = 110.f;
 
-    inline constexpr float MONSTER_BOARD_SIZE = 44.f;
+    // Shared on-board visual size every monster's static sprite (and
+    // Muffintop's walking sprite-sheet frames - see Monster::setWalkAnimation)
+    // is scaled against - not tile size, range, or any gameplay/collision
+    // value. Raised from the original 44.f for a moderately more prominent
+    // monster silhouette while still fitting inside a tile (TILE_RADIUS
+    // above is unchanged).
+    inline constexpr float MONSTER_BOARD_SIZE = 52.f;
 }

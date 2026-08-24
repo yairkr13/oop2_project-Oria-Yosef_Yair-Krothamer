@@ -34,15 +34,21 @@ namespace
     // Small upward nudge applied to the whole effect (start and end alike) -
     // a pure positioning tweak, independent of size/duration above.
     constexpr float FREEZE_EFFECT_VERTICAL_SHIFT = Config::MONSTER_BOARD_SIZE * 0.25f;
+
+    // Walking/movement sprite sheet: Mozzy is a flying monster, so its
+    // MozzyFly.png sheet is used for its board-travel animation instead of
+    // a ground walk cycle - same mechanism either way. 6 columns x 4 rows
+    // (24 frames), verified against the actual file, same layout as
+    // Muffintop's working sheet.
+    constexpr int WALK_SHEET_COLUMNS = 6;
+    constexpr int WALK_SHEET_ROWS = 4;
+    constexpr float WALK_FRAME_DURATION = 0.06f;
 }
 
 Mozzy::Mozzy(PlayerSide side)
     : Monster(side, "Mozzy", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Cyan, "mozzy",true)
 {
-    //TextureManager::getInstance().loadTexture("mozzy_r", "resources/Monster/Mozzy/Mozzy_R.png");
-    //TextureManager::getInstance().loadTexture("mozzy_l", "resources/Monster/Mozzy/Mozzy_L.png");
-    //TextureManager::getInstance().loadTexture("mozzy_card_r", "resources/Monster/Mozzy/Mozzy_card_R.png");
-    //TextureManager::getInstance().loadTexture("mozzy_card_l", "resources/Monster/Mozzy/Mozzy_card_L.png");
+    setWalkAnimation("mozzy_fly", WALK_SHEET_COLUMNS, WALK_SHEET_ROWS, WALK_FRAME_DURATION);
 }
 
 //void Mozzy::attack(Monster& target)
