@@ -39,6 +39,32 @@ namespace
     constexpr int WALK_SHEET_ROWS = 4;
     constexpr float WALK_FRAME_DURATION = 0.06f;
 
+    // Idle sprite sheet: 6x4 (24 frames), verified against the actual file -
+    // same grid as every other sheet in the project, inspected directly
+    // rather than assumed. Same calm pace as Muffintop's Idle.
+    constexpr int IDLE_SHEET_COLUMNS = 6;
+    constexpr int IDLE_SHEET_ROWS = 4;
+    constexpr float IDLE_FRAME_DURATION = 0.08f;
+
+    // Attack sprite sheet: same 6x4 grid. Unlike Muffintop's single-shot
+    // MUFFIN_SHOT_DURATION, Blue's own attack (see createAttackAnimation
+    // below) is a 5-shot burst: the last of WIND_BLAST_COUNT shots launches
+    // at (WIND_BLAST_COUNT-1)*WIND_BLAST_LAUNCH_INTERVAL = 0.32s, then takes
+    // WIND_BLAST_TRAVEL_DURATION = 0.35s more to land - isAttacking() (what
+    // drives this sheet) stays true for that whole ~0.67s window. 24 frames
+    // at 0.028s each finishes in ~0.672s, matching it closely instead of
+    // Muffintop's frame duration, which would finish far too early here.
+    constexpr int ATTACK_SHEET_COLUMNS = 6;
+    constexpr int ATTACK_SHEET_ROWS = 4;
+    constexpr float ATTACK_FRAME_DURATION = 0.028f;
+
+    // Die sprite sheet: same 6x4 grid, non-looping (setDieSpriteAnimation
+    // always configures looping=false - see Monster). Same pace as
+    // Muffintop's Die: ~1.2s, a clearly readable one-shot collapse.
+    constexpr int DIE_SHEET_COLUMNS = 6;
+    constexpr int DIE_SHEET_ROWS = 4;
+    constexpr float DIE_FRAME_DURATION = 0.05f;
+
     // Knockback direction math: Blue's Special can target ANY enemy Monster
     // on the Board (Monster::isValidSpecialTarget's default is "any enemy",
     // not "adjacent enemy" - see Monster.h), so (target.q - Blue.q, target.row
@@ -102,6 +128,9 @@ Blue::Blue(PlayerSide side)
     : Monster(side, "Blue", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Magenta, "blue")
 {
     setWalkAnimation("blue_fly", WALK_SHEET_COLUMNS, WALK_SHEET_ROWS, WALK_FRAME_DURATION);
+    setIdleSpriteAnimation("blue_idle", IDLE_SHEET_COLUMNS, IDLE_SHEET_ROWS, IDLE_FRAME_DURATION);
+    setAttackSpriteAnimation("blue_attack", ATTACK_SHEET_COLUMNS, ATTACK_SHEET_ROWS, ATTACK_FRAME_DURATION);
+    setDieSpriteAnimation("blue_die", DIE_SHEET_COLUMNS, DIE_SHEET_ROWS, DIE_FRAME_DURATION);
 }
 
 std::unique_ptr<AttackAnimation> Blue::createAttackAnimation(BoardEntity* target) const

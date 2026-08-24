@@ -21,7 +21,12 @@
 class SpriteSheetAnimation
 {
 public:
-    SpriteSheetAnimation(int columns, int rows, float frameDuration);
+    // `looping` (default true, matches every caller before Death existed):
+    // true wraps back to frame 0 after the last frame, forever - Idle/Walk/
+    // Attack all want this. false instead holds on the last frame once
+    // reached and reports it via isFinished() - what a one-shot animation
+    // like Death needs, and what caused this parameter to be added.
+    SpriteSheetAnimation(int columns, int rows, float frameDuration, bool looping = true);
 
     // Advances the animation clock - call only while the animation should
     // actually be playing (e.g. only while the owning monster isMoving()).
@@ -35,10 +40,18 @@ public:
     // size (not a stored/assumed one) divided by columns/rows.
     sf::IntRect getCurrentFrameRect(sf::Vector2u textureSize) const;
 
+    // True once a non-looping animation has played through its last frame
+    // and is now holding on it. Always false for a looping animation - it
+    // never "finishes", it just keeps wrapping - so this is meaningless
+    // (and unused) for Idle/Walk/Attack, only for a one-shot animation like
+    // Death.
+    bool isFinished() const;
+
 private:
     int m_columns;
     int m_rows;
     int m_frameCount;
     float m_frameDuration;
     float m_elapsed = 0.f;
+    bool m_looping;
 };

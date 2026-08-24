@@ -80,18 +80,38 @@ public:
     // the two would make isAttacking() lie about what's actually happening.
     virtual bool isUsingSpecialAnimation() const { return false; }
 
+    // True while this entity is dead (see isAlive()) but still occupying
+    // its Tile so a one-shot death animation can finish playing - see
+    // Monster's Die sprite sheet. False (the default) for every entity
+    // that either isn't dead or has no death animation to wait for, which
+    // is exactly "removed from the board the instant it dies", the
+    // behavior every entity already had before death animations existed.
+    virtual bool isDying() const { return false; }
+
     // The single aggregate query callers like Board should use: "is this
     // entity currently doing anything visual that should block the game."
     // Callers never need to know *why* - this entity decides what counts.
     // Declared once here (not overridden per-subclass): because isMoving(),
-    // isAttacking() and isUsingSpecialAnimation() are themselves virtual,
-    // this automatically picks up whatever the most-derived class does for
-    // each, with zero extra code in Monster. When a new reason to be busy is
-    // added later (a death animation, ...), it's added the same way - a new
-    // virtual predicate here, defaulted to false, ORed into this one line -
-    // so only this class (where the new state actually lives) needs
-    // editing, never Board.
-    virtual bool isAnimating() const { return isMoving() || isAttacking() || isUsingSpecialAnimation(); }
+    // isAttacking(), isUsingSpecialAnimation() and isDying() are themselves
+    // virtual, this automatically picks up whatever the most-derived class
+    // does for each, with zero extra code in Monster. When a new reason to
+    // be busy is added later, it's added the same way - a new virtual
+    // predicate here, defaulted to false, ORed into this one line - so only
+    // this class (where the new state actually lives) needs editing, never
+    // Board.
+    virtual bool isAnimating() const { return isMoving() || isAttacking() || isUsingSpecialAnimation() || isDying(); }
+
+    // Whether this entity should be cleared from its Tile right now - i.e.
+    // whether it's actually safe/appropriate to stop drawing/updating it as
+    // a board occupant. Default: as soon as it's dead, which is exactly the
+    // immediate-removal behavior every entity had before death animations
+    // existed - Heart and any Monster without a Die sheet configured keep
+    // this default untouched. Monster overrides this to also wait for its
+    // own death animation (see isDying() above) to finish first. Callers
+    // (Tile::receiveAttackFrom, Board::updateTileEffects, Board::update)
+    // ask only this - never isAlive() directly - to decide whether to call
+    // Tile::clearEntity().
+    virtual bool isReadyForRemoval() const { return !isAlive(); }
     //// --- �������� �����: ��� ��-������ �� ������ ---
     //void setCurrentTile(Tile* tile) { m_currentTile = tile; }
     //Tile* getCurrentTile() const { return m_currentTile; }

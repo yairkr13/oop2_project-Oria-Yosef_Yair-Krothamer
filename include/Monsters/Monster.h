@@ -45,8 +45,13 @@ public:
     //void setSelected(bool selected) { m_selected = selected; }
     //bool isSelected() const override { return m_selected; }
     //virtual bool isSelectable() const override { return true; } // ����� ���� �����!
+    // isAlive() is checked explicitly (not just implied): a dead monster
+    // stays linked to its Tile for as long as its death animation is
+    // playing (see isDying()/isReadyForRemoval() below), so without this
+    // check it would otherwise still satisfy "not an enemy, has actions
+    // left" and be selectable/movable/attackable-with while visibly dying.
     bool canBeSelectedBy(PlayerSide side) const override {
-        return !isEnemyOf(side) && m_actionsLeft > 0;
+        return isAlive() && !isEnemyOf(side) && m_actionsLeft > 0;
     }
     virtual Monster* asMonster() override { return this; }
 
@@ -145,9 +150,14 @@ public:
     // Protection) override this to require the same side instead.
     // GameplayState calls only this - it never hardcodes "ally" or "enemy"
     // for a specific monster.
+    // candidate.isAlive() is required for the same reason canBeSelectedBy()
+    // above requires it: a dying candidate is still Tile-linked (see
+    // isDying()/isReadyForRemoval()) and must not be targetable while its
+    // death animation plays. Henrietta's and Muffintop's ally-targeted
+    // overrides need the same check - see their own isValidSpecialTarget.
     virtual bool isValidSpecialTarget(BoardEntity& candidate) const
     {
-        return candidate.asMonster() != nullptr && candidate.isEnemyOf(m_side);
+        return candidate.isAlive() && candidate.asMonster() != nullptr && candidate.isEnemyOf(m_side);
     }
 
     // The Tile-highlight color for this monster's valid Special targets,
@@ -159,6 +169,22 @@ public:
     virtual sf::Color getSpecialTargetHighlightColor() const { return sf::Color(255, 255, 255, 180); }
 
     virtual bool useSpecialAbility(Board& board, BoardEntity* target = nullptr);
+
+    // True while dead but still playing a one-shot Die sheet (see
+    // setDieSpriteAnimation below) - false once that animation finishes, or
+    // immediately/always false if no Die sheet was ever configured. Feeds
+    // BoardEntity::isAnimating() (unchanged, ORs this in automatically), so
+    // Board/AIPlayer/GameplayState already wait for this exactly like they
+    // wait for movement or an attack animation, with no changes of their
+    // own needed.
+    bool isDying() const override;
+
+    // Overrides BoardEntity's "ready the instant it's dead" default: a
+    // monster with a configured Die sheet must also wait for that
+    // animation to finish (see isDying() above) before Board clears it from
+    // its Tile - a monster with none configured falls straight through to
+    // the base behavior, unchanged.
+    bool isReadyForRemoval() const override;
 protected:
     //virtual void onAttackHook(BoardEntity* target) {}
     virtual void onSpecialAbility(Board& board, BoardEntity* target) {}
@@ -189,6 +215,18 @@ protected:
     // so adding Idle for one monster never affects any other.
     void setIdleSpriteAnimation(const std::string& idleTextureKey, int columns, int rows, float frameDuration);
 
+    // Highest-priority of the four (see draw()'s activeSheet selection: die
+    // beats attack beats walk beats idle) and the only non-looping one -
+    // built with looping=false (see configureSpriteSheet/SpriteSheetAnimation)
+    // so it plays exactly once and holds on its last frame instead of
+    // restarting. Driven by isDying() (true from the instant HP reaches 0
+    // until this animation finishes), not by any separate flag - once
+    // active it never yields back to walk/attack/idle, since isAlive()
+    // never becomes true again. A monster that hasn't called this is
+    // removed from the board immediately on death, exactly as every
+    // monster was before Die sheets existed (see isReadyForRemoval()).
+    void setDieSpriteAnimation(const std::string& dieTextureKey, int columns, int rows, float frameDuration);
+
     std::string m_name;
     //int m_health;
     //int m_maxHealth;
@@ -216,6 +254,7 @@ protected:
     MonsterSpriteSheet m_walkSheet;
     MonsterSpriteSheet m_attackSheet;
     MonsterSpriteSheet m_idleSheet;
+    MonsterSpriteSheet m_dieSheet;
 
     // This monster's own in-flight attack animation (see createAttackAnimation/
     // playAttackAnimation) - owned, updated and drawn here, the same
@@ -270,7 +309,7 @@ private:
     // the static sprite's own m_baseScale already uses) - the one place
     // this math lives, regardless of how many sheet-driven states a
     // monster ends up configuring.
-    MonsterSpriteSheet configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration) const;
+    MonsterSpriteSheet configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration, bool looping = true) const;
 
     // Advances `sheet`'s animation while `active` is true, otherwise resets
     // it to frame 0 (so whichever state becomes active next always starts

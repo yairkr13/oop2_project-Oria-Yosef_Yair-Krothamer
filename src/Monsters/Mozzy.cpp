@@ -43,12 +43,39 @@ namespace
     constexpr int WALK_SHEET_COLUMNS = 6;
     constexpr int WALK_SHEET_ROWS = 4;
     constexpr float WALK_FRAME_DURATION = 0.06f;
+
+    // Idle sprite sheet: 6x4 (24 frames), verified against the actual file -
+    // same grid as every other sheet in the project, inspected directly
+    // rather than assumed. Same calm pace as Muffintop's Idle.
+    constexpr int IDLE_SHEET_COLUMNS = 6;
+    constexpr int IDLE_SHEET_ROWS = 4;
+    constexpr float IDLE_FRAME_DURATION = 0.08f;
+
+    // Attack sprite sheet: same 6x4 grid. Mozzy's own attack (see
+    // createAttackAnimation below) is a single AcidSplash traveling for
+    // ACID_SPLASH_DURATION = 0.5s - isAttacking() stays true for exactly
+    // that window, same shape as Muffintop's single MuffinShot, so the same
+    // frame duration applies here too: 24 frames at 0.02s finishes in
+    // ~0.48s, close to the 0.5s window.
+    constexpr int ATTACK_SHEET_COLUMNS = 6;
+    constexpr int ATTACK_SHEET_ROWS = 4;
+    constexpr float ATTACK_FRAME_DURATION = 0.02f;
+
+    // Die sprite sheet: same 6x4 grid, non-looping (setDieSpriteAnimation
+    // always configures looping=false - see Monster). Same pace as
+    // Muffintop's Die: ~1.2s, a clearly readable one-shot collapse.
+    constexpr int DIE_SHEET_COLUMNS = 6;
+    constexpr int DIE_SHEET_ROWS = 4;
+    constexpr float DIE_FRAME_DURATION = 0.05f;
 }
 
 Mozzy::Mozzy(PlayerSide side)
     : Monster(side, "Mozzy", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Cyan, "mozzy",true)
 {
     setWalkAnimation("mozzy_fly", WALK_SHEET_COLUMNS, WALK_SHEET_ROWS, WALK_FRAME_DURATION);
+    setIdleSpriteAnimation("mozzy_idle", IDLE_SHEET_COLUMNS, IDLE_SHEET_ROWS, IDLE_FRAME_DURATION);
+    setAttackSpriteAnimation("mozzy_attack", ATTACK_SHEET_COLUMNS, ATTACK_SHEET_ROWS, ATTACK_FRAME_DURATION);
+    setDieSpriteAnimation("mozzy_die", DIE_SHEET_COLUMNS, DIE_SHEET_ROWS, DIE_FRAME_DURATION);
 }
 
 //void Mozzy::attack(Monster& target)

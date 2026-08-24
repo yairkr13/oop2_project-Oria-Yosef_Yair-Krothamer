@@ -65,6 +65,17 @@ namespace
     constexpr int IDLE_SHEET_COLUMNS = 6;
     constexpr int IDLE_SHEET_ROWS = 4;
     constexpr float IDLE_FRAME_DURATION = 0.08f;
+
+    // Die sprite sheet: same 6x4 (24-frame) grid, verified against the
+    // actual file - again coincidentally matching Walk/Attack/Idle's pixel
+    // dimensions (5760x3840), inspected directly rather than assumed. Plays
+    // once (setDieSpriteAnimation always configures a non-looping sheet -
+    // see Monster/SpriteSheetAnimation) at a brisker pace than Idle: full
+    // 24-frame cycle in ~1.2s, a clearly readable collapse without
+    // lingering once the monster is already dead and gone from play.
+    constexpr int DIE_SHEET_COLUMNS = 6;
+    constexpr int DIE_SHEET_ROWS = 4;
+    constexpr float DIE_FRAME_DURATION = 0.05f;
 }
 
 Muffintop::Muffintop(PlayerSide side)
@@ -72,10 +83,12 @@ Muffintop::Muffintop(PlayerSide side)
 {
     // Test case for the sprite-sheet-animation mechanism (see
     // Monster::setWalkAnimation/setAttackSpriteAnimation/
-    // setIdleSpriteAnimation) - Muffintop only, for now.
+    // setIdleSpriteAnimation/setDieSpriteAnimation) - Muffintop only, for
+    // now.
     setWalkAnimation("muffintop_walk", WALK_SHEET_COLUMNS, WALK_SHEET_ROWS, WALK_FRAME_DURATION);
     setAttackSpriteAnimation("muffintop_attack", ATTACK_SHEET_COLUMNS, ATTACK_SHEET_ROWS, ATTACK_FRAME_DURATION);
     setIdleSpriteAnimation("muffintop_idle", IDLE_SHEET_COLUMNS, IDLE_SHEET_ROWS, IDLE_FRAME_DURATION);
+    setDieSpriteAnimation("muffintop_die", DIE_SHEET_COLUMNS, DIE_SHEET_ROWS, DIE_FRAME_DURATION);
 }
 
 

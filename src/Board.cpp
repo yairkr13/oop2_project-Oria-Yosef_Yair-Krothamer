@@ -752,7 +752,7 @@ void Board::updateTileEffects()
             // Board never learns what any status effect means.
             entity->onTurnBoundary();
 
-            if (!entity->isAlive()) // משתמש במתודה שלכם שבודקת אם המפלצת חיה
+            if (entity->isReadyForRemoval()) // כמו ב-receiveAttackFrom - מחכה לאנימציית מוות אם יש
             {
                 tile->clearEntity();
             }
@@ -1031,6 +1031,16 @@ void Board::update(float dt)
             // the per-frame tick; it owns none of that state itself.
             entity->update(dt);
 
+            // A dying entity (see BoardEntity::isDying/isReadyForRemoval)
+            // stayed linked to this tile specifically so the tick above
+            // could keep advancing its one-shot death animation - now that
+            // it's ticked, check whether that animation just finished and,
+            // if so, clear it. A no-op for every other entity: one that was
+            // never dying is never ready for removal here (it would already
+            // have been cleared immediately by Tile::receiveAttackFrom/
+            // updateTileEffects instead of ever reaching this loop again).
+            if (entity->isReadyForRemoval())
+                tile->clearEntity();
         }
     }
 }

@@ -262,24 +262,32 @@ Monster* Player::playCard(Card* card)
 void Player::removeDeadMonsters()
 {
     // שלב 1: ניתוק קלפים ממונעי dangling pointers
+    // isReadyForRemoval() here (not isAlive()), same reasoning as steps 2-3
+    // below: a monster still playing its Die sheet (see Monster::isDying/
+    // isReadyForRemoval) is already dead but must stay fully intact -
+    // Card, Tile and this very unique_ptr all still need it to exist.
     for (auto& card : m_hand)
     {
-        if (card && card->getLinkedMonster() && !card->getLinkedMonster()->isAlive())
+        if (card && card->getLinkedMonster() && card->getLinkedMonster()->isReadyForRemoval())
             card->clearLink();
     }
 
     // שלב 2: ניתוק מפלצות מתות מהאריחים
     for (auto& monster : m_monsters)
     {
-        if (monster && !monster->isAlive() && monster->getCurrentTile())
+        if (monster && monster->isReadyForRemoval() && monster->getCurrentTile())
             monster->getCurrentTile()->clearEntity();
     }
 
     // שלב 3: מחיקת מצביעי null ומפלצות מתות
+    // isReadyForRemoval(), not isAlive() - destroying the unique_ptr while
+    // isAlive() is false but isReadyForRemoval() isn't yet would free the
+    // Monster out from under its own still-playing death animation, exactly
+    // the dangling-callback hazard this distinction exists to avoid.
     m_monsters.erase(
         std::remove_if(m_monsters.begin(), m_monsters.end(),
             [](const std::unique_ptr<Monster>& m) {
-                return !m || !m->isAlive();
+                return !m || m->isReadyForRemoval();
             }),
         m_monsters.end());
 }

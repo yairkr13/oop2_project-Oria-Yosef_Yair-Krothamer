@@ -9,7 +9,7 @@ class Tile //: public StaticObject
 {
 public:
 	Tile(int q, int row, const sf::Vector2f& position, const sf::Color& color= sf::Color(80, 80, 80, 180));
-    virtual ~Tile() = default; // 1. зебд тбеш фемйоешфйжн ейшещд биезд!
+    virtual ~Tile() = default; // 1. пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ!
 	void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const;
 	int getQ() const { return m_q; }
 	int getRow() const { return m_row; }
@@ -20,15 +20,15 @@ public:
 	//void setMonster(std::shared_ptr<Monster> monster) { m_monsterRef = monster; };
 	//std::shared_ptr<Monster> getMonster() const { return m_monsterRef.lock(); }
 	//bool hasMonster() const { return !m_monsterRef.expired(); }
-    // --- рйдем дйщеъ ---
+    // --- пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ ---
     void clearEntity();
 
     BoardEntity* getEntity() const { return m_entity; }
 
-    // ферчцйд сфцйфйъ - ойетгъ мотшлъ дчшб (щцшйлд ълмс офмцъ)
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)
     //Monster* getMonster() const {
     //    if (m_entity && m_entity->getType() == EntityType::Monster) {
-    //        return static_cast<Monster*>(m_entity); // Downcasting биез
+    //        return static_cast<Monster*>(m_entity); // Downcasting пїЅпїЅпїЅпїЅ
     //    }
     //    return nullptr;
     //}
@@ -41,12 +41,21 @@ public:
     }
 
 	bool isEntityAlive() const { return m_entity != nullptr && m_entity->isAlive(); }
-    bool isOccupiedByEnemy(PlayerSide mySide) const { return m_entity != nullptr && m_entity->isEnemyOf(mySide); }
-    bool isOccupiedByAlly(PlayerSide mySide) const { return m_entity != nullptr && m_entity->isAllyOf(mySide); }
+
+    // Both require isEntityAlive(), not just m_entity != nullptr - a dying
+    // entity (dead, but still linked to its Tile so a death animation can
+    // finish - see BoardEntity::isDying/isReadyForRemoval) must not be
+    // selectable as an attack or special-ability target just because it
+    // hasn't visually disappeared yet. Every caller (attack-target
+    // highlighting/resolution, AI targeting, ally-target highlighting)
+    // already goes through these two, so this one change closes that gap
+    // everywhere at once.
+    bool isOccupiedByEnemy(PlayerSide mySide) const { return isEntityAlive() && m_entity->isEnemyOf(mySide); }
+    bool isOccupiedByAlly(PlayerSide mySide) const { return isEntityAlive() && m_entity->isAllyOf(mySide); }
 
     void receiveAttackFrom(BoardEntity* attacker);
 
-    // тег тийфд резд - "йщ лап йщеъ оъд щцшйк мфреъ?" (ощощ б-updateTileEffects)
+    // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ - "пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ?" (пїЅпїЅпїЅпїЅ пїЅ-updateTileEffects)
     //bool hasDeadEntity() const { return m_entity != nullptr && !m_entity->isAlive(); }
 
     /*virtual bool isPassableFor(Monster* monster) const {

@@ -43,12 +43,40 @@ namespace
     constexpr int WALK_SHEET_COLUMNS = 6;
     constexpr int WALK_SHEET_ROWS = 4;
     constexpr float WALK_FRAME_DURATION = 0.06f;
+
+    // Idle sprite sheet: 6x4 (24 frames), verified against the actual file -
+    // same grid as every other sheet in the project, inspected directly
+    // rather than assumed. Same calm pace as Muffintop's Idle.
+    constexpr int IDLE_SHEET_COLUMNS = 6;
+    constexpr int IDLE_SHEET_ROWS = 4;
+    constexpr float IDLE_FRAME_DURATION = 0.08f;
+
+    // Attack sprite sheet: same 6x4 grid, timed against Barzilla's normal
+    // (non-empowered) attack - a single FireBlast traveling for
+    // FIRE_BLAST_DURATION = 0.5s, the same shape as Muffintop's single
+    // MuffinShot. 24 frames at 0.02s finishes in ~0.48s, close to that 0.5s
+    // window. (The empowered burst's own window is a bit shorter - not
+    // specially timed for, since isAttacking() and this sheet are the same
+    // regardless of which variant fired.)
+    constexpr int ATTACK_SHEET_COLUMNS = 6;
+    constexpr int ATTACK_SHEET_ROWS = 4;
+    constexpr float ATTACK_FRAME_DURATION = 0.02f;
+
+    // Die sprite sheet: same 6x4 grid, non-looping (setDieSpriteAnimation
+    // always configures looping=false - see Monster). Same pace as
+    // Muffintop's Die: ~1.2s, a clearly readable one-shot collapse.
+    constexpr int DIE_SHEET_COLUMNS = 6;
+    constexpr int DIE_SHEET_ROWS = 4;
+    constexpr float DIE_FRAME_DURATION = 0.05f;
 }
 
 Barzilla::Barzilla(PlayerSide side)
     : Monster(side, "Barzilla", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Red, "barzilla")
 {
     setWalkAnimation("barzilla_walk", WALK_SHEET_COLUMNS, WALK_SHEET_ROWS, WALK_FRAME_DURATION);
+    setIdleSpriteAnimation("barzilla_idle", IDLE_SHEET_COLUMNS, IDLE_SHEET_ROWS, IDLE_FRAME_DURATION);
+    setAttackSpriteAnimation("barzilla_attack", ATTACK_SHEET_COLUMNS, ATTACK_SHEET_ROWS, ATTACK_FRAME_DURATION);
+    setDieSpriteAnimation("barzilla_die", DIE_SHEET_COLUMNS, DIE_SHEET_ROWS, DIE_FRAME_DURATION);
 }
 
 // Empowered Attack: doubles the damage of the next successful attack only.

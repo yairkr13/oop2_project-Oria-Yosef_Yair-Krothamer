@@ -83,7 +83,15 @@ void Tile::receiveAttackFrom(BoardEntity* attacker)
     BoardEntity* defender = m_entity;
     attacker->attack(defender);
 
-    if (!defender->isAlive())
+    // isReadyForRemoval(), not isAlive() directly - a defender with a
+    // configured death animation (see Monster::isReadyForRemoval) is
+    // already dead (isAlive() is already false, so it's already
+    // unselectable/untargetable/unable to act - see Tile::isOccupiedByEnemy/
+    // Monster::canBeSelectedBy) but stays linked to this Tile so that
+    // animation can keep playing; Board::update() clears it once it
+    // finishes. A defender with no death animation configured is ready
+    // immediately, same as before this distinction existed.
+    if (defender->isReadyForRemoval())
     {
         //attacker->onKill(defender);
         //defender->onDeath();

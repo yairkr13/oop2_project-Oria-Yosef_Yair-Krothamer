@@ -16,10 +16,13 @@ public:
 
     bool specialAbilityNeedsTarget() const override { return true; }
 
-    // Protection targets a friendly Monster - flips the base (enemy) default.
+    // Protection targets a friendly Monster - flips the base (enemy)
+    // default, but keeps its isAlive() requirement (see Monster's own
+    // isValidSpecialTarget): a dying ally is still Tile-linked and must not
+    // be targetable while its death animation plays.
     bool isValidSpecialTarget(BoardEntity& candidate) const override
     {
-        return candidate.asMonster() != nullptr && candidate.isAllyOf(getSide());
+        return candidate.isAlive() && candidate.asMonster() != nullptr && candidate.isAllyOf(getSide());
     }
 
     sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(255, 165, 0, 180); } // orange

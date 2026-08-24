@@ -37,13 +37,13 @@ Monster::Monster(PlayerSide side, const std::string& name, int health, int attac
     }
 }
 
-MonsterSpriteSheet Monster::configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration) const
+MonsterSpriteSheet Monster::configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration, bool looping) const
 {
     const sf::Texture& texture = AssetsManager::getInstance().getTexture(textureKey);
 
     MonsterSpriteSheet sheet;
     sheet.texture = &texture;
-    sheet.animation = std::make_unique<SpriteSheetAnimation>(columns, rows, frameDuration);
+    sheet.animation = std::make_unique<SpriteSheetAnimation>(columns, rows, frameDuration, looping);
 
     // One frame's real pixel size - not the whole sheet's - is what
     // origin/scale need to be based on, so a sheet-driven frame centers and
@@ -74,6 +74,11 @@ void Monster::setIdleSpriteAnimation(const std::string& idleTextureKey, int colu
     m_idleSheet = configureSpriteSheet(idleTextureKey, columns, rows, frameDuration);
 }
 
+void Monster::setDieSpriteAnimation(const std::string& dieTextureKey, int columns, int rows, float frameDuration)
+{
+    m_dieSheet = configureSpriteSheet(dieTextureKey, columns, rows, frameDuration, /*looping=*/false);
+}
+
 void Monster::updateSpriteSheet(MonsterSpriteSheet& sheet, bool active, float dt)
 {
     if (!sheet.isConfigured()) return;
@@ -84,6 +89,17 @@ void Monster::updateSpriteSheet(MonsterSpriteSheet& sheet, bool active, float dt
         sheet.animation->reset();
 }
 
+bool Monster::isDying() const
+{
+    return !isAlive() && m_dieSheet.isConfigured() && !m_dieSheet.animation->isFinished();
+}
+
+bool Monster::isReadyForRemoval() const
+{
+    if (isAlive()) return false;
+    return !m_dieSheet.isConfigured() || m_dieSheet.animation->isFinished();
+}
+
 void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
 {
     if (m_q == -1 && m_row == -1) return;
@@ -91,18 +107,23 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
     if (m_hasTexture)
     {
         // Whichever configured sprite-sheet's own condition currently holds
-        // wins, in priority order attack > walk > idle - attacking beats
-        // walking though in practice a monster is never mid-attack and
-        // mid-move at once (Board::performAction only ever triggers one
-        // action per click); idle is the lowest priority, applying only
-        // once neither of the other two does. Only monsters that opted
-        // into at least one sheet (see setWalkAnimation/
-        // setAttackSpriteAnimation/setIdleSpriteAnimation) ever touch
-        // texture/origin here at all - a monster with none configured
-        // never enters this block, so its draw() is exactly what it always
-        // was.
+        // wins, in priority order die > attack > walk > idle. Die is
+        // checked first and, once it applies, applies forever - isAlive()
+        // never becomes true again, so a dying monster never falls back to
+        // attack/walk/idle no matter what m_isMoving/isAttacking() are
+        // doing underneath. Attacking beats walking though in practice a
+        // monster is never mid-attack and mid-move at once (Board::
+        // performAction only ever triggers one action per click); idle is
+        // the lowest priority, applying only once none of the other three
+        // do. Only monsters that opted into at least one sheet (see
+        // setWalkAnimation/setAttackSpriteAnimation/setIdleSpriteAnimation/
+        // setDieSpriteAnimation) ever touch texture/origin here at all - a
+        // monster with none configured never enters this block, so its
+        // draw() is exactly what it always was.
         const MonsterSpriteSheet* activeSheet = nullptr;
-        if (m_attackSheet.isConfigured() && isAttacking())
+        if (m_dieSheet.isConfigured() && !isAlive())
+            activeSheet = &m_dieSheet;
+        else if (m_attackSheet.isConfigured() && isAttacking())
             activeSheet = &m_attackSheet;
         else if (m_walkSheet.isConfigured() && m_isMoving)
             activeSheet = &m_walkSheet;
@@ -119,7 +140,7 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
             m_sprite.setTextureRect(activeSheet->animation->getCurrentFrameRect(activeSheet->texture->getSize()));
             m_sprite.setOrigin(activeSheet->frameOrigin); // center of ONE frame, not the whole sheet
         }
-        else if (m_walkSheet.isConfigured() || m_attackSheet.isConfigured() || m_idleSheet.isConfigured())
+        else if (m_walkSheet.isConfigured() || m_attackSheet.isConfigured() || m_idleSheet.isConfigured() || m_dieSheet.isConfigured())
         {
             // At least one sheet is configured but none applies right now
             // (e.g. a monster with only a walk sheet, currently standing
@@ -153,10 +174,15 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
     }
     if (m_side != currentTurnSide)
     {
-        drawHealthBar(window);
+        drawHealthBar(window); // already a no-op while dead - see BoardEntity::drawHealthBar
     }
-    else
+    else if (isAlive())
+    {
+        // Skipped while dying (see isDying()) - an actions-left count has
+        // no meaning floating over a monster that's already dead and
+        // playing its death animation.
         drawActionsLeft(window);
+    }
 
     // This monster draws its own in-flight attack animation, if any -
     // ownership mirrors movement (see m_pathQueue/m_isMoving): Board never
@@ -264,16 +290,22 @@ void Monster::update(float dt)
     }
 
     // State-driven sprite-sheet animations (see setWalkAnimation/
-    // setAttackSpriteAnimation/setIdleSpriteAnimation): each only advances
-    // while its own condition holds, and resets to frame 0 the rest of the
-    // time, so whichever one becomes active next always starts fresh -
-    // draw() falls back to the static sprite once none of the three
-    // conditions hold. No-op for any sheet a monster hasn't configured.
-    // Idle's condition is just "neither of the other two" - no separate
-    // resume logic needed for it to pick back up once Walk/Attack ends.
+    // setAttackSpriteAnimation/setIdleSpriteAnimation/setDieSpriteAnimation):
+    // each only advances while its own condition holds, and resets to frame
+    // 0 the rest of the time, so whichever one becomes active next always
+    // starts fresh - draw() falls back to the static sprite once none of
+    // the four conditions hold. No-op for any sheet a monster hasn't
+    // configured. Idle's condition is just "neither walk nor attack" - no
+    // separate resume logic needed for it to pick back up once Walk/Attack
+    // ends. Die's condition (!isAlive()) is permanent once true - it keeps
+    // ticking harmlessly after its own SpriteSheetAnimation::isFinished()
+    // (it just holds on the last frame; see updateSpriteSheet), but by then
+    // draw() has already been showing only the Die sheet for a while, so
+    // this never becomes visible.
     updateSpriteSheet(m_walkSheet, m_isMoving, dt);
     updateSpriteSheet(m_attackSheet, isAttacking(), dt);
     updateSpriteSheet(m_idleSheet, !m_isMoving && !isAttacking(), dt);
+    updateSpriteSheet(m_dieSheet, !isAlive(), dt);
 
     // אם לא זזים כרגע, אין מה לעדכן
     if (!m_isMoving || m_pathQueue.empty())
