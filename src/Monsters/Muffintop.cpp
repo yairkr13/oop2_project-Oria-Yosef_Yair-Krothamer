@@ -18,10 +18,20 @@ namespace
     // Heal effect: rises the full height of a tile (bottom to top), sized
     // similarly to the other effect animations, over a gentler duration
     // than the sharper attack effects - a heal is meant to read as a slow
-    // glow, not an impact.
-    constexpr float HEAL_EFFECT_DURATION = 0.6f;
+    // glow, not an impact. Slowed down further from the original single-sprite
+    // timing so the player has time to actually notice it.
+    constexpr float HEAL_EFFECT_DURATION = 0.9f;
     constexpr float HEAL_EFFECT_SIZE = Config::MONSTER_BOARD_SIZE * 0.7f;
     constexpr float HEAL_EFFECT_RISE_DISTANCE = 2.f * Config::TILE_RADIUS;
+
+    // Three copies (left/center/right) instead of one, so the heal reads as
+    // a single wide bloom around the healed monster rather than one narrow
+    // beam. Spacing is kept well under HEAL_EFFECT_SIZE so the three overlap
+    // visually and stay one effect, not three separate ones; the small
+    // stagger gives them a gentle ripple instead of rising in lockstep.
+    constexpr int HEAL_EFFECT_INSTANCE_COUNT = 3;
+    constexpr float HEAL_EFFECT_HORIZONTAL_SPACING = Config::MONSTER_BOARD_SIZE * 0.4f;
+    constexpr float HEAL_EFFECT_STAGGER_DELAY = 0.06f;
 }
 
 Muffintop::Muffintop(PlayerSide side)
@@ -56,7 +66,8 @@ void Muffintop::onSpecialAbility(Board& board, BoardEntity* target)
     sf::Vector2f bottomOfTile = targetMonster->getScreenPosition() + sf::Vector2f(0.f, Config::TILE_RADIUS);
 
     auto healEffect = std::make_unique<RisingEffectAnimation>(
-        healEffectTexture, bottomOfTile, HEAL_EFFECT_RISE_DISTANCE, HEAL_EFFECT_DURATION, HEAL_EFFECT_SIZE);
+        healEffectTexture, bottomOfTile, HEAL_EFFECT_RISE_DISTANCE, HEAL_EFFECT_DURATION, HEAL_EFFECT_SIZE,
+        HEAL_EFFECT_INSTANCE_COUNT, HEAL_EFFECT_HORIZONTAL_SPACING, HEAL_EFFECT_STAGGER_DELAY);
 
     // heal() (BoardEntity) still does the actual +HP and max-HP clamp -
     // nothing here duplicates that math, it only decides *when* to call it.

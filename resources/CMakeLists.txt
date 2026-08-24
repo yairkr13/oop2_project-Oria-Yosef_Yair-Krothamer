@@ -64,6 +64,9 @@ configure_file("Attacks/WindBlast.png" ${CMAKE_BINARY_DIR}/resources/Attacks/Win
 configure_file("Attacks/FlameWeb.png" ${CMAKE_BINARY_DIR}/resources/Attacks/FlameWeb.png COPYONLY)
 
 configure_file("SpecialAttack/HealEffect.png" ${CMAKE_BINARY_DIR}/resources/SpecialAttack/HealEffect.png COPYONLY)
+configure_file("SpecialAttack/FreezeEffect.png" ${CMAKE_BINARY_DIR}/resources/SpecialAttack/FreezeEffect.png COPYONLY)
+configure_file("SpecialAttack/WindEffect.png" ${CMAKE_BINARY_DIR}/resources/SpecialAttack/WindEffect.png COPYONLY)
+configure_file("SpecialAttack/ShieldEffect.png" ${CMAKE_BINARY_DIR}/resources/SpecialAttack/ShieldEffect.png COPYONLY)
 
 configure_file("StaticObject/CrystalSpike.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/CrystalSpike.png COPYONLY)
 configure_file("StaticObject/DeadTree.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/DeadTree.png COPYONLY)
