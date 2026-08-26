@@ -14,6 +14,7 @@ class Board; // Forward declaration - only ever used by reference in Special Abi
 // reuses exactly the same centering/scaling math a first state (walking)
 // already needed, instead of a second hand-copied implementation - see
 // Monster::configureSpriteSheet(), the one place that math lives.
+//להפוך למחלקה
 struct MonsterSpriteSheet
 {
     std::unique_ptr<SpriteSheetAnimation> animation;
