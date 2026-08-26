@@ -88,6 +88,13 @@ public:
     int getSpecialCooldown() const { return m_specialCooldown; }
     bool isSpecialReady() const { return m_specialCooldown <= 0; }
 
+    // Single source of truth for "can this monster's Special actually be
+    // used right now" - both useSpecialAbility()'s own internal guard and
+    // any caller deciding whether to even offer the option (see
+    // GameplayState::handleSpecialAbilityClick) ask this, instead of each
+    // independently reconstructing isSpecialReady() && getActionsLeft() > 0.
+    bool canUseSpecialAbilityNow() const { return isSpecialReady() && getActionsLeft() > 0; }
+
     // True while frozen (see Mozzy). Kept as its own explicit, named state -
     // deliberately NOT inferred from m_actionsLeft == 0, since "frozen" and
     // "already spent my actions this turn" are different domain concepts

@@ -40,8 +40,6 @@ public:
     bool isAllyOf(PlayerSide otherSide) const { return getSide() == otherSide; }
     virtual void attack(BoardEntity* target) {}
 
-    virtual void setSelected(bool selected) { m_isSelected = selected; }
-    virtual bool isSelected() const { return m_isSelected; }
     virtual int getRange() const { return 0; }
 
     // Encapsulated "cannot currently receive damage" state (see Henrietta's
@@ -169,7 +167,6 @@ protected:
     int m_health;
     int m_maxHealth;
     Tile* m_currentTile;
-    bool m_isSelected = false;
     bool m_protected = false;
     int m_protectionTurnsRemaining = 0;
 };

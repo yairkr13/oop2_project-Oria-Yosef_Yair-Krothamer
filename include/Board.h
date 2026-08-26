@@ -16,7 +16,6 @@ class Board
 public:
 	Board();
 	void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const;
-	void handleClick(const sf::Vector2f& pos, PlayerSide currentSide);
 	//bool isTilePassable(Tile* start, Tile* end) const;
 
 	void update(float dt);
@@ -44,18 +43,27 @@ public:
 	//bool AI_SpawnMonster(Monster* monster, PlayerSide side);
 	void performAction(BoardEntity* entity, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
-	// Selects `entity` (on behalf of `side`) and highlights its move/attack
-	// options - exactly what a direct board click on it already does (see
-	// handleClick's own "select a new entity" branch, which now calls this
-	// too, so the logic exists in exactly one place). Extracted so any other
-	// caller needing "select this and show its current options" reuses the
-	// identical flow instead of re-deriving it - e.g. GameplayState
-	// auto-selecting a monster right after its own no-target Special changes
-	// what it can do (Barzilla's Empowered Attack extending his attack
-	// range). Deselects whatever else might already be selected first, so
-	// calling this from outside a board click can never leave two entities
-	// marked selected at once.
-	void selectEntity(BoardEntity* entity, PlayerSide side);
+	// Validates that `entity` may currently be selected by `side` and, if
+	// so, highlights its move/attack options - exactly what GameplayState
+	// needs both when interpreting a direct board click on an entity, and
+	// when auto-selecting a monster right after its own no-target Special
+	// changes what it can do (e.g. Barzilla's Empowered Attack extending
+	// his attack range). Returns whether selection actually happened, so
+	// the caller (which owns the "what is currently selected" state - see
+	// GameplayState::m_selectedEntity) knows whether to remember `entity`.
+	// Board itself no longer tracks "who is selected" - that's interaction
+	// state, not board state.
+	bool selectEntity(BoardEntity* entity, PlayerSide side);
+
+	// Highlights every Tile in `tiles` with `color` - the generic operation
+	// behind highlightNeighbors/highlightSpawnTiles below, exposed so a
+	// caller with its own caller-specific Tile selection (e.g. GameplayState
+	// highlighting valid Special-ability targets) can ask Board to paint
+	// them instead of calling Tile::setHighlighted directly. Knows nothing
+	// about *why* these tiles are being highlighted - same "Board owns Tile
+	// painting, never a bystander" principle highlightNeighbors already
+	// follows.
+	void highlightTiles(const std::vector<Tile*>& tiles, const sf::Color& color);
 
 	// שלב א' של הפירוק: כל ה-tiles שהמפלצת יכולה להגיע/לתקוף אליהם, בלי לצייר
 	// שום דבר. לוגיקה טהורה - אין כאן שום קריאה ל-setHighlighted. גם highlightNeighbors
@@ -126,6 +134,48 @@ private:
 		std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
 		std::vector<Tile*>* outExtendedAttackOnly = nullptr) const;
 
+	// The one place that answers "can this entity enter/traverse this
+	// neighboring Tile" for the BFS above - the natural extension point for
+	// any future movement/collision rule. Returns whether `monster` can
+	// continue walking THROUGH `tile` (i.e. computeReachability's frontier
+	// management should mark it visited and, if unoccupied, keep exploring
+	// past it); false means it blocks further movement. Either way, also
+	// records `tile` into outReachable/outParent/outExtendedAttackOnly via
+	// recordReachability() below when it falls within range - movement
+	// legality and attack-range recording are evaluated together here
+	// because both depend on the same passability/occupancy facts about
+	// this one neighbor.
+	bool visitNeighbor(Monster* monster, Tile* tile,
+		const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
+		int neighborDist, int range, int attackRange,
+		std::vector<Tile*>& outReachable,
+		std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
+		std::vector<Tile*>* outExtendedAttackOnly) const;
+
+	// Records `tile` into outReachable (+ outParent, so getPathTo can later
+	// reconstruct a route to it) when within `range`, or into
+	// outExtendedAttackOnly when beyond `range` but still within
+	// `attackRange` - shared by both of visitNeighbor's cases (a passable
+	// tile always gets recorded this way; a blocked-but-enemy-occupied tile
+	// gets recorded the same way, only when occupied by an enemy).
+	static void recordReachability(Tile* tile,
+		const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
+		int neighborDist, int range, int attackRange,
+		std::vector<Tile*>& outReachable,
+		std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
+		std::vector<Tile*>* outExtendedAttackOnly);
+
+	// performAction()'s two independent branches, split out so each reads
+	// as one responsibility. performAttack coordinates the attack (wires an
+	// animation if the attacker supplies one, otherwise resolves through
+	// Tile::receiveAttackFrom immediately) - it never computes a damage
+	// number or inspects concrete Monster types; that stays entirely below
+	// Tile::receiveAttackFrom, inside Monster::attack(). performMove keeps
+	// the existing movement coordination (reachability/path/target-tile
+	// handling) unchanged.
+	void performAttack(BoardEntity* entity, Tile* targetTile);
+	void performMove(Monster* monster, Tile* targetTile);
+
 	//void setHighlight(const sf::Vector2f& pos, int range);
 	//sf::Vector2f tileToScreen(int q, int row) const;
 	//void highlightNeighbors(int q, int row, int range);
@@ -136,6 +186,30 @@ private:
 
 	//bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
 	// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
+
+	// The hex grid's raw base position for (q,row) - NOT the tile's visual
+	// center. This is what Tile's own constructor needs: Tile's shape never
+	// has its origin set (see Tile::Tile/m_shape), so SFML anchors it at
+	// this raw point, Config::TILE_RADIUS short of the true center in both
+	// axes. tileToScreen() below builds the center from this same base by
+	// adding that correction - the single place both quantities are
+	// computed from, so Tile construction and tileToScreen's center can
+	// never drift apart the way they did before this existed.
+	sf::Vector2f tileAnchor(int q, int row) const;
+
+	// Shared creation/replacement mechanics behind generateSpecialTiles()
+	// below: builds TileType at `coords`'s raw anchor position (see
+	// tileAnchor above - NOT tileToScreen's center, which is the wrong
+	// quantity for constructing a Tile) and swaps it into m_grid. TileType
+	// is always known at the call site (never chosen at runtime), and
+	// constructor argument lists genuinely differ between Tile subtypes
+	// (PanicPoint needs both Hearts; Hole/LavaTile need neither) - Args...
+	// forwards whatever extra constructor arguments TileType needs beyond
+	// (q, row, position). Declared here (a private member template needs to
+	// be), but defined entirely in Board.cpp - its only caller - since
+	// nothing outside this file ever needs to see the template body.
+	template <typename TileType, typename... Args>
+	void createSpecialTile(const std::pair<int, int>& coords, Args&&... extraArgs);
 
 	void generateSpecialTiles(Heart* p1Heart, Heart* p2Heart);
 	void createBoard();

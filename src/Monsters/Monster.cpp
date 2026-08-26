@@ -336,7 +336,7 @@ bool Monster::isOnBoard() const {
 
 bool Monster::useSpecialAbility(Board& board, BoardEntity* target)
 {
-    if (!isSpecialReady() || m_actionsLeft <= 0)
+    if (!canUseSpecialAbilityNow())
         return false;
 
     onSpecialAbility(board, target); // הפעלת הבונוס הייחודי של המפלצת

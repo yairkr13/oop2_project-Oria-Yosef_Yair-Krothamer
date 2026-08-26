@@ -5,6 +5,7 @@
 #include "Attacks/AttackAnimation.h"
 #include <random>
 #include <iostream>
+#include <utility>
 #include "Constants.h"
 //HEY2
 //hiiiiiiiii
@@ -15,7 +16,6 @@ Board::Board()
 
 void Board::createBoard()
 {
-    float width = std::sqrt(3.f) * Config::TILE_RADIUS;
     int max_rows = 7;
     int max_cols = 14;
 
@@ -29,11 +29,7 @@ void Board::createBoard()
 
         for (int q = start_col; q < max_cols; q += 2)
         {
-            float x = START_X + (width / 2.f) * q;
-            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
-
-            sf::Vector2f physicalPosition(x, y);
-            m_grid[{q, row}] = std::make_unique<Tile>(q, row, physicalPosition);
+            m_grid[{q, row}] = std::make_unique<Tile>(q, row, tileAnchor(q, row));
             /*
                         if(q!=1 && q!=12)
                             allCoords.push_back({ q, row }); */// שומרים את הקורדינטה שנוצרה
@@ -123,24 +119,27 @@ void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart) {
     // 1. מיקום הלב של שחקן 1 (הכי שמאלי)
     Tile* p1Tile = getLeftmostTileInRow(middleRow);
     if (p1Tile != nullptr && p1Heart != nullptr) {
-        sf::Vector2f screenPos = tileToScreen(p1Tile->getQ(), p1Tile->getRow());
-        p1Heart->spawnOnBoard(p1Tile->getQ(), p1Tile->getRow(), screenPos); // הפונקציה הפשוטה מההודעה הקודמת
+        p1Heart->spawnOnBoard(p1Tile->getQ(), p1Tile->getRow(), p1Tile->getScreenPosition());
         p1Tile->setEntity(p1Heart);
     }
 
     // 2. מיקום הלב של שחקן 2 (הכי ימני)
     Tile* p2Tile = getRightmostTileInRow(middleRow);
     if (p2Tile != nullptr && p2Heart != nullptr) {
-        sf::Vector2f screenPos = tileToScreen(p2Tile->getQ(), p2Tile->getRow());
-        p2Heart->spawnOnBoard(p2Tile->getQ(), p2Tile->getRow(), screenPos);
+        p2Heart->spawnOnBoard(p2Tile->getQ(), p2Tile->getRow(), p2Tile->getScreenPosition());
         p2Tile->setEntity(p2Heart);
     }
     generateSpecialTiles(p1Heart, p2Heart);
 }
+template <typename TileType, typename... Args>
+void Board::createSpecialTile(const std::pair<int, int>& coords, Args&&... extraArgs)
+{
+    auto [q, row] = coords;
+    m_grid[{q, row}] = std::make_unique<TileType>(q, row, tileAnchor(q, row), std::forward<Args>(extraArgs)...);
+}
+
 void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
 {
-    float width = std::sqrt(3.f) * Config::TILE_RADIUS;
-
     std::vector<std::pair<int, int>> allCoords;
 
     // אוספים משבצות רק מהאיזור המותר (בלי הטורים הקיצוניים של הזימונים והלבבות)
@@ -155,33 +154,18 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
 
     if (allCoords.size() >= 5)
     {
-        //std::random_device rd;
-        //std::mt19937 g(rd());
         std::shuffle(allCoords.begin(), allCoords.end(), rng());
 
         // 2 משבצות לבה
-        for (int i = 0; i < 2; ++i) {
-            auto [q, row] = allCoords[i];
-            float x = START_X + (width / 2.f) * q;
-            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;//fix the rest later!!!!!
-            m_grid[{q, row}] = std::make_unique<LavaTile>(q, row, sf::Vector2f(x, y));
-        }
+        createSpecialTile<LavaTile>(allCoords[0]);
+        createSpecialTile<LavaTile>(allCoords[1]);
 
         // 2 משבצות חור
-        for (int i = 2; i < 4; ++i) {
-            auto [q, row] = allCoords[i];
-            float x = START_X + (width / 2.f) * q;
-            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
-            m_grid[{q, row}] = std::make_unique<Hole>(q, row, sf::Vector2f(x, y));
-        }
+        createSpecialTile<Hole>(allCoords[2]);
+        createSpecialTile<Hole>(allCoords[3]);
 
-        // 1 משבצת פאניקה שמקבלת את הלבבות שהוזרקו לפונקציה!
-        for (int i = 4; i < 5; ++i) {
-            auto [q, row] = allCoords[i];
-            float x = START_X + (width / 2.f) * q;
-            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
-            m_grid[{q, row}] = std::make_unique<PanicPoint>(q, row, sf::Vector2f(x, y), p1Heart, p2Heart);
-        }
+        // 1 משבצת פאניקה שמקבלת את הלבבות שהוזרקו לפונקציה
+        createSpecialTile<PanicPoint>(allCoords[4], p1Heart, p2Heart);
     }
 }
 
@@ -210,200 +194,23 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
 //    }
 //}
 
-//try to fix this function!!!!
-void Board::handleClick(const sf::Vector2f& pos, PlayerSide currentSide)
-{
-    // 1. מציאת המשבצת עליה לחצו
-    //make this not for loop- eith the find function!!!!!!!!!!!!!!!!!!
-    /*Tile* clickedTile = nullptr;
-    for (auto& [coords, tile] : m_grid)
-    {
-        sf::Vector2f tileCenter = tileToScreen(coords.first, coords.second);
-        float dx = pos.x - tileCenter.x;
-        float dy = pos.y - tileCenter.y;
-
-        if ((dx * dx + dy * dy) <= (Config::TILE_RADIUS * Config::TILE_RADIUS))
-        {
-            clickedTile = tile.get();
-            break;
-        }
-    }*/
-    // 1. מציאת המשבצת עליה לחצו - במקום לסרוק את כל ה-grid ולחשב מרחק לכל tile,
-    // ממירים ישירות פיקסלים -> (q,row) ומחפשים ב-find() (O(log n) במקום O(n)).
-    Tile* clickedTile = getTileAtScreenPosition(pos);
-
-
-    if (!clickedTile) return;
-
-    // 2. מציאת המפלצת שנבחרה קודם לכן
-    //Monster* selectedMonster = nullptr;
-	BoardEntity* selectedEntity = nullptr;
-    for (auto& [coords, tile] : m_grid)
-    {
-		//use the m_isSelected flag in the BoardEntity class to check if the entity is selected!!!!!!
-        if (auto entity = tile->getEntity()) // שלב א: לוקחים את הישות הכללית
-        {
-            if (entity->isSelected())//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            {
-                selectedEntity = entity;
-                //selectedMonster = static_cast<Monster*>(entity); // אבל שימו לב - selectedMonster חייב עדיין להיות Monster*
-                break;
-            }
-            // שלב ב: הלוח שואל "האם אתה מפלצת?" 
-            //if (entity->getType() == EntityType::Monster)
-            //{
-            //    // עכשיו אנחנו בטוחים שזו מפלצת, אז אפשר להמיר בבטחה
-            //    Monster* monster = static_cast<Monster*>(entity);
-
-            //    if (monster->isSelected())
-            //    {
-            //        selectedMonster = monster;
-            //        break;
-            //    }
-            //}
-        }
-        //if (auto monster = tile->getMonster())
-        //{
-        //    /*Monster* monster;
-        //    if (entity->isSelectable())
-        //        monster = static_cast<Monster*>(entity);
-        //    else
-        //        return;*/
-        //    if (monster->isSelected())
-        //    {
-        //        selectedMonster = monster;
-        //        break;
-        //    }
-        //}
-    }
-
-    // 3. ביצוע הפעולה בעזרת פונקציית הליבה המשותפת!
-    if (selectedEntity)
-    {
-        // אם לחצנו על משבצת חוקית (מוארת) - פונקציית הליבה כבר תדע אם לזוז או לתקוף
-        if (clickedTile->isHighlighted())
-        {
-            performAction(selectedEntity, clickedTile);
-        }
-
-        // ניקוי וביטול בחירה
-        selectedEntity->setSelected(false);
-        clearHighlights();
-    }
-    else
-    {
-        // 4. בחירת מפלצת חדשה
-        //if (auto entity = clickedTile->getEntity())
-        //{
-        //    // בודקים אם הישות ניתנת לבחירה (מפלצת - כן, לב - לא)
-        //    if (entity->isSelectable())
-        //    {
-        //        Monster* monster = static_cast<Monster*>(entity);
-
-        //        if (/*monster->getSide() != currentSide*/monster->isEnemyOf(currentSide) || monster->getActionsLeft() <= 0) return;
-
-        //        monster->setSelected(true);
-        //        highlightNeighbors(monster);
-        //    }
-        //}
-        if (auto entity = clickedTile->getEntity())
-        {
-            // פולימורפיזם מלא: הלוח לא יודע שזו מפלצת, רק שזו ישות שניתן לבחור כרגע
-            selectEntity(entity, currentSide);
-        }
-        
-        //if (auto monster = clickedTile->getMonster())
-        //{
-        //    /*Monster* monster;
-        //    if (entity->isSelectable())
-        //        monster = static_cast<Monster*>(entity);
-        //    else
-        //        return;*/
-        //    if (monster->getSide() != currentSide || monster->getActionsLeft() <= 0) return;
-
-        //    monster->setSelected(true);
-        //    highlightNeighbors(monster);
-        //}
-    }
-}
-
-
-
 bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
 {
     if (!monster) return false;
-    for (auto& [coords, tile] : m_grid)
+
+    // Same screen-position -> Tile lookup handleClick's replacement
+    // (GameplayState::handleBoardClick) and every other click-driven flow
+    // already use, instead of a second hand-rolled hypot-distance scan.
+    Tile* tile = getTileAtScreenPosition(pos);
+    if (!tile || !tile->isHighlighted()) return false;
+
+    if (spawnMonsterOnTile(monster, tile))
     {
-        if (tile->isHighlighted() &&
-            std::hypot(pos.x - tileToScreen(coords.first, coords.second).x,
-                pos.y - tileToScreen(coords.first, coords.second).y) < Config::TILE_RADIUS)
-        {
-            // משתמשים בפונקציית הליבה לזימון!
-            if (spawnMonsterOnTile(monster, tile.get()))
-            {
-                clearHighlights();
-                return true;
-            }
-        }
+        clearHighlights();
+        return true;
     }
     return false;
 }
-//returns true if the monster was successfully spawned on the board, false otherwise
-//bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
-//{
-//    if (!monster) return false; // תמיד טוב לבדוק שהמצביע חוקי
-//
-//    for (auto& [coords, tile] : m_grid)
-//    {
-//        if (tile->isHighlighted() &&
-//            std::hypot(pos.x - tileToScreen(coords.first, coords.second).x,
-//                pos.y - tileToScreen(coords.first, coords.second).y) < Config::TILE_RADIUS)
-//        {
-//            if (tile->isPassable())
-//            {
-//                // המשבצת שומרת את המצביע הרגיל לישות
-//                tile->setMonster(monster);
-//
-//                // המפלצת מתעדכנת על המיקום החדש שלה
-//                //monster->setBoardPosition(coords.first, coords.second, tileToScreen(coords.first, coords.second));
-//                monster->spawnOnBoard(coords.first, coords.second, tileToScreen(coords.first, coords.second));
-//
-//                clearHighlights();
-//                return true;
-//            }
-//        }
-//    }
-//    return false;
-//}
-//bool Board::trySpawnMonster(const sf::Vector2f& pos, std::shared_ptr<Monster> monster)
-//{
-//    Tile* clickedTile = nullptr;
-//
-//    for (auto& [coords, tile] : m_grid)
-//    {
-//        sf::Vector2f tileCenter = tileToScreen(coords.first, coords.second);
-//        float dx = pos.x - tileCenter.x;
-//        float dy = pos.y - tileCenter.y;
-//        if ((dx * dx + dy * dy) <= (Config::TILE_RADIUS * Config::TILE_RADIUS))
-//        {
-//            clickedTile = tile.get();
-//            break;
-//        }
-//    }
-//
-//    // Only allow spawning on highlighted (valid) tiles that are empty
-//    if (clickedTile && clickedTile->isHighlighted() && !clickedTile->hasMonster())
-//    {
-//        clickedTile->setMonster(monster);
-//        monster->spawnOnBoard(clickedTile->getQ(), clickedTile->getRow(), 
-//			tileToScreen(clickedTile->getQ(), clickedTile->getRow()));
-//        //monster->setPosition(clickedTile->getQ(), clickedTile->getRow());
-//        return true;
-//    }
-//
-//    return false; 
-//}
-//
 void Board::highlightSpawnTiles(PlayerSide side)
 {
     clearHighlights();
@@ -422,46 +229,6 @@ void Board::highlightSpawnTiles(PlayerSide side)
     }
 }
 
-// BFS
-//void Board::highlightNeighbors(int q, int row, int range)
-//{
-//    std::pair<int, int> offsets[] = {
-//        {-2,  0}, {+2,  0},
-//        {-1, -1}, {+1, -1},
-//        {-1, +1}, {+1, +1}
-//    };
-//
-//    std::map<std::pair<int, int>, int> visited;
-//    std::vector<std::pair<int, int>> frontier;
-//    visited[{q, row}] = 0;
-//    frontier.push_back({ q, row });
-//
-//    while (!frontier.empty())
-//    {
-//        std::vector<std::pair<int, int>> nextFrontier;
-//        for (auto [cq, cr] : frontier)
-//        {
-//            int dist = visited[{cq, cr}];
-//            if (dist >= range)
-//                continue;
-//
-//            for (auto [dq, dr] : offsets)
-//            {
-//                std::pair<int, int> neighbor = { cq + dq, cr + dr };
-//                if (visited.count(neighbor))
-//                    continue;
-//                auto it = m_grid.find(neighbor);
-//                if (it == m_grid.end())
-//                    continue;
-//
-//                visited[neighbor] = dist + 1;
-//                it->second->setHighlighted(true);
-//                nextFrontier.push_back(neighbor);
-//            }
-//        }
-//        frontier = std::move(nextFrontier);
-//    }
-//}
 // שכבה 1: לוגיקה טהורה - "אילו tiles המפלצת יכולה להגיע/לתקוף אליהם", בלי לצייר כלום.
 // זהה בדיוק ל-BFS שהיה בתוך highlightNeighbors, רק שבמקום setHighlighted() כל tile
 // חוקי פשוט נכנס לרשימה שמוחזרת.
@@ -481,6 +248,52 @@ void Board::highlightSpawnTiles(PlayerSide side)
 // אותה הערה כמו קודם עדיין רלוונטית: tile של חור עם אויב מעופף עליו לא
 // מסומן ב-visited (רק tiles "רגילים" מסומנים), אז תיאורטית יכול להיכנס
 // לרשימה/למפת ה-parent פעמיים אם הוא נגיש משני כיוונים. זו לא באגה חדשה.
+void Board::recordReachability(Tile* tile,
+    const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
+    int neighborDist, int range, int attackRange,
+    std::vector<Tile*>& outReachable,
+    std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
+    std::vector<Tile*>* outExtendedAttackOnly)
+{
+    if (neighborDist <= range)
+    {
+        outReachable.push_back(tile);
+        outParent[neighbor] = parent; // an entry here means "movement can
+        // legally end here" (see getPathTo) - an extended-only tile below
+        // must never get one.
+    }
+    else if (outExtendedAttackOnly && neighborDist <= attackRange)
+    {
+        // Beyond normal range, still within the extended attack range -
+        // attackable, but deliberately never given an outParent entry:
+        // never path-able-to, never movement-legal.
+        outExtendedAttackOnly->push_back(tile);
+    }
+}
+
+bool Board::visitNeighbor(Monster* monster, Tile* tile,
+    const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
+    int neighborDist, int range, int attackRange,
+    std::vector<Tile*>& outReachable,
+    std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
+    std::vector<Tile*>* outExtendedAttackOnly) const
+{
+    // בדיקת עבירות פולימורפית: המשבצת מחליטה בעצמה אם הישות יכולה לעבור
+    if (!tile->isPassableFor(monster))
+    {
+        // אם המשבצת לא עבירה לתנועה, עדיין נבדוק אם יש עליה אויב שניתן לתקוף מרחוק/באוויר
+        if (tile->isOccupiedByEnemy(monster->getSide()))
+            recordReachability(tile, neighbor, parent, neighborDist, range, attackRange,
+                outReachable, outParent, outExtendedAttackOnly);
+
+        return false; // הישות לא יכולה להמשיך לנוע דרך המשבצת הזו
+    }
+
+    recordReachability(tile, neighbor, parent, neighborDist, range, attackRange,
+        outReachable, outParent, outExtendedAttackOnly);
+    return true;
+}
+
 void Board::computeReachability(Monster* monster,
     std::vector<Tile*>& outReachable,
     std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
@@ -529,86 +342,21 @@ void Board::computeReachability(Monster* monster,
                 Tile* tile = it->second.get();
                 int neighborDist = dist + 1;
 
-                // --- בדיקת חור ותעופה ---
-                // בדיקת עבירות פולימורפית: המשבצת מחליטה בעצמה אם הישות יכולה לעבור
-                if (!tile->isPassableFor(monster))
-                {
-                    // אם המשבצת לא עבירה לתנועה, עדיין נבדוק אם יש עליה אויב שניתן לתקוף מרחוק/באוויר
-                    if (tile->isOccupiedByEnemy(monster->getSide()))
-                    {
-                        if (neighborDist <= range)
-                        {
-                            outReachable.push_back(tile);
-                            outParent[neighbor] = { cq, cr };
-                        }
-                        else if (outExtendedAttackOnly && neighborDist <= attackRange)
-                        {
-                            // Beyond normal range, still within the extended attack
-                            // range - attackable, but deliberately given no
-                            // outParent entry: never path-able-to, never movement-legal.
-                            outExtendedAttackOnly->push_back(tile);
-                        }
-                    }
-                    continue; // הישות לא יכולה להמשיך לנוע דרך המשבצת הזו
-                }
+                // The one place "can this entity enter/traverse this
+                // neighboring tile" is decided - see visitNeighbor above.
+                bool canContinueThrough = visitNeighbor(monster, tile, neighbor, { cq, cr },
+                    neighborDist, range, attackRange,
+                    outReachable, outParent, outExtendedAttackOnly);
 
-                visited[neighbor] = neighborDist; // always - needed so the BFS keeps
-                // walking through this tile (e.g. to find an extended-range enemy
-                // farther out) even when it's beyond `range` itself.
-                if (neighborDist <= range)
-                    outParent[neighbor] = { cq, cr }; // only within normal range - see
-                    // getPathTo: an entry here means "movement can legally end here",
-                    // so an extended-only tile must never get one.
-                //if (tile->isHole() && !monster->canFly())
-                //{
-                //    if (tile->isOccupiedByEnemy(monster->getSide()))
-                //    {
-                //        outReachable.push_back(tile); // אויב מעופף מעל הבור - ניתן לתקוף
-                //        outParent[neighbor] = { cq, cr };
-                //    }
-                //    continue; // מפלצת קרקע לא יכולה לעבור/לעמוד על החור
-                //}
-                //visited[neighbor] = dist + 1;
-                //outParent[neighbor] = { cq, cr };
+                if (!canContinueThrough)
+                    continue;
 
+                visited[neighbor] = neighborDist; // needed so the BFS keeps
+                // walking through this tile (e.g. to find an extended-range
+                // enemy farther out) even when it's beyond `range` itself.
 
-               // // --- בן-ברית תופס משבצת: אי אפשר לעמוד עליו ולא לתקוף אותו,
-               //// ולכן הוא לעולם לא נכנס ל-outReachable. קרקעי לא יכול לעבור
-               //// דרכו (בדיוק כמו אויב) - רק מעופף יכול "לדלג" מעליו הלאה.
-               // if (tile->isOccupiedByAlly(monster->getSide()))
-               // {
-               //     if (monster->canFly())
-               //         nextFrontier.push_back(neighbor);
-               //     continue;
-               // }
-
-                // --- זיהוי אויבים/לבבות שחוסמים המשך תנועה ---
-                if (neighborDist <= range)
-                {
-                    outReachable.push_back(tile);
-                }
-                else if (outExtendedAttackOnly && neighborDist <= attackRange)
-                {
-                    // Passable but beyond normal range: not movement-legal (never
-                    // added to outReachable/outParent-as-a-destination-reason),
-                    // but still walked through above so the BFS can keep
-                    // searching past it for an extended-range enemy, and shown
-                    // here so the whole extended band highlights, not just
-                    // occupied tiles within it.
-                    outExtendedAttackOnly->push_back(tile);
-                }
-
-                //if (tile->isOccupiedByEnemy(monster->getSide()))
-                //{
-                //    if (!monster->canFly()) continue; // האויב חוסם את המשך הדרך
-                //}
-                //nextFrontier.push_back(neighbor);
-
-                //did i fix it????????
                 if (!tile->hasEntity())
-                {
                     nextFrontier.push_back(neighbor);
-                }
             }
         }
         frontier = std::move(nextFrontier);
@@ -693,26 +441,24 @@ void Board::highlightNeighbors(Monster* monster)
         tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
 }
 
-void Board::selectEntity(BoardEntity* entity, PlayerSide side)
+bool Board::selectEntity(BoardEntity* entity, PlayerSide side)
 {
-    if (!entity || !entity->canBeSelectedBy(side)) return;
+    if (!entity || !entity->canBeSelectedBy(side)) return false;
 
-    // A fresh selection always replaces whatever was selected before.
-    // Board clicks already guarantee this can't happen (handleClick only
-    // ever reaches the "select a new entity" branch when its own scan just
-    // found nothing selected) - this loop only matters for a caller like
-    // GameplayState that can select an entity from outside that flow, so a
-    // stale selection left over from an earlier board click can never end
-    // up with two entities marked selected at once.
-    for (auto& [coords, tile] : m_grid)
-    {
-        if (auto occupant = tile->getEntity())
-            occupant->setSelected(false);
-    }
+    // Which entity is currently selected is GameplayState's own interaction
+    // state (see GameplayState::m_selectedEntity) - Board no longer tracks
+    // it, so there's nothing here to clear on any previous selection.
     clearHighlights();
-
-    entity->setSelected(true);
     highlightNeighbors(entity->asMonster());
+    return true;
+}
+
+void Board::highlightTiles(const std::vector<Tile*>& tiles, const sf::Color& color)
+{
+    for (Tile* tile : tiles)
+    {
+        if (tile) tile->setHighlighted(true, color);
+    }
 }
 
 void Board::clearHighlights()
@@ -723,15 +469,16 @@ void Board::clearHighlights()
     }
 }
 
-sf::Vector2f Board::tileToScreen(int q, int row) const
+sf::Vector2f Board::tileAnchor(int q, int row) const
 {
     float width = std::sqrt(3.f) * Config::TILE_RADIUS;
+    return { START_X + (width / 2.f) * q, START_Y + (1.5f * Config::TILE_RADIUS) * row };
+}
 
-    // חייב להיות תואם ל-createBoard!
-    float x = START_X + (width / 2.f) * q;
-    float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
-
-    return { x + Config::TILE_RADIUS, y + Config::TILE_RADIUS };
+sf::Vector2f Board::tileToScreen(int q, int row) const
+{
+    sf::Vector2f anchor = tileAnchor(q, row);
+    return { anchor.x + Config::TILE_RADIUS, anchor.y + Config::TILE_RADIUS };
 }
 
 void Board::updateTileEffects()
@@ -888,95 +635,59 @@ std::vector<Tile*> Board::getSpawnableTiles(Monster* monster, PlayerSide side) c
 }
 bool Board::spawnMonsterOnTile(Monster* monster, Tile* targetTile)
 {
-    //if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassable()) return false;
     if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(monster)) return false;
     targetTile->setEntity(monster);
-    monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(),
-        tileToScreen(targetTile->getQ(), targetTile->getRow()));
+    monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(), targetTile->getScreenPosition());
     return true;
 }
-//use this later!!!!!!!
-//bool Board::spawnEntityOnTile(BoardEntity* entity, Tile* targetTile)//FIX THIS!!!!!!
-//{
-//    if (!entity || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(entity))
-//        return false;
-//
-//    targetTile->setEntity(entity);
-//    entity->spawnOnBoard(targetTile->getQ(), targetTile->getRow(),
-//        tileToScreen(targetTile->getQ(), targetTile->getRow()));
-//    return true;
-//}
+
 void Board::performAction(BoardEntity* entity, Tile* targetTile)
 {
     if (!entity || !targetTile) return;
 
-    // 1. תקיפה
-    //change this!!!!!!!!!!!!!!!!!!!!!! put in the player???????????
-    //if (targetTile->hasEntity() && targetTile->getEntity()->getSide() != entity->getSide())
-
-
     if (targetTile->isOccupiedByEnemy(entity->getSide()))
     {
-        // Give the attacker a chance to supply an animated attack (see
-        // BoardEntity::createAttackAnimation). Most entities don't override
-        // it, so this is nullptr and the attack resolves immediately below,
-        // exactly as before. An entity that does provide one (e.g. Mozzy)
-        // gets its damage deferred until the animation reports impact -
-        // Board never needs to know which concrete entity/animation this is.
-        BoardEntity* target = targetTile->getEntity();
-        if (std::unique_ptr<AttackAnimation> animation = entity->createAttackAnimation(target))
-        {
-            animation->setOnImpact([targetTile, entity]() {
-                targetTile->receiveAttackFrom(entity);
-            });
-
-            // Board's job ends at deciding the attack happens and wiring
-            // how it eventually resolves - from here the attacker owns and
-            // drives its own animation (update/draw/isAttacking), the same
-            // ownership split it already has for its own movement.
-            entity->playAttackAnimation(std::move(animation));
-        }
-        else
-        {
-            targetTile->receiveAttackFrom(entity);
-        }
+        performAttack(entity, targetTile);
         return;
     }
 
-    // 2. תנועה
-    //else if (!targetTile->hasEntity() && targetTile->isPassable())
-    //else if (!targetTile->hasEntity() && targetTile->isPassableFor(monster))
-    //{
-    //    auto sourceIt = m_grid.find({ monster->getQ(), monster->getRow() });
-    //    if (sourceIt != m_grid.end())
-    //    {
-    //        Tile* sourceTile = sourceIt->second.get();
-    //        //targetTile->setMonster(monster);
-    //        targetTile->setEntity(monster);
-    //        sourceTile->clearEntity();
+    // Movement is Monster-only (Heart has no legal movement) - the one safe
+    // downcast performMove needs happens here, once.
+    if (Monster* monster = entity->asMonster())
+        performMove(monster, targetTile);
+}
 
-    //        // בונים את המסלול המדורג (משבצת-משבצת) במקום לקפוץ בקו ישר ליעד
-    //        std::vector<Tile*> path = getPathTo(monster, targetTile);
-    //        std::vector<sf::Vector2f> pathScreenPositions;
-    //        pathScreenPositions.reserve(path.size());
-    //        for (Tile* step : path)
-    //            pathScreenPositions.push_back(tileToScreen(step->getQ(), step->getRow()));
+void Board::performAttack(BoardEntity* entity, Tile* targetTile)
+{
+    // Give the attacker a chance to supply an animated attack (see
+    // BoardEntity::createAttackAnimation). Most entities don't override
+    // it, so this is nullptr and the attack resolves immediately below,
+    // exactly as before. An entity that does provide one (e.g. Mozzy)
+    // gets its damage deferred until the animation reports impact -
+    // Board never needs to know which concrete entity/animation this is,
+    // nor does it ever compute or inspect a damage value: that stays
+    // entirely below Tile::receiveAttackFrom, inside Monster::attack().
+    BoardEntity* target = targetTile->getEntity();
+    if (std::unique_ptr<AttackAnimation> animation = entity->createAttackAnimation(target))
+    {
+        animation->setOnImpact([targetTile, entity]() {
+            targetTile->receiveAttackFrom(entity);
+        });
 
-    //        // רשת ביטחון: אם משום מה לא נמצא מסלול (לא אמור לקרות, כי targetTile
-    //        // כבר אושר כנגיש), נופלים חזרה על תזוזה ישירה כדי שהמפלצת לא "תיתקע"
-    //        if (pathScreenPositions.empty())
-    //            pathScreenPositions.push_back(tileToScreen(targetTile->getQ(), targetTile->getRow()));
+        // Board's job ends at deciding the attack happens and wiring
+        // how it eventually resolves - from here the attacker owns and
+        // drives its own animation (update/draw/isAttacking), the same
+        // ownership split it already has for its own movement.
+        entity->playAttackAnimation(std::move(animation));
+    }
+    else
+    {
+        targetTile->receiveAttackFrom(entity);
+    }
+}
 
-    //        monster->moveAlongPath(targetTile->getQ(), targetTile->getRow(), pathScreenPositions);
-    //    }
-    //}
-
-    // 2. תנועה - כאן, ורק כאן, אנחנו זקוקים למפלצת קונקרטית: moveAlongPath
-    // היא פעולה שאין לה משמעות הגיונית עבור Heart (בניגוד ל-attack, שיש לה
-    // ברירת מחדל טבעית). ה-downcast הבטוח (asMonster) קורה בדיוק פה, פעם אחת.
-    Monster* monster = entity->asMonster();
-    if (!monster) return; // Heart (או כל BoardEntity שאינו מפלצת) לא יכולה לזוז
-
+void Board::performMove(Monster* monster, Tile* targetTile)
+{
     // Movement is only ever legal onto a tile within this monster's NORMAL
     // range - an extended attack-only range (see Monster::getAttackRange,
     // Barzilla's Empowered Attack) lets it strike farther, never walk
@@ -988,33 +699,29 @@ void Board::performAction(BoardEntity* entity, Tile* targetTile)
     bool isMoveLegal = !targetTile->hasEntity() && targetTile->isPassableFor(monster)
         && std::find(reachable.begin(), reachable.end(), targetTile) != reachable.end();
 
-    if (isMoveLegal)
-    {
-        // לא צריך יותר m_grid.find({q,row}) - המפלצת יודעת ישירות על איזה Tile
-        // היא נמצאת, בזכות הקשר הדו-כיווני ב-setEntity/clearEntity.
-        Tile* sourceTile = monster->getCurrentTile();
-        if (sourceTile != nullptr)
-        {
-            /*targetTile->setEntity(monster);
-            sourceTile->clearEntity();*/
+    if (!isMoveLegal) return;
 
-            // בונים את המסלול המדורג (משבצת-משבצת) במקום לקפוץ בקו ישר ליעד
-            std::vector<Tile*> path = getPathTo(monster, targetTile);
-            std::vector<sf::Vector2f> pathScreenPositions;
-            pathScreenPositions.reserve(path.size());
-            for (Tile* step : path)
-                pathScreenPositions.push_back(tileToScreen(step->getQ(), step->getRow()));
+    // לא צריך m_grid.find({q,row}) - המפלצת יודעת ישירות על איזה Tile
+    // היא נמצאת, בזכות הקשר הדו-כיווני ב-setEntity/clearEntity.
+    Tile* sourceTile = monster->getCurrentTile();
+    if (sourceTile == nullptr) return;
 
-            // רשת ביטחון: אם משום מה לא נמצא מסלול (לא אמור לקרות, כי targetTile
-            // כבר אושר כנגיש), נופלים חזרה על תזוזה ישירה כדי שהמפלצת לא "תיתקע"
-            if (pathScreenPositions.empty())
-                pathScreenPositions.push_back(tileToScreen(targetTile->getQ(), targetTile->getRow()));
-            targetTile->setEntity(monster);
-            sourceTile->clearEntity();
+    // בונים את המסלול המדורג (משבצת-משבצת) במקום לקפוץ בקו ישר ליעד
+    std::vector<Tile*> path = getPathTo(monster, targetTile);
+    std::vector<sf::Vector2f> pathScreenPositions;
+    pathScreenPositions.reserve(path.size());
+    for (Tile* step : path)
+        pathScreenPositions.push_back(step->getScreenPosition());
 
-            monster->moveAlongPath(targetTile->getQ(), targetTile->getRow(), pathScreenPositions);
-        }
-    }
+    // רשת ביטחון: אם משום מה לא נמצא מסלול (לא אמור לקרות, כי targetTile
+    // כבר אושר כנגיש), נופלים חזרה על תזוזה ישירה כדי שהמפלצת לא "תיתקע"
+    if (pathScreenPositions.empty())
+        pathScreenPositions.push_back(targetTile->getScreenPosition());
+
+    targetTile->setEntity(monster);
+    sourceTile->clearEntity();
+
+    monster->moveAlongPath(targetTile->getQ(), targetTile->getRow(), pathScreenPositions);
 }
 
 void Board::update(float dt)
@@ -1114,16 +821,8 @@ std::pair<int, int> Board::screenToTile(const sf::Vector2f& pos) const
 //// Board.cpp - הוספה, לא נוגעת ב-Card בכלל, רק ב-Tile/geometry
 bool Board::isSpawnPositionValid(const sf::Vector2f& pos) const
 {
-    for (auto& [coords, tile] : m_grid)
-    {
-        if (tile->isHighlighted() &&
-            std::hypot(pos.x - tileToScreen(coords.first, coords.second).x,
-                pos.y - tileToScreen(coords.first, coords.second).y) < Config::TILE_RADIUS)
-        {
-            return !tile->hasEntity();
-        }
-    }
-    return false;
+    Tile* tile = getTileAtScreenPosition(pos);
+    return tile && tile->isHighlighted() && !tile->hasEntity();
 }
 
 Tile* Board::getTileAt(int q, int row) const

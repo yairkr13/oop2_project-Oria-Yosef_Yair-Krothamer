@@ -13,7 +13,24 @@ public:
 	void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const;
 	int getQ() const { return m_q; }
 	int getRow() const { return m_row; }
-	bool isPassable() const { return m_isPassable; }
+
+	// This tile's own screen-space center, so callers that already hold a
+	// Tile* (Board, mainly) can ask this instead of re-deriving the same
+	// point from Board::tileToScreen(getQ(), getRow()). Mirrors
+	// BoardEntity::getScreenPosition()'s existing shape.
+	//
+	// m_shape's own position is NOT the center - m_shape's origin is never
+	// set (see Tile::Tile), so SFML anchors it at the hexagon's top-left
+	// bounding-box corner, exactly Config::TILE_RADIUS short of the true
+	// center in both axes. tileToScreen() already applies this same
+	// correction when computing a center from raw coordinates; this must
+	// apply it too, or the two stop agreeing on what "a tile's screen
+	// position" means.
+	sf::Vector2f getScreenPosition() const
+	{
+		return m_shape.getPosition() + sf::Vector2f(Config::TILE_RADIUS, Config::TILE_RADIUS);
+	}
+
 	bool isHighlighted() const { return m_isHighlighted; }
 	virtual void setHighlighted(bool highlighted, const sf::Color& highlightColor= sf::Color(150, 220, 150, 180));
 
@@ -40,16 +57,13 @@ public:
         return m_isPassable;
     }
 
-	bool isEntityAlive() const { return m_entity != nullptr && m_entity->isAlive(); }
-
-    // Both require isEntityAlive(), not just m_entity != nullptr - a dying
-    // entity (dead, but still linked to its Tile so a death animation can
-    // finish - see BoardEntity::isDying/isReadyForRemoval) must not be
-    // selectable as an attack or special-ability target just because it
-    // hasn't visually disappeared yet. Every caller (attack-target
-    // highlighting/resolution, AI targeting, ally-target highlighting)
-    // already goes through these two, so this one change closes that gap
-    // everywhere at once.
+    // Both require isEntityAlive() (private, below) - a dying entity (dead,
+    // but still linked to its Tile so a death animation can finish - see
+    // BoardEntity::isDying/isReadyForRemoval) must not be selectable as an
+    // attack or special-ability target just because it hasn't visually
+    // disappeared yet. Every caller (attack-target highlighting/resolution,
+    // AI targeting, ally-target highlighting) already goes through these
+    // two, so this one change closes that gap everywhere at once.
     bool isOccupiedByEnemy(PlayerSide mySide) const { return isEntityAlive() && m_entity->isEnemyOf(mySide); }
     bool isOccupiedByAlly(PlayerSide mySide) const { return isEntityAlive() && m_entity->isAllyOf(mySide); }
 
@@ -75,6 +89,10 @@ protected:
     bool m_isPassable;
     sf::Color m_color;
 private:
+	// Only used internally, by isOccupiedByEnemy/isOccupiedByAlly above -
+	// no external caller needs "is my occupant alive" on its own.
+	bool isEntityAlive() const { return m_entity != nullptr && m_entity->isAlive(); }
+
 	int m_row;
 	int m_q;
 	bool m_isHighlighted = false;

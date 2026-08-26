@@ -9,6 +9,7 @@
 
 class Card;
 class Monster;
+class BoardEntity;
 
 // The active match screen: owns the board and both players for one game,
 // renders them, drives the per-frame update loop, and routes gameplay
@@ -66,6 +67,14 @@ private:
     Card* m_selectedFromHand = nullptr;   // קלף שנבחר ליד, טרם שוחק - ממתין ל-tile להנחה
     Card* m_pendingSpecialCard = nullptr; // קלף ששוחק, יכולת מיוחדת שלו ממתינה לבחירת מטרה
 
+    // The on-board Monster/Heart currently selected, awaiting a second
+    // click to move/attack with - the same kind of interaction/input state
+    // m_selectedFromHand above already is, and owned the same way: a
+    // non-owning pointer into whatever Player actually owns the Monster
+    // (see Player::m_monsters). GameplayState never takes ownership here,
+    // exactly like it never takes ownership of a selected Card.
+    BoardEntity* m_selectedEntity = nullptr;
+
     std::optional<Button> m_miniMenuButton;
 
     // מטפל בלחיצה על קלף ששוחק כבר (מציג "READY"/"CD: X") - מפעיל מצב בחירת מטרה ליכולת
@@ -76,6 +85,16 @@ private:
 
     // מטפל בלחיצה על tile כשיש יכולת מיוחדת ממתינה למטרה
     void handleSpecialTargetClick(const sf::Vector2f& pos);
+
+    // Interprets a plain board click - the sequence "select an entity, then
+    // click a highlighted tile to move/attack with it, or click elsewhere
+    // to deselect." Formerly Board::handleClick(); moved here so all four
+    // click-interpretation flows (this one, handleSpawnAttempt,
+    // handleSpecialTargetClick, handleSpecialAbilityClick) live in one
+    // place and share the same shape - Board now only exposes the
+    // primitives (getTileAtScreenPosition/selectEntity/performAction/
+    // clearHighlights) this calls, never the interaction decision itself.
+    void handleBoardClick(const sf::Vector2f& pos, Player& current);
 
     // The one place m_pendingSpecialCard is abandoned before it reached its
     // own commit event (toggled off, superseded by a different selection,

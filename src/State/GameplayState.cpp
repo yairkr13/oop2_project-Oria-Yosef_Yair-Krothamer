@@ -169,9 +169,10 @@ void GameplayState::handleSpecialAbilityClick(Card* card)
 
     Monster* monster = card->getLinkedMonster();
 
-    // Purely a readiness check - does not commit/reset anything. Mirrors
-    // the guard useSpecialAbility() re-checks internally at commit time.
-    if (!monster || !monster->isSpecialReady() || monster->getActionsLeft() <= 0)
+    // Purely a readiness check - does not commit/reset anything. Asks the
+    // same single predicate useSpecialAbility() re-checks internally at
+    // commit time, rather than reconstructing the rule here too.
+    if (!monster || !monster->canUseSpecialAbilityNow())
         return;
 
     // Switching selection away from whatever was pending before (if
@@ -219,7 +220,14 @@ void GameplayState::handleSpecialAbilityClick(Card* card)
             // highlights, which would silently wipe the spawn-tile
             // highlighting out from under it without this.
             m_selectedFromHand = nullptr;
-            m_board.selectEntity(monster, monster->getSide());
+
+            // Equivalent to the player clicking this monster on the board
+            // right after activating the Special - remember it as the
+            // current board selection ourselves (Board no longer tracks
+            // this), so the next board click acts on it exactly like a
+            // direct click-then-click would.
+            if (m_board.selectEntity(monster, monster->getSide()))
+                m_selectedEntity = monster;
         }
     }
 }
@@ -248,6 +256,29 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
     }
 }
 
+void GameplayState::handleBoardClick(const sf::Vector2f& pos, Player& current)
+{
+    Tile* clickedTile = m_board.getTileAtScreenPosition(pos);
+    if (!clickedTile) return;
+
+    if (m_selectedEntity)
+    {
+        // אם לחצנו על משבצת חוקית (מוארת) - Board כבר תדע אם לזוז או לתקוף
+        if (clickedTile->isHighlighted())
+            m_board.performAction(m_selectedEntity, clickedTile);
+
+        // ניקוי וביטול בחירה
+        m_selectedEntity = nullptr;
+        m_board.clearHighlights();
+    }
+    else if (BoardEntity* entity = clickedTile->getEntity())
+    {
+        // פולימורפיזם מלא: לא צריך לדעת שזו מפלצת, רק שזו ישות שניתן לבחור כרגע
+        if (m_board.selectEntity(entity, current.getSide()))
+            m_selectedEntity = entity;
+    }
+}
+
 void GameplayState::clearPendingSpecial()
 {
     if (m_pendingSpecialCard)
@@ -257,13 +288,18 @@ void GameplayState::clearPendingSpecial()
 
 void GameplayState::highlightValidSpecialTargets(Monster& caster)
 {
-    const sf::Color highlightColor = caster.getSpecialTargetHighlightColor();
+    std::vector<Tile*> validTargets;
     for (Tile* tile : m_board.getOccupiedTiles())
     {
         BoardEntity* candidate = tile->getEntity();
         if (candidate && caster.isValidSpecialTarget(*candidate))
-            tile->setHighlighted(true, highlightColor);
+            validTargets.push_back(tile);
     }
+
+    // Board owns painting its own Tiles - this only ever decides *which*
+    // tiles qualify and *what color*, both of which stay entirely up to
+    // `caster` (see Monster::isValidSpecialTarget/getSpecialTargetHighlightColor).
+    m_board.highlightTiles(validTargets, caster.getSpecialTargetHighlightColor());
 }
 
 void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
@@ -335,27 +371,9 @@ void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
         }
         else
         {
-            m_board.handleClick(pos, current.getSide());
+            handleBoardClick(pos, current);
         }
     }
-   /* else
-    {
-
-        if (m_selectedFromHand)
-        {
-            bool success = m_board.trySpawnMonster(pos, m_selectedFromHand);
-            if (success)
-            {
-                current.reduceKeys(m_selectedFromHand->getCost());
-                m_board.clearHighlights();
-                m_selectedFromHand = nullptr;
-            }
-        }
-        else
-        {
-            m_board.handleClick(pos, current.getSide());
-        }
-    }*/
 }
 
 void GameplayState::handle(const sf::Event::KeyPressed& event)
@@ -373,6 +391,7 @@ void GameplayState::handle(const sf::Event::KeyPressed& event)
         m_turnManager.requestEndTurn();
         clearPendingSpecial();
         m_selectedFromHand = nullptr;
+        m_selectedEntity = nullptr;
         m_board.clearHighlights();
     }
 }
