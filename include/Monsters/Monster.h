@@ -1,29 +1,11 @@
 #pragma once
 #include "Constants.h"
 #include "BoardEntity.h"
-#include "SpriteSheetAnimation.h"
+#include "SpriteSheet.h"
 #include <string>
 #include <deque>
 #include <memory>
 class Board; // Forward declaration - only ever used by reference in Special Ability hooks below
-
-// One state-driven sprite-sheet slot: the frame-cycling logic
-// (SpriteSheetAnimation), the sheet's own texture, and the per-frame
-// origin/scale needed to keep it centered and sized consistently with a
-// monster's static sprite. Bundled once here so a second state (attacking)
-// reuses exactly the same centering/scaling math a first state (walking)
-// already needed, instead of a second hand-copied implementation - see
-// Monster::configureSpriteSheet(), the one place that math lives.
-//להפוך למחלקה
-struct MonsterSpriteSheet
-{
-    std::unique_ptr<SpriteSheetAnimation> animation;
-    const sf::Texture* texture = nullptr;
-    sf::Vector2f frameOrigin;
-    float baseScale = 1.f;
-
-    bool isConfigured() const { return animation != nullptr; }
-};
 
 class Monster :public BoardEntity
 {
@@ -218,7 +200,7 @@ protected:
 
     // Highest-priority of the four (see draw()'s activeSheet selection: die
     // beats attack beats walk beats idle) and the only non-looping one -
-    // built with looping=false (see configureSpriteSheet/SpriteSheetAnimation)
+    // built with looping=false (see configureSpriteSheet/SpriteSheet)
     // so it plays exactly once and holds on its last frame instead of
     // restarting. Driven by isDying() (true from the instant HP reaches 0
     // until this animation finishes), not by any separate flag - once
@@ -247,15 +229,17 @@ protected:
     bool m_isMoving = false;
 
     // Optional sprite-sheet-driven states (see setWalkAnimation/
-    // setAttackSpriteAnimation above) - unconfigured (isConfigured()
-    // false) for every monster that hasn't opted into that particular one,
-    // which is every monster except Muffintop for now. Each texture
-    // pointer is non-owning, into AssetsManager's own texture (same
-    // lifetime assumption m_sprite already relies on for m_textureKey).
-    MonsterSpriteSheet m_walkSheet;
-    MonsterSpriteSheet m_attackSheet;
-    MonsterSpriteSheet m_idleSheet;
-    MonsterSpriteSheet m_dieSheet;
+    // setAttackSpriteAnimation above) - null (unconfigured) for every
+    // monster that hasn't opted into that particular one, which is every
+    // monster except Muffintop for now; same "pointer presence is the
+    // state" convention m_attackAnimation/m_specialAnimation below already
+    // use. Each SpriteSheet holds a non-owning pointer into AssetsManager's
+    // own texture (same lifetime assumption m_sprite already relies on for
+    // m_textureKey).
+    std::unique_ptr<SpriteSheet> m_walkSheet;
+    std::unique_ptr<SpriteSheet> m_attackSheet;
+    std::unique_ptr<SpriteSheet> m_idleSheet;
+    std::unique_ptr<SpriteSheet> m_dieSheet;
 
     // This monster's own in-flight attack animation (see createAttackAnimation/
     // playAttackAnimation) - owned, updated and drawn here, the same
@@ -303,19 +287,20 @@ private:
     //void drawHealthBar(sf::RenderWindow& window) const;
     //std::string getCardTextureKey() const { return m_textureKey + "_card"; }
 
-    // Shared by setWalkAnimation/setAttackSpriteAnimation: builds a
-    // MonsterSpriteSheet's texture pointer, per-frame origin (the center of
-    // ONE frame, not the whole sheet) and base scale (from one frame's real
-    // pixel size against Config::MONSTER_BOARD_SIZE - the same reference
-    // the static sprite's own m_baseScale already uses) - the one place
-    // this math lives, regardless of how many sheet-driven states a
-    // monster ends up configuring.
-    MonsterSpriteSheet configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration, bool looping = true) const;
+    // Shared by setWalkAnimation/setAttackSpriteAnimation/etc: looks up
+    // `textureKey` and builds a SpriteSheet sized against
+    // Config::MONSTER_BOARD_SIZE - the same reference the static sprite's
+    // own m_baseScale already uses - so a sheet-driven frame centers and
+    // sizes the same way the static sprite does, regardless of how many
+    // sheet-driven states a monster ends up configuring. All of the actual
+    // frame-layout/origin/scale math now lives in SpriteSheet itself; this
+    // is just the one place that knows which texture and which on-board
+    // reference size a Monster's own sheets use.
+    std::unique_ptr<SpriteSheet> configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration, bool looping = true) const;
 
     // Advances `sheet`'s animation while `active` is true, otherwise resets
     // it to frame 0 (so whichever state becomes active next always starts
-    // fresh) - a no-op for an unconfigured sheet. Shared by update() for
-    // both m_walkSheet/m_isMoving and m_attackSheet/isAttacking().
-    static void updateSpriteSheet(MonsterSpriteSheet& sheet, bool active, float dt);
-     // �� ����� ������ �� 2 ������
+    // fresh) - a no-op for an unconfigured (null) sheet. Shared by update()
+    // for all four sheets below.
+    static void updateSpriteSheet(SpriteSheet* sheet, bool active, float dt);
 };

@@ -70,7 +70,7 @@ namespace
     // actual file - again coincidentally matching Walk/Attack/Idle's pixel
     // dimensions (5760x3840), inspected directly rather than assumed. Plays
     // once (setDieSpriteAnimation always configures a non-looping sheet -
-    // see Monster/SpriteSheetAnimation) at a brisker pace than Idle: full
+    // see Monster/SpriteSheet) at a brisker pace than Idle: full
     // 24-frame cycle in ~1.2s, a clearly readable collapse without
     // lingering once the monster is already dead and gone from play.
     constexpr int DIE_SHEET_COLUMNS = 6;

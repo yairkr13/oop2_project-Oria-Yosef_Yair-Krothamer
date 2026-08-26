@@ -37,26 +37,10 @@ Monster::Monster(PlayerSide side, const std::string& name, int health, int attac
     }
 }
 
-MonsterSpriteSheet Monster::configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration, bool looping) const
+std::unique_ptr<SpriteSheet> Monster::configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration, bool looping) const
 {
     const sf::Texture& texture = AssetsManager::getInstance().getTexture(textureKey);
-
-    MonsterSpriteSheet sheet;
-    sheet.texture = &texture;
-    sheet.animation = std::make_unique<SpriteSheetAnimation>(columns, rows, frameDuration, looping);
-
-    // One frame's real pixel size - not the whole sheet's - is what
-    // origin/scale need to be based on, so a sheet-driven frame centers and
-    // sizes the same way the static sprite does (see draw()).
-    sf::Vector2u sheetSize = texture.getSize();
-    float frameWidth = static_cast<float>(sheetSize.x) / static_cast<float>(std::max(columns, 1));
-    float frameHeight = static_cast<float>(sheetSize.y) / static_cast<float>(std::max(rows, 1));
-    sheet.frameOrigin = { frameWidth / 2.f, frameHeight / 2.f };
-
-    float maxFrameDim = std::max(frameWidth, frameHeight);
-    sheet.baseScale = (maxFrameDim > 0.f) ? (Config::MONSTER_BOARD_SIZE / maxFrameDim) : m_baseScale;
-
-    return sheet;
+    return std::make_unique<SpriteSheet>(texture, columns, rows, frameDuration, Config::MONSTER_BOARD_SIZE, looping);
 }
 
 void Monster::setWalkAnimation(const std::string& walkTextureKey, int columns, int rows, float frameDuration)
@@ -79,25 +63,25 @@ void Monster::setDieSpriteAnimation(const std::string& dieTextureKey, int column
     m_dieSheet = configureSpriteSheet(dieTextureKey, columns, rows, frameDuration, /*looping=*/false);
 }
 
-void Monster::updateSpriteSheet(MonsterSpriteSheet& sheet, bool active, float dt)
+void Monster::updateSpriteSheet(SpriteSheet* sheet, bool active, float dt)
 {
-    if (!sheet.isConfigured()) return;
+    if (!sheet) return;
 
     if (active)
-        sheet.animation->update(dt);
+        sheet->update(dt);
     else
-        sheet.animation->reset();
+        sheet->reset();
 }
 
 bool Monster::isDying() const
 {
-    return !isAlive() && m_dieSheet.isConfigured() && !m_dieSheet.animation->isFinished();
+    return !isAlive() && m_dieSheet && !m_dieSheet->isFinished();
 }
 
 bool Monster::isReadyForRemoval() const
 {
     if (isAlive()) return false;
-    return !m_dieSheet.isConfigured() || m_dieSheet.animation->isFinished();
+    return !m_dieSheet || m_dieSheet->isFinished();
 }
 
 void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
@@ -120,27 +104,25 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
         // setDieSpriteAnimation) ever touch texture/origin here at all - a
         // monster with none configured never enters this block, so its
         // draw() is exactly what it always was.
-        const MonsterSpriteSheet* activeSheet = nullptr;
-        if (m_dieSheet.isConfigured() && !isAlive())
-            activeSheet = &m_dieSheet;
-        else if (m_attackSheet.isConfigured() && isAttacking())
-            activeSheet = &m_attackSheet;
-        else if (m_walkSheet.isConfigured() && m_isMoving)
-            activeSheet = &m_walkSheet;
-        else if (m_idleSheet.isConfigured() && !m_isMoving && !isAttacking())
-            activeSheet = &m_idleSheet;
+        SpriteSheet* activeSheet = nullptr;
+        if (m_dieSheet && !isAlive())
+            activeSheet = m_dieSheet.get();
+        else if (m_attackSheet && isAttacking())
+            activeSheet = m_attackSheet.get();
+        else if (m_walkSheet && m_isMoving)
+            activeSheet = m_walkSheet.get();
+        else if (m_idleSheet && !m_isMoving && !isAttacking())
+            activeSheet = m_idleSheet.get();
 
         if (activeSheet)
         {
-            // Same texture, different visible rect each frame - the
+            // Delegates texture/rect/origin entirely to SpriteSheet - the
             // sprite's own screen position/scale below never changes
             // because of this, only which pixels of which texture it
             // shows, so switching frames can't make it jump around.
-            m_sprite.setTexture(*activeSheet->texture, false);
-            m_sprite.setTextureRect(activeSheet->animation->getCurrentFrameRect(activeSheet->texture->getSize()));
-            m_sprite.setOrigin(activeSheet->frameOrigin); // center of ONE frame, not the whole sheet
+            activeSheet->applyCurrentFrame(m_sprite);
         }
-        else if (m_walkSheet.isConfigured() || m_attackSheet.isConfigured() || m_idleSheet.isConfigured() || m_dieSheet.isConfigured())
+        else if (m_walkSheet || m_attackSheet || m_idleSheet || m_dieSheet)
         {
             // At least one sheet is configured but none applies right now
             // (e.g. a monster with only a walk sheet, currently standing
@@ -153,11 +135,12 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
         }
 
         // A sheet in use draws with its own base scale (derived from one of
-        // its frames' real pixel size in configureSpriteSheet) rather than
-        // m_baseScale (derived from the static image's size), so a monster
-        // reads as the same on-board size whether idle or sheet-animated,
-        // even though the textures aren't the same native resolution.
-        float scale = activeSheet ? activeSheet->baseScale : m_baseScale;
+        // its frames' real pixel size - see SpriteSheet::getBaseScale())
+        // rather than m_baseScale (derived from the static image's size),
+        // so a monster reads as the same on-board size whether idle or
+        // sheet-animated, even though the textures aren't the same native
+        // resolution.
+        float scale = activeSheet ? activeSheet->getBaseScale() : m_baseScale;
         float currentScaleX = (m_side == PlayerSide::Right) ? -scale : scale;
         m_sprite.setPosition(m_screenPos);
         m_sprite.setScale({ currentScaleX, scale });
@@ -298,14 +281,14 @@ void Monster::update(float dt)
     // configured. Idle's condition is just "neither walk nor attack" - no
     // separate resume logic needed for it to pick back up once Walk/Attack
     // ends. Die's condition (!isAlive()) is permanent once true - it keeps
-    // ticking harmlessly after its own SpriteSheetAnimation::isFinished()
+    // ticking harmlessly after its own SpriteSheet::isFinished()
     // (it just holds on the last frame; see updateSpriteSheet), but by then
     // draw() has already been showing only the Die sheet for a while, so
     // this never becomes visible.
-    updateSpriteSheet(m_walkSheet, m_isMoving, dt);
-    updateSpriteSheet(m_attackSheet, isAttacking(), dt);
-    updateSpriteSheet(m_idleSheet, !m_isMoving && !isAttacking(), dt);
-    updateSpriteSheet(m_dieSheet, !isAlive(), dt);
+    updateSpriteSheet(m_walkSheet.get(), m_isMoving, dt);
+    updateSpriteSheet(m_attackSheet.get(), isAttacking(), dt);
+    updateSpriteSheet(m_idleSheet.get(), !m_isMoving && !isAttacking(), dt);
+    updateSpriteSheet(m_dieSheet.get(), !isAlive(), dt);
 
     // אם לא זזים כרגע, אין מה לעדכן
     if (!m_isMoving || m_pathQueue.empty())
