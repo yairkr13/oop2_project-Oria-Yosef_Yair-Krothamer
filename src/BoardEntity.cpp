@@ -2,22 +2,6 @@
 #include "Tiles/Tile.h" // �-include ��� ���� ���!
 #include "Attacks/AttackAnimation.h" // complete type needed for the unique_ptr default below
 #include <algorithm>
-//
-//BoardEntity::~BoardEntity() {
-//     ��� �-OOP ��������: 
-//     ��� ���� ������ ����� ����� ��������, �� ��� ����� �� �����...
-//    if (m_currentTile != nullptr) {
-//         ��� ���� �� ���� ������� ��� ��� ����� �� Dangling Pointer
-//        m_currentTile->clearEntity();
-//    }
-//}
-
-//BoardEntity::~BoardEntity() 
-//{
-//    if (m_currentTile != nullptr && m_currentTile->getEntity() == this)
-//        m_currentTile->clearEntity();
-//    //delete this;
-//}
 
 void BoardEntity::spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) {
     m_q = q;
