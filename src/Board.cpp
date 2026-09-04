@@ -1,90 +1,25 @@
 #include "Board.h"
-#include "Tiles/LavaTile.h"
-#include "Tiles/Hole.h"
-#include "Tiles/PanicPoint.h"
 #include "Attacks/AttackAnimation.h"
-#include <random>
 #include <iostream>
 #include <utility>
 #include "Constants.h"
-//HEY2
-//hiiiiiiiii
-Board::Board()
+
+Board::Board(const BoardLayout& layout)
+    : m_layout(layout), m_pathfinder(m_grid)
 {
     createBoard();
 }
 
 void Board::createBoard()
 {
-    int max_rows = 7;
-    int max_cols = 14;
-
-    // וקטור זמני שישמור את כל הקורדינטות החוקיות שנוצרו
-    //std::vector<std::pair<int, int>> allCoords;
-
-    // שלב א': יצירת הלוח כרגיל עם משבצות רגילות
-    for (int row = 0; row < max_rows; ++row)
-    {
-        int start_col = (row % 2 == 0) ? 0 : 1;
-
-        for (int q = start_col; q < max_cols; q += 2)
-        {
-            m_grid[{q, row}] = std::make_unique<Tile>(q, row, tileAnchor(q, row));
-            /*
-                        if(q!=1 && q!=12)
-                            allCoords.push_back({ q, row }); */// שומרים את הקורדינטה שנוצרה
-        }
-
-
-    }
-
-    // שלב ב': בחירה רנדומלית של 2 מיקומים והחלפתם בלבה
-    //if (allCoords.size() >= 4)
-    //{
-    //    std::random_device rd;
-    //    std::mt19937 g(rd());
-    //    std::shuffle(allCoords.begin(), allCoords.end(), g); // מערבב את המיקומים החוקיים
-
-    //    // 2 המיקומים הראשונים יהיו לבה
-    //    for (int i = 0; i < 2; ++i)
-    //    {
-    //        auto [q, row] = allCoords[i];
-    //        float x = START_X + (width / 2.f) * q;
-    //        float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
-    //        m_grid[{q, row}] = std::make_unique<LavaTile>(q, row, sf::Vector2f(x, y));
-    //    }
-    //    //ליצור פונקציה שפשוט מביאה מישהו מהאקראים !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //    // 2 המיקומים הבאים (2 ו-3) יהיו חורים
-    //    for (int i = 2; i < 4; ++i)
-    //    {
-    //        auto [q, row] = allCoords[i];
-    //        float x = START_X + (width / 2.f) * q;
-    //        float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
-    //        m_grid[{q, row}] = std::make_unique<Hole>(q, row, sf::Vector2f(x, y));
-    //    }
-    //}
+    // BoardGenerator owns the actual tile-construction knowledge (grid
+    // shape, and - later, in generateSpecialTiles - which concrete Tile
+    // subtypes exist) - Board just decides *when* this happens (here, at
+    // construction) and hands in its own tileAnchor() so the generator
+    // never needs to know Board's pixel constants either.
+    m_grid = BoardGenerator::buildBaseGrid(m_layout,
+        [this](int q, int row) { return tileAnchor(q, row); });
 }
-//void Board::createBoard()
-//{
-//    float width = std::sqrt(3.f) * Config::TILE_RADIUS;
-//
-//    int max_rows = 7;
-//    int max_cols = 14;
-//
-//    for (int row = 0; row < max_rows; ++row)
-//    {
-//        int start_col = (row % 2 == 0) ? 0 : 1;
-//
-//        for (int q = start_col; q < max_cols; q += 2)
-//        {
-//            float x = START_X + (width / 2.f) * q;
-//            float y = START_Y + (1.5f * Config::TILE_RADIUS) * row;
-//
-//            sf::Vector2f physicalPosition(x, y);
-//            m_grid[{q, row}] = std::make_unique<Tile>(q, row, physicalPosition);
-//        }
-//    }
-//}
 
 void Board::draw(sf::RenderWindow& window) const
 {
@@ -145,68 +80,13 @@ void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart) {
     }
     generateSpecialTiles(p1Heart, p2Heart);
 }
-template <typename TileType, typename... Args>
-void Board::createSpecialTile(const std::pair<int, int>& coords, Args&&... extraArgs)
-{
-    auto [q, row] = coords;
-    m_grid[{q, row}] = std::make_unique<TileType>(q, row, tileAnchor(q, row), std::forward<Args>(extraArgs)...);
-}
 
 void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
 {
-    std::vector<std::pair<int, int>> allCoords;
-
-    // אוספים משבצות רק מהאיזור המותר (בלי הטורים הקיצוניים של הזימונים והלבבות)
-    for (auto const& [coords, tile] : m_grid)
-    {
-        int q = coords.first;
-        if (q >= 2 && q <= 11)
-        {
-            allCoords.push_back(coords);
-        }
-    }
-
-    if (allCoords.size() >= 5)
-    {
-        std::shuffle(allCoords.begin(), allCoords.end(), rng());
-
-        // 2 משבצות לבה
-        createSpecialTile<LavaTile>(allCoords[0]);
-        createSpecialTile<LavaTile>(allCoords[1]);
-
-        // 2 משבצות חור
-        createSpecialTile<Hole>(allCoords[2]);
-        createSpecialTile<Hole>(allCoords[3]);
-
-        // 1 משבצת פאניקה שמקבלת את הלבבות שהוזרקו לפונקציה
-        createSpecialTile<PanicPoint>(allCoords[4], p1Heart, p2Heart);
-    }
+    BoardGenerator::applySpecialTiles(m_grid, m_layout,
+        [this](int q, int row) { return tileAnchor(q, row); },
+        p1Heart, p2Heart, rng());
 }
-
-//add later:::::::::::::::::::::::::::
-//template <class T>
-//void Board::choosePlace(const std::vector<std::pair<int, int>>& allCoords, int amount, Heart* p1Heart=nullptr, Heart* p2Heart=nullptr)
-//{
-//    static int first = 0;
-//    int last = amount + first;
-//    for (int i = first;i < last;++i)
-//    {
-//        auto [q, row] = allCoords[i];
-//        m_grid[{q, row}] = std::make_unique<T>(q, row, tileToScreen(q, row), p1Heart, p2Heart);
-//    }
-//}
-//
-//template <>
-//void Board::choosePlace(const std::vector<std::pair<int, int>>& allCoords, int amount, Heart* p1Heart, Heart* p2Heart)
-//{
-//    static int first = 0;
-//    int last = amount + first;
-//    for (int i = first;i < last;++i)
-//    {
-//        auto [q, row] = allCoords[i];
-//        m_grid[{q, row}] = std::make_unique<PanicPoint>(q, row, tileToScreen(q, row), p1Heart, p2Heart);
-//    }
-//}
 
 bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
 {
@@ -243,192 +123,23 @@ void Board::highlightSpawnTiles(PlayerSide side)
     }
 }
 
-// שכבה 1: לוגיקה טהורה - "אילו tiles המפלצת יכולה להגיע/לתקוף אליהם", בלי לצייר כלום.
-// זהה בדיוק ל-BFS שהיה בתוך highlightNeighbors, רק שבמקום setHighlighted() כל tile
-// חוקי פשוט נכנס לרשימה שמוחזרת.
-//
-// הערה: נשמרה כאן במכוון "תכונה" קיימת מהגרסה המקורית - tile של חור עם אויב מעופף
-// עליו אף פעם לא מסומן ב-visited (רק tiles "רגילים" מסומנים). זה אומר שתיאורטית, אם
-// אותו חור נגיש משני כיוונים שונים באותו BFS, הוא עלול להיכנס לרשימה פעמיים. זו לא
-// באגה חדשה שהוספתי - היא הייתה קיימת גם בגרסה הישנה (רק שם זה היה "לצבוע פעמיים"
-// שלא נראה למשתמש, ואילו כאן זה "רשימה עם כפילות אפשרית"). אם תרצו, אפשר לתקן בקלות
-// ע"י סימון visited גם על tiles של חור - תגיד לי אם לתקן את זה גם.
-// ה-BFS המשותף (מעבר יחיד) שגם getReachableTiles וגם getPathTo נשענים עליו.
-// זהה לגמרי ל-BFS הקודם שהיה בתוך getReachableTiles - השינוי היחיד: לצד
-// visited (מרחק, פנימי בלבד - לא מוחזר החוצה), נוסף outParent שזוכר לכל
-// tile "מאיפה הגעתי אליו" - זה מה שמאפשר ל-getPathTo לשחזר מסלול מדורג
-// בלי להריץ שוב את בדיקות החסימה (חור/תעופה/אויב).
-//
-// אותה הערה כמו קודם עדיין רלוונטית: tile של חור עם אויב מעופף עליו לא
-// מסומן ב-visited (רק tiles "רגילים" מסומנים), אז תיאורטית יכול להיכנס
-// לרשימה/למפת ה-parent פעמיים אם הוא נגיש משני כיוונים. זו לא באגה חדשה.
-void Board::recordReachability(Tile* tile,
-    const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
-    int neighborDist, int range, int attackRange,
-    std::vector<Tile*>& outReachable,
-    std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
-    std::vector<Tile*>* outExtendedAttackOnly)
+// Board stays the public facade for all three of these (see Board.h) - the
+// actual BFS now lives entirely in BoardPathfinder (see m_pathfinder and
+// BoardPathfinder.h/.cpp). Each is now a one-line forward; no caller of
+// Board needed to change.
+std::vector<Tile*> Board::getReachableTiles(Monster* monster) const
 {
-    if (neighborDist <= range)
-    {
-        outReachable.push_back(tile);
-        outParent[neighbor] = parent; // an entry here means "movement can
-        // legally end here" (see getPathTo) - an extended-only tile below
-        // must never get one.
-    }
-    else if (outExtendedAttackOnly && neighborDist <= attackRange)
-    {
-        // Beyond normal range, still within the extended attack range -
-        // attackable, but deliberately never given an outParent entry:
-        // never path-able-to, never movement-legal.
-        outExtendedAttackOnly->push_back(tile);
-    }
-}
-
-bool Board::visitNeighbor(Monster* monster, Tile* tile,
-    const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
-    int neighborDist, int range, int attackRange,
-    std::vector<Tile*>& outReachable,
-    std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
-    std::vector<Tile*>* outExtendedAttackOnly) const
-{
-    // בדיקת עבירות פולימורפית: המשבצת מחליטה בעצמה אם הישות יכולה לעבור
-    if (!tile->isPassableFor(monster))
-    {
-        // אם המשבצת לא עבירה לתנועה, עדיין נבדוק אם יש עליה אויב שניתן לתקוף מרחוק/באוויר
-        if (tile->isOccupiedByEnemy(monster->getSide()))
-            recordReachability(tile, neighbor, parent, neighborDist, range, attackRange,
-                outReachable, outParent, outExtendedAttackOnly);
-
-        return false; // הישות לא יכולה להמשיך לנוע דרך המשבצת הזו
-    }
-
-    recordReachability(tile, neighbor, parent, neighborDist, range, attackRange,
-        outReachable, outParent, outExtendedAttackOnly);
-    return true;
-}
-
-void Board::computeReachability(Monster* monster,
-    std::vector<Tile*>& outReachable,
-    std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
-    std::vector<Tile*>* outExtendedAttackOnly) const
-{
-    outReachable.clear();
-    outParent.clear();
-    if (outExtendedAttackOnly) outExtendedAttackOnly->clear();
-    if (!monster) return;
-
-    int q = monster->getQ();
-    int row = monster->getRow();
-    int range = monster->getRange();
-    int attackRange = monster->getAttackRange(); // == range for every monster except an empowered Barzilla
-    int bfsLimit = std::max(range, attackRange); // walk far enough to find extended-only enemies too
-
-    std::pair<int, int> offsets[] = {
-        {-2,  0}, {+2,  0},
-        {-1, -1}, {+1, -1},
-        {-1, +1}, {+1, +1}
-    };
-
-    std::map<std::pair<int, int>, int> visited; // מרחק בלבד - פנימי לחישוב, לא מוחזר
-    std::vector<std::pair<int, int>> frontier;
-    visited[{q, row}] = 0;
-    frontier.push_back({ q, row });
-
-    while (!frontier.empty())
-    {
-        std::vector<std::pair<int, int>> nextFrontier;
-        for (auto [cq, cr] : frontier)
-        {
-            int dist = visited[{cq, cr}];
-            if (dist >= bfsLimit)
-                continue;
-
-            for (auto [dq, dr] : offsets)
-            {
-                std::pair<int, int> neighbor = { cq + dq, cr + dr };
-                if (visited.count(neighbor))
-                    continue;
-                auto it = m_grid.find(neighbor);
-                if (it == m_grid.end())
-                    continue;
-
-                Tile* tile = it->second.get();
-                int neighborDist = dist + 1;
-
-                // The one place "can this entity enter/traverse this
-                // neighboring tile" is decided - see visitNeighbor above.
-                bool canContinueThrough = visitNeighbor(monster, tile, neighbor, { cq, cr },
-                    neighborDist, range, attackRange,
-                    outReachable, outParent, outExtendedAttackOnly);
-
-                if (!canContinueThrough)
-                    continue;
-
-                visited[neighbor] = neighborDist; // needed so the BFS keeps
-                // walking through this tile (e.g. to find an extended-range
-                // enemy farther out) even when it's beyond `range` itself.
-
-                if (!tile->hasEntity())
-                    nextFrontier.push_back(neighbor);
-            }
-        }
-        frontier = std::move(nextFrontier);
-    }
-}
-
-std::vector<Tile*> Board::getReachableTiles(Monster* monster) const //std::vector<Tile*> Board::getTilesInRadius(Tile* center, int radius) const;
-{
-    std::vector<Tile*> reachable;
-    std::map<std::pair<int, int>, std::pair<int, int>> parent; // לא בשימוש כאן, רק כי computeReachability דורש אותו
-    computeReachability(monster, reachable, parent);
-    return reachable;
+    return m_pathfinder.getReachableTiles(monster);
 }
 
 std::vector<Tile*> Board::getExtendedAttackOnlyTiles(Monster* monster) const
 {
-    std::vector<Tile*> reachable, extended;
-    std::map<std::pair<int, int>, std::pair<int, int>> parent; // unused here, same as above
-    computeReachability(monster, reachable, parent, &extended);
-    return extended;
+    return m_pathfinder.getExtendedAttackOnlyTiles(monster);
 }
 
-// שחזור המסלול: הולכים אחורה מה-target דרך outParent עד שמגיעים למקור, ואז
-// הופכים את הסדר (כי בנינו אותו מהסוף להתחלה). אם target לא הופיע ב-parent
-// בכלל - זה אומר שהוא לא נגיש (או שהוא עצמו נקודת המוצא), ומוחזרת רשימה ריקה.
 std::vector<Tile*> Board::getPathTo(Monster* monster, Tile* target) const
 {
-    std::vector<Tile*> path;
-    if (!monster || !target) return path;
-
-    //what this do???
-    std::vector<Tile*> reachable;
-    std::map<std::pair<int, int>, std::pair<int, int>> parent;
-    computeReachability(monster, reachable, parent);
-
-    std::pair<int, int> sourceCoords = { monster->getQ(), monster->getRow() };
-    std::pair<int, int> targetCoords = { target->getQ(), target->getRow() };
-
-    if (targetCoords == sourceCoords) return path; // כבר שם
-    if (!parent.count(targetCoords)) return path;   // לא נגיש - לא אמור לקרות בפועל
-
-    std::vector<std::pair<int, int>> reversedCoords;
-    std::pair<int, int> cur = targetCoords;
-    while (cur != sourceCoords)
-    {
-        reversedCoords.push_back(cur);
-        cur = parent.at(cur);
-    }
-    std::reverse(reversedCoords.begin(), reversedCoords.end());
-
-    for (auto& coords : reversedCoords)
-    {
-        auto it = m_grid.find(coords);
-        if (it != m_grid.end())
-            path.push_back(it->second.get());
-    }
-
-    return path;
+    return m_pathfinder.getPathTo(monster, target);
 }
 
 // שכבה 2: wrapper דק - קורא לשאילתה הטהורה למעלה, ורק אחראי על הצביעה (side effect
@@ -556,72 +267,6 @@ Tile* Board::getRightmostTileInRow(int row) const {
 // AI_FindBestTargetForMonster עברה ל-AIPlayer::findBestTarget - היא הייתה מכילה
 // היוריסטיקה (תקיפה > תנועה שמאלה), לא שאילתה עובדתית, אז לא הייתה שייכת ל-Board.
 // AIPlayer עכשיו קורא ל-getReachableTiles() (למעלה בקובץ) בעצמו במקומה.
-//
-//void Board::AI_ExecuteAction(Monster* monster, Tile* targetTile)
-//{
-//    if (!monster || !targetTile) return;
-//
-//    // 1. אם יש אויב במשבצת היעד -> תקיפה
-//    if (targetTile->hasEntity() && targetTile->getEntity()->getSide() != monster->getSide())
-//    {
-//        monster->attack(targetTile->getEntity());
-//        if (!targetTile->getEntity()->isAlive()) {
-//            targetTile->clearEntity();
-//        }
-//    }
-//    // 2. אם המשבצת פנויה -> תנועה
-//    else if (!targetTile->hasEntity() && targetTile->isPassable())
-//    {
-//        // מוצאים את המשבצת הנוכחית של המפלצת כדי לנקות אותה
-//        auto sourceIt = m_grid.find({ monster->getQ(), monster->getRow() });
-//        if (sourceIt != m_grid.end())
-//        {
-//            Tile* sourceTile = sourceIt->second.get();
-//            targetTile->setMonster(monster); // השמה ביעד
-//            sourceTile->clearEntity();       // ניקוי המקור
-//
-//            // עדכון המיקום הפיזי והגרפי של המפלצת
-//            monster->moveTo(targetTile->getQ(), targetTile->getRow(),
-//                tileToScreen(targetTile->getQ(), targetTile->getRow()));
-//        }
-//    }
-//
-//    // חובה: מורידים למפלצת נקודת פעולה כדי שהלולאה לא תהיה אינסופית!
-//    //monster->useAction(); // או איך שנקראת אצלך המתודה שמורידה Action (למשל m_actionsLeft--)
-//}
-
-//bool Board::AI_SpawnMonster(Monster* monster, PlayerSide side)
-//{
-//    if (!monster || monster->isOnBoard()) return false;
-//
-//    int minQ = (side == PlayerSide::Left) ? 0 : 12;
-//    int maxQ = (side == PlayerSide::Left) ? 1 : 13;
-//
-//    std::vector<Tile*> availableSpawnTiles;
-//
-//    for (auto& [coords, tile] : m_grid)
-//    {
-//        if (coords.first >= minQ && coords.first <= maxQ)
-//        {
-//            //if (!tile->hasEntity() && tile->isPassable())
-//            if (!tile->hasEntity() && tile->isPassableFor(monster))
-//            {
-//                availableSpawnTiles.push_back(tile.get());
-//            }
-//        }
-//    }
-//
-//    // תוקן: הבדיקה חייבת לקרות *לפני* שמשתמשים ב-size()-1 (אחרת underflow על size_t
-//    // כשהוקטור ריק), וגם הייתה כאן הצהרה כפולה של targetTile שלא מתקמפלת.
-//    if (availableSpawnTiles.empty()) return false;
-//
-//    std::uniform_int_distribution<size_t> dist(0, availableSpawnTiles.size() - 1);
-//    Tile* targetTile = availableSpawnTiles[dist(rng())];
-//
-//    // שורה אחת שמחליפה את כל כפל הקוד הפיזי של הזימון!
-//    return spawnMonsterOnTile(monster, targetTile);
-//}
-
 
 // שאילתה עובדתית בלבד - "אילו tiles פנויים בשטח הזימון של הצד הזה?" Board לא
 // בוחר אף אחת מהן - זו הייתה בדיוק העבודה של AI_SpawnMonster הישנה, שגם אספה

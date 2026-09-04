@@ -5,6 +5,8 @@
 #include "Monsters/Monster.h"
 #include "Constants.h"
 #include "Heart.h"
+#include "BoardPathfinder.h"
+#include "BoardGenerator.h"
 #include <cmath>
 #include <map>
 #include <random>
@@ -14,7 +16,11 @@
 class Board
 {
 public:
-	Board();
+	// `layout` defaults to BoardGenerator::standardLayout() - today's one
+	// and only map. A future second map/stage is a second BoardLayout
+	// (see BoardGenerator.h) passed in here instead - Board's own code
+	// never needs to change to support it.
+	explicit Board(const BoardLayout& layout = BoardGenerator::standardLayout());
 	void draw(sf::RenderWindow& window) const;
 	//bool isTilePassable(Tile* start, Tile* end) const;
 
@@ -69,19 +75,22 @@ public:
 	// שום דבר. לוגיקה טהורה - אין כאן שום קריאה ל-setHighlighted. גם highlightNeighbors
 	// (לקליק אנושי) וגם AIPlayer (בעתיד, לצורך ההיוריסטיקה) ישתמשו באותה פונקציה הזו,
 	// כדי שה-BFS לא ישוכפל בשני מקומות.
+	//
+	// Board stays the facade for this (and the two queries below) - the
+	// actual BFS lives in BoardPathfinder (see m_pathfinder below); this
+	// just forwards. No caller (GameplayState, AIPlayer, Board's own
+	// performMove/highlightNeighbors) needs to know that or change anything.
 	std::vector<Tile*> getReachableTiles(Monster* monster) const;
 
 	// Enemy tiles reachable ONLY because of a monster's extended attack
 	// range (Monster::getAttackRange() > getRange() - see Barzilla's
 	// Empowered Attack) - i.e. beyond normal move/attack reach but still
-	// within the extended reach. Reuses the exact same shared BFS as
-	// getReachableTiles (see computeReachability's extra out-parameter
-	// below): NOT movement-legal (never appears in getReachableTiles, so
-	// performAction's movement branch already rejects them - see there),
-	// purely an additional set for highlighting "this monster can strike
-	// here but not stand here." Empty for every monster whose
-	// getAttackRange() == getRange() (the default for all monsters except
-	// an empowered Barzilla).
+	// within the extended reach. NOT movement-legal (never appears in
+	// getReachableTiles, so performAction's movement branch already rejects
+	// them - see there), purely an additional set for highlighting "this
+	// monster can strike here but not stand here." Empty for every monster
+	// whose getAttackRange() == getRange() (the default for all monsters
+	// except an empowered Barzilla).
 	std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;
 
 	// שלב ב': אותה שאילתה, אבל מחזירה את המסלול המדורג (לפי סדר) מהמפלצת ל-target
@@ -117,54 +126,6 @@ public:
 	// colors - it only ever answers "what's occupied," never "what's valid."
 	std::vector<Tile*> getOccupiedTiles() const;
 private:
-	// ה-BFS המשותף לשתי השאילתות למעלה - מעבר יחיד, לא משוכפל. בנוסף לרשימת ה-tiles
-	// הנגישים (outReachable, בדיוק כמו ש-getReachableTiles מחזירה), שומר גם "מאיפה
-	// הגעתי לכאן" (outParent) - כדי ש-getPathTo תוכל לשחזר את המסלול המלא בלי להריץ
-	// שוב את כל בדיקות החסימה.
-	// outExtendedAttackOnly (optional): when non-null, tiles found beyond
-	// monster->getRange() but within monster->getAttackRange() are recorded
-	// here instead of outReachable/outParent - reached by continuing the
-	// SAME walk (still respecting the usual blocking/passability rules),
-	// just not counted as movement-legal or path-able-to. Every existing
-	// caller passes nullptr and every monster's getAttackRange() defaults
-	// to getRange(), so this is a no-op extension: behavior for them is
-	// unchanged.
-	void computeReachability(Monster* monster,
-		std::vector<Tile*>& outReachable,
-		std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
-		std::vector<Tile*>* outExtendedAttackOnly = nullptr) const;
-
-	// The one place that answers "can this entity enter/traverse this
-	// neighboring Tile" for the BFS above - the natural extension point for
-	// any future movement/collision rule. Returns whether `monster` can
-	// continue walking THROUGH `tile` (i.e. computeReachability's frontier
-	// management should mark it visited and, if unoccupied, keep exploring
-	// past it); false means it blocks further movement. Either way, also
-	// records `tile` into outReachable/outParent/outExtendedAttackOnly via
-	// recordReachability() below when it falls within range - movement
-	// legality and attack-range recording are evaluated together here
-	// because both depend on the same passability/occupancy facts about
-	// this one neighbor.
-	bool visitNeighbor(Monster* monster, Tile* tile,
-		const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
-		int neighborDist, int range, int attackRange,
-		std::vector<Tile*>& outReachable,
-		std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
-		std::vector<Tile*>* outExtendedAttackOnly) const;
-
-	// Records `tile` into outReachable (+ outParent, so getPathTo can later
-	// reconstruct a route to it) when within `range`, or into
-	// outExtendedAttackOnly when beyond `range` but still within
-	// `attackRange` - shared by both of visitNeighbor's cases (a passable
-	// tile always gets recorded this way; a blocked-but-enemy-occupied tile
-	// gets recorded the same way, only when occupied by an enemy).
-	static void recordReachability(Tile* tile,
-		const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
-		int neighborDist, int range, int attackRange,
-		std::vector<Tile*>& outReachable,
-		std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
-		std::vector<Tile*>* outExtendedAttackOnly);
-
 	// performAction()'s two independent branches, split out so each reads
 	// as one responsibility. performAttack coordinates the attack (wires an
 	// animation if the attacker supplies one, otherwise resolves through
@@ -197,27 +158,32 @@ private:
 	// never drift apart the way they did before this existed.
 	sf::Vector2f tileAnchor(int q, int row) const;
 
-	// Shared creation/replacement mechanics behind generateSpecialTiles()
-	// below: builds TileType at `coords`'s raw anchor position (see
-	// tileAnchor above - NOT tileToScreen's center, which is the wrong
-	// quantity for constructing a Tile) and swaps it into m_grid. TileType
-	// is always known at the call site (never chosen at runtime), and
-	// constructor argument lists genuinely differ between Tile subtypes
-	// (PanicPoint needs both Hearts; Hole/LavaTile need neither) - Args...
-	// forwards whatever extra constructor arguments TileType needs beyond
-	// (q, row, position). Declared here (a private member template needs to
-	// be), but defined entirely in Board.cpp - its only caller - since
-	// nothing outside this file ever needs to see the template body.
-	template <typename TileType, typename... Args>
-	void createSpecialTile(const std::pair<int, int>& coords, Args&&... extraArgs);
-
+	// Both now thin wrappers around BoardGenerator (see BoardGenerator.h):
+	// createBoard() builds the plain grid from m_layout at construction
+	// time; generateSpecialTiles() swaps in that same layout's special
+	// tiles once Hearts exist (called from initPlayerHearts, exactly as
+	// before). Board owns *when* generation happens (its own lifecycle);
+	// BoardGenerator owns *how* a layout's tiles are actually built - it,
+	// not Board, is what now knows LavaTile/Hole/PanicPoint exist.
 	void generateSpecialTiles(Heart* p1Heart, Heart* p2Heart);
 	void createBoard();
 
-	
+	// This board's own layout recipe (shape + special-tile plan) - kept so
+	// generateSpecialTiles() can still consult it later, once Hearts exist.
+	// See BoardGenerator.h for what a future second map/stage would pass
+	// here instead.
+	BoardLayout m_layout;
+
 	// ��� public:
 	//std::vector <Monster*> m_monsters;
 	std::map<std::pair<int, int>, std::unique_ptr<Tile>> m_grid;
+
+	// Owns the reachability/pathfinding BFS - see BoardPathfinder.h. Reads
+	// m_grid by reference, so it must be declared (and therefore
+	// constructed) after it - binds once, at Board's own construction, and
+	// stays valid for Board's whole lifetime since m_grid's identity (not
+	// its contents) never changes afterward.
+	BoardPathfinder m_pathfinder;
 
 	// Board layout constants
 	static constexpr float START_X = 320.f;

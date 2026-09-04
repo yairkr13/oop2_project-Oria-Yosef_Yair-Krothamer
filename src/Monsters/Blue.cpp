@@ -5,8 +5,7 @@
 #include "Constants.h"
 #include "Board.h"
 #include "Tiles/Tile.h"
-#include <limits>
-#include <utility>
+#include "HexGrid.h"
 
 namespace
 {
@@ -64,64 +63,6 @@ namespace
     constexpr int DIE_SHEET_COLUMNS = 6;
     constexpr int DIE_SHEET_ROWS = 4;
     constexpr float DIE_FRAME_DURATION = 0.05f;
-
-    // Knockback direction math: Blue's Special can target ANY enemy Monster
-    // on the Board (Monster::isValidSpecialTarget's default is "any enemy",
-    // not "adjacent enemy" - see Monster.h), so (target.q - Blue.q, target.row
-    // - Blue.row) is generally NOT one of the board's six hex-neighbor
-    // offsets, only a multiple/approximation of one. This is a self-contained
-    // conversion into cube coordinates (the standard way to reason about
-    // direction on a hex grid) purely to answer "which single hex-step
-    // continues outward along the Blue->target line" - it does not touch or
-    // duplicate any Board rule (occupancy/passability/ally-enemy all still
-    // come from Board::getTileAt + Tile, unchanged below).
-    struct CubeCoord { int x, y, z; };
-
-    // This board's (q, row) is a "doubled" coordinate system: q always
-    // moves in steps of 2 for a same-row neighbor, or +-1 alongside a +-1
-    // row change for a diagonal neighbor (q - row is always even). That is
-    // exactly the standard doubled-width <-> cube coordinate mapping.
-    CubeCoord toCube(int q, int row)
-    {
-        int x = (q - row) / 2;
-        int z = row;
-        return { x, -x - z, z };
-    }
-
-    // The six unit directions of a cube-coordinate hex grid - a fixed fact
-    // of the coordinate system itself (every permutation of 1, -1, 0).
-    constexpr int HEX_DIRECTIONS[6][3] = {
-        { 1, -1,  0}, {-1,  1,  0},
-        { 1,  0, -1}, {-1,  0,  1},
-        { 0,  1, -1}, { 0, -1,  1}
-    };
-
-    // The single hex-step (dq, dr) that best continues outward along the
-    // line from (attackerQ,attackerRow) to (targetQ,targetRow): exact when
-    // the two tiles are aligned along one of the six axes (as in the
-    // knockback example in the design), and the closest matching direction
-    // otherwise. Chosen by maximizing the dot product against each of the
-    // six unit directions - the standard way to pick the nearest hex
-    // direction for an arbitrary vector.
-    std::pair<int, int> knockbackStep(int attackerQ, int attackerRow, int targetQ, int targetRow)
-    {
-        CubeCoord from = toCube(attackerQ, attackerRow);
-        CubeCoord to = toCube(targetQ, targetRow);
-        int dx = to.x - from.x, dy = to.y - from.y, dz = to.z - from.z;
-
-        int bestIndex = 0;
-        int bestDot = std::numeric_limits<int>::min();
-        for (int i = 0; i < 6; ++i)
-        {
-            int dot = dx * HEX_DIRECTIONS[i][0] + dy * HEX_DIRECTIONS[i][1] + dz * HEX_DIRECTIONS[i][2];
-            if (dot > bestDot) { bestDot = dot; bestIndex = i; }
-        }
-
-        // Inverse of toCube: q = 2x + z, row = z.
-        int ddx = HEX_DIRECTIONS[bestIndex][0];
-        int ddz = HEX_DIRECTIONS[bestIndex][2];
-        return { 2 * ddx + ddz, ddz };
-    }
 }
 
 Blue::Blue(PlayerSide side)
@@ -148,10 +89,13 @@ std::unique_ptr<AttackAnimation> Blue::createAttackAnimation(BoardEntity* target
 // Blue's Special can target ANY enemy Monster on the Board (see
 // isValidSpecialTarget's default in Monster.h - no adjacency requirement),
 // so that direction is generally NOT the raw (target - Blue) coordinate
-// delta; knockbackStep() above resolves it to a proper single hex-step
-// first. Passability (including the existing Hole/flying rule) and
-// occupancy are both reused as-is from Tile - Blue adds no new board rule,
-// only the meaning of "knockback" itself.
+// delta; HexGrid::stepToward resolves it to a proper single hex-step first -
+// the same shared hex-direction math Board/BoardPathfinder's own
+// reachability BFS is built on (see HexGrid.h), so this knowledge exists in
+// exactly one place instead of Blue re-deriving its own copy. Passability
+// (including the existing Hole/flying rule) and occupancy are both reused
+// as-is from Tile - Blue adds no new board rule, only the meaning of
+// "knockback" itself.
 void Blue::onSpecialAbility(Board& board, BoardEntity* target)
 {
     Monster* targetMonster = target ? target->asMonster() : nullptr;
@@ -160,7 +104,7 @@ void Blue::onSpecialAbility(Board& board, BoardEntity* target)
     Tile* currentTile = targetMonster->getCurrentTile();
     if (!currentTile) return;
 
-    auto [dq, dr] = knockbackStep(m_q, m_row, targetMonster->getQ(), targetMonster->getRow());
+    auto [dq, dr] = HexGrid::stepToward(m_q, m_row, targetMonster->getQ(), targetMonster->getRow());
 
     // Wind effect: built from the target's ORIGINAL position and the
     // board's own tile-to-tile screen distance for (dq, dr) - the exact
