@@ -93,3 +93,4 @@ void MiniMenuState::handleEvent(const sf::Event& event)
     m_volumeButton.handleEvent(event);
 }
 //
+//
