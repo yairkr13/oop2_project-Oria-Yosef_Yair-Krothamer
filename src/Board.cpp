@@ -88,27 +88,41 @@ void Board::createBoard()
 
 void Board::draw(sf::RenderWindow& window) const
 {
+    // Two full passes, deliberately NOT interleaved tile-by-tile (hex,
+    // occupant, hex, occupant, ...): m_grid is a std::map keyed by
+    // (q, row), so iterating it draws tiles left-to-right (sorted by q).
+    // A moving entity is drawn as part of whichever tile it's LOGICALLY
+    // standing on (its target tile - see Board::performMove, which
+    // reassigns it there before the walk animation even starts), which is
+    // not necessarily the tile under its current on-screen/animated
+    // position (Monster::m_screenPos, interpolated in Monster::update).
+    //
+    // Interleaving meant a tile with a greater q than the moving entity's
+    // target tile - i.e. a tile still ahead of it in iteration order -
+    // got its semi-transparent hex painted on top of that entity's sprite
+    // whenever the entity's animated position still overlapped it. Moving
+    // right-to-left, the target tile's q is SMALLER than the source's, so
+    // every tile in between (q between target and source) is drawn AFTER
+    // the entity and stamps its hex on top of it for the whole animation -
+    // exactly the "gray/darker, looks stuck under a tile" glitch. Moving
+    // left-to-right never showed it: the target tile's q is the larger
+    // one, so it (and the entity drawn with it) is always painted last.
+    //
+    // Drawing every tile's hex first, then every tile's occupant, makes
+    // every occupant draw strictly on top of every hex regardless of grid
+    // iteration order, so this no longer depends on movement direction.
+
     // 1. ציור כל המשבצות עצמן
     for (auto const& [coords, tile] : m_grid)
     {
         tile->draw(window);
-        /* if (tile->hasHeart()) {
-             tile->getHeart()->draw(window);
-         }*/
     }
-
-    // 2. ציור כל הישויות שנמצאות על המשבצות
-    //for (auto const& [coords, tile] : m_grid)
-    //{
-    //    // lock() ממיר את weak_ptr ל-shared_ptr זמני. אם לא קיים - מחזיר null
-    //    if (auto monster = tile->getMonster())
-    //    {
-    //        monster->draw(window, currentTurnSide);
-    //    }
-    //}
-    // (tile->draw() above already calls entity->draw() for the occupied
-    // tiles - and a Monster now draws its own in-flight attack animation as
-    // part of that call, so there is nothing left for Board to draw here.)
+    
+    // 2. ציור כל הישויות שנמצאות על המשבצות - תמיד מעל כל המשבצות
+    for (auto const& [coords, tile] : m_grid)
+    {
+        tile->drawEntity(window);
+    }
 }
 
 // בתוך Board.cpp

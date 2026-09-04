@@ -11,6 +11,20 @@ public:
 	Tile(int q, int row, const sf::Vector2f& position, const sf::Color& color= sf::Color(80, 80, 80, 180));
     virtual ~Tile() = default; // 1. ���� ���� ����������� ������ �����!
 	void draw(sf::RenderWindow& window) const;
+
+	// Draws only this tile's occupant (if any), never the hex itself. Split
+	// out from draw() so Board can paint every tile's hex first and every
+	// tile's occupant second, in two separate full passes - see Board::draw
+	// for why: drawing them tile-by-tile (hex+occupant, hex+occupant, ...)
+	// made layering depend on m_grid's iteration order (sorted by q), so a
+	// monster mid-walk got another tile's hex painted on top of it whenever
+	// that tile's q was greater than the tile the monster is logically
+	// standing on - most visible moving right-to-left, since the target
+	// tile (drawn early, smaller q) is where the still-mid-animation moving
+	// entity is drawn from, while the tiles it's still passing over
+	// (larger q) get painted after it.
+	void drawEntity(sf::RenderWindow& window) const;
+
 	int getQ() const { return m_q; }
 	int getRow() const { return m_row; }
 

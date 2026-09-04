@@ -70,12 +70,12 @@ void BoardEntity::drawHealthBar(sf::RenderWindow& window) const
     /*if (m_side == currentPlayer)
         return;*/
         // 1. ����� ����� ��� ����� (����, 80% ����� ����� ����)
-    float barWidth = Config::MONSTER_BOARD_SIZE * 0.8f;
+    float barWidth = Config::MONSTER_BOARD_SIZE * 0.65f;
     float barHeight = 6.f;
 
     // 2. ����� ����� ��� ��� ������ (����� �-m_screenPos ��� ���� �����)
     float x = m_screenPos.x - (barWidth / 2.f);
-    float y = m_screenPos.y - (Config::MONSTER_BOARD_SIZE / 2.f) - 12.f; // 12 ������� ��� �����
+    float y = m_screenPos.y - (Config::MONSTER_BOARD_SIZE / 2.f) - 10.f; // 12 ������� ��� �����
 
     // 3. ���� ��� �� ����� (���� ��� �� ����)
     sf::RectangleShape bgBar({ barWidth, barHeight });

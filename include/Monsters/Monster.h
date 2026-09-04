@@ -2,9 +2,11 @@
 #include "Constants.h"
 #include "BoardEntity.h"
 #include "SpriteSheet.h"
+#include "SpriteAnimator.h"
 #include <string>
 #include <deque>
 #include <memory>
+#include <functional>
 class Board; // Forward declaration - only ever used by reference in Special Ability hooks below
 
 //צריך להפוך לא
@@ -186,36 +188,41 @@ protected:
     // describe the sheet's uniform grid (frame size is derived from the
     // real loaded texture, never hardcoded); `frameDuration` is how long
     // each frame is shown, in seconds - the one knob for animation speed.
+    //
+    // This (and the three setters below) is Monster's entire public-facing
+    // animation-state surface - a subclass calls these from its own
+    // constructor exactly as before and never otherwise touches animation
+    // state; internally each now just registers one more state with
+    // m_animator (see addAnimationState() and the AnimState enum below).
+    // The animator itself (what it is, how it decides who's active) is a
+    // private implementation detail of Monster - nothing outside this class
+    // needs to know it exists.
     void setWalkAnimation(const std::string& walkTextureKey, int columns, int rows, float frameDuration);
 
     // Same idea, tied to isAttacking() instead - i.e. shown only while this
     // monster's own m_attackAnimation (the projectile/VFX built by
     // createAttackAnimation) is in flight, swapped back to the static
-    // sprite the instant it resolves. Not called by any monster's
-    // constructor yet except Muffintop's; every other monster simply never
-    // calls this (or setWalkAnimation), so both sheets stay unconfigured
-    // and their update()/draw() behave exactly as before, unchanged.
+    // sprite the instant it resolves.
     void setAttackSpriteAnimation(const std::string& attackTextureKey, int columns, int rows, float frameDuration);
 
-    // Same idea again, this time the lowest-priority of the three - shown
-    // only while neither the walk sheet nor the attack sheet applies (see
-    // draw()'s activeSheet selection: attack beats walk beats idle), i.e.
-    // whenever this monster is on the board and not currently moving or
-    // attacking. A monster that hasn't called this keeps falling back to
-    // its static sprite while idle, exactly as before Idle existed at all -
-    // so adding Idle for one monster never affects any other.
+    // Same idea again, lowest priority of the four (see AnimState/
+    // addAnimationState below) - shown only while neither attack nor walk
+    // applies, i.e. whenever this monster is on the board and not currently
+    // moving or attacking. A monster that hasn't called this keeps falling
+    // back to its static sprite while idle, exactly as before Idle existed
+    // at all - so adding Idle for one monster never affects any other.
     void setIdleSpriteAnimation(const std::string& idleTextureKey, int columns, int rows, float frameDuration);
 
-    // Highest-priority of the four (see draw()'s activeSheet selection: die
-    // beats attack beats walk beats idle) and the only non-looping one -
-    // built with looping=false (see configureSpriteSheet/SpriteSheet)
-    // so it plays exactly once and holds on its last frame instead of
-    // restarting. Driven by isDying() (true from the instant HP reaches 0
-    // until this animation finishes), not by any separate flag - once
-    // active it never yields back to walk/attack/idle, since isAlive()
-    // never becomes true again. A monster that hasn't called this is
-    // removed from the board immediately on death, exactly as every
-    // monster was before Die sheets existed (see isReadyForRemoval()).
+    // Highest priority of the four (see addAnimationState below: die beats
+    // attack beats walk beats idle) and the only non-looping one - built
+    // with looping=false (see configureSpriteSheet/SpriteSheet) so it plays
+    // exactly once and holds on its last frame instead of restarting.
+    // Driven by isAlive() (false from the instant HP reaches 0 onward), not
+    // by any separate flag - once active it never yields back to
+    // walk/attack/idle, since isAlive() never becomes true again. A
+    // monster that hasn't called this is removed from the board
+    // immediately on death, exactly as every monster was before Die sheets
+    // existed (see isReadyForRemoval()).
     void setDieSpriteAnimation(const std::string& dieTextureKey, int columns, int rows, float frameDuration);
 
     std::string m_name;
@@ -235,20 +242,6 @@ protected:
     //sf::Vector2f m_targetPos;//private od protected??????????????????????????????
     std::deque<sf::Vector2f> m_pathQueue; // ���: ��� ������ ������, ���� m_targetPos ������
     bool m_isMoving = false;
-
-    // Optional sprite-sheet-driven states (see setWalkAnimation/
-    // setAttackSpriteAnimation above) - null (unconfigured) for every
-    // monster that hasn't opted into that particular one, which is every
-    // monster except Muffintop for now; same "pointer presence is the
-    // state" convention m_attackAnimation/m_specialAnimation below already
-    // use. Each SpriteSheet holds a non-owning pointer into AssetsManager's
-    // own texture (same lifetime assumption m_sprite already relies on for
-    // m_textureKey).
-    //למה זה כאן? זה מיותר. לנסות לעשות command
-    std::unique_ptr<SpriteSheet> m_walkSheet;
-    std::unique_ptr<SpriteSheet> m_attackSheet;
-    std::unique_ptr<SpriteSheet> m_idleSheet;
-    std::unique_ptr<SpriteSheet> m_dieSheet;
 
     // This monster's own in-flight attack animation (see createAttackAnimation/
     // playAttackAnimation) - owned, updated and drawn here, the same
@@ -307,9 +300,31 @@ private:
     // reference size a Monster's own sheets use.
     std::unique_ptr<SpriteSheet> configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration, bool looping = true) const;
 
-    // Advances `sheet`'s animation while `active` is true, otherwise resets
-    // it to frame 0 (so whichever state becomes active next always starts
-    // fresh) - a no-op for an unconfigured (null) sheet. Shared by update()
-    // for all four sheets below.
-    static void updateSpriteSheet(SpriteSheet* sheet, bool active, float dt);
+    // The opaque ids Monster's four sheets are registered under (see
+    // m_animator below) - meaningful only inside this class. SpriteAnimator
+    // itself only ever sees the underlying int (via static_cast), and never
+    // needs to know what any of them represents; this enum is what lets
+    // Monster's own code (isDying/isReadyForRemoval, and each setter below)
+    // refer to "the Die state" by name instead of a bare magic number.
+    // Adding a future state (e.g. a "Special/Cast" pose) means adding one
+    // more value here plus one more addAnimationState() call somewhere -
+    // nothing else in Monster, and nothing at all in SpriteAnimator, needs
+    // to change.
+    enum class AnimState : int { Idle, Walk, Attack, Die };
+
+    // Shared by setWalkAnimation/setAttackSpriteAnimation/etc: registers
+    // one more state with m_animator under the given id/priority. Kept as
+    // its own private helper (rather than each setter calling
+    // m_animator.addState directly) purely so the four setters read
+    // uniformly - it adds no behavior of its own beyond forwarding.
+    void addAnimationState(AnimState id, std::unique_ptr<SpriteSheet> sheet,
+        std::function<bool()> isActive, int priority);
+
+    // This monster's own animation-state machine (see SpriteAnimator) -
+    // owns all four of its sprite sheets internally and decides which one
+    // is active each frame. Private: nothing outside Monster - not Board,
+    // not GameplayState, not even a Monster subclass - ever needs to know
+    // this exists or touch it directly; subclasses only ever go through
+    // the four setAnimation methods above, exactly as before.
+    SpriteAnimator m_animator;
 };

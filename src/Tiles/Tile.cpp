@@ -31,6 +31,10 @@ Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)/
 void Tile::draw(sf::RenderWindow& window) const
 {
     window.draw(m_shape);
+}
+
+void Tile::drawEntity(sf::RenderWindow& window) const
+{
     if (m_entity != nullptr)
     {
         m_entity->draw(window); // קריאה וירטואלית (אפס RTTI, מהיר לחלוטין)
