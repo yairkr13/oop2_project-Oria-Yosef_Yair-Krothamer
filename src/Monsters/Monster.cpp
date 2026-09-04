@@ -84,7 +84,7 @@ bool Monster::isReadyForRemoval() const
     return !m_dieSheet || m_dieSheet->isFinished();
 }
 
-void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
+void Monster::draw(sf::RenderWindow& window) const
 {
     if (m_q == -1 && m_row == -1) return;
 
@@ -155,15 +155,16 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
         circle.setPosition(m_screenPos);
         window.draw(circle);
     }
-    if (m_side != currentTurnSide)
-    {
-        drawHealthBar(window); // already a no-op while dead - see BoardEntity::drawHealthBar
-    }
-    else if (isAlive())
+    //if (m_side != currentTurnSide)
+    //{
+    //    drawHealthBar(window); // already a no-op while dead - see BoardEntity::drawHealthBar
+    //}
+    if (isAlive())
     {
         // Skipped while dying (see isDying()) - an actions-left count has
         // no meaning floating over a monster that's already dead and
         // playing its death animation.
+		drawHealthBar(window);
         drawActionsLeft(window);
     }
 

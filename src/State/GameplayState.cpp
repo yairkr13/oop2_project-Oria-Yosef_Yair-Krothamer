@@ -66,7 +66,7 @@ void GameplayState::draw(sf::RenderWindow& window) const
     window.draw(m_background);
 
     Player& current = m_turnManager.getCurrentPlayer();
-    m_board.draw(window, current.getSide());
+    m_board.draw(window);
 
     // Card already knows how to render its own "selected" border
     // (see Card::draw's isSelected parameter) - we just need to feed it
@@ -78,8 +78,8 @@ void GameplayState::draw(sf::RenderWindow& window) const
     Card* visuallySelectedCard = m_selectedFromHand ? m_selectedFromHand : m_pendingSpecialCard;
     current.draw(window, &current == m_player2.get(), visuallySelectedCard);
 
-    m_player1->drawKeys(window, false);
-    m_player2->drawKeys(window, true);
+    //m_player1->drawKeys(window, false);
+    //m_player2->drawKeys(window, true);
 
     if (m_miniMenuButton)
         m_miniMenuButton->draw(window);

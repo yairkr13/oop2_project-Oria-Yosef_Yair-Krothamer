@@ -30,7 +30,7 @@ public:
         m_sprite.setPosition(screenPos);
     }
 
-    void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const override {
+    void draw(sf::RenderWindow& window) const override {
         window.draw(m_sprite);
         drawHealthBar(window);
     }

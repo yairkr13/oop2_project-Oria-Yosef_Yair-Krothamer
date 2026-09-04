@@ -15,7 +15,7 @@ class Board
 {
 public:
 	Board();
-	void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const;
+	void draw(sf::RenderWindow& window) const;
 	//bool isTilePassable(Tile* start, Tile* end) const;
 
 	void update(float dt);

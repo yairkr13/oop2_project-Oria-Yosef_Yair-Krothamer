@@ -10,7 +10,7 @@ class Tile //: public StaticObject
 public:
 	Tile(int q, int row, const sf::Vector2f& position, const sf::Color& color= sf::Color(80, 80, 80, 180));
     virtual ~Tile() = default; // 1. ���� ���� ����������� ������ �����!
-	void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const;
+	void draw(sf::RenderWindow& window) const;
 	int getQ() const { return m_q; }
 	int getRow() const { return m_row; }
 

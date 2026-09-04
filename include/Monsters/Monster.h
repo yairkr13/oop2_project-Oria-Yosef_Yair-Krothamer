@@ -7,7 +7,7 @@
 #include <memory>
 class Board; // Forward declaration - only ever used by reference in Special Ability hooks below
 
-//צריך להפוך לאבסטרקטית
+//צריך להפוך לא
 class Monster :public BoardEntity
 {
 public:
@@ -17,7 +17,7 @@ public:
     // forward-declared in this header (via BoardEntity.h) - same reason
     // BoardEntity::createAttackAnimation's body had to move out-of-line.
     virtual ~Monster();
-    void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const override;
+    void draw(sf::RenderWindow& window) const override;
     //void drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const;
     // 
     //void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos);

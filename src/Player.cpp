@@ -42,6 +42,7 @@ void Player::handleClick(sf::Vector2f pos)
 void Player::draw(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand) const
 {
     drawHand(window, alignRight, selectedFromHand);
+	drawKeys(window, alignRight);
 	//למה הוא לא קורא לdrawKeys? כי הוא לא קורא לdrawKeys, צריך להוסיף את זה פה
 }
 

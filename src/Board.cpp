@@ -86,12 +86,12 @@ void Board::createBoard()
 //    }
 //}
 
-void Board::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
+void Board::draw(sf::RenderWindow& window) const
 {
     // 1. ציור כל המשבצות עצמן
     for (auto const& [coords, tile] : m_grid)
     {
-        tile->draw(window, currentTurnSide);
+        tile->draw(window);
         /* if (tile->hasHeart()) {
              tile->getHeart()->draw(window);
          }*/

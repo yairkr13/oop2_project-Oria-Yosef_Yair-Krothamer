@@ -23,7 +23,7 @@ public:
 
     //virtual int getRange() const { return 0; }
     // ����� ������� ������ ����:
-    virtual void draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const = 0;
+    virtual void draw(sf::RenderWindow& window) const = 0;
     virtual void takeDamage(int damage);
 
     // Heals this entity, capped at its own max HP - mirrors takeDamage as

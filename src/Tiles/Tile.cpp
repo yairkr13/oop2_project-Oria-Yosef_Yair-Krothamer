@@ -28,12 +28,12 @@ Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)/
     // m_shape.setOrigin(radius, radius);
 }
 
-void Tile::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
+void Tile::draw(sf::RenderWindow& window) const
 {
     window.draw(m_shape);
     if (m_entity != nullptr)
     {
-        m_entity->draw(window, currentTurnSide); // קריאה וירטואלית (אפס RTTI, מהיר לחלוטין)
+        m_entity->draw(window); // קריאה וירטואלית (אפס RTTI, מהיר לחלוטין)
     }
 }
 

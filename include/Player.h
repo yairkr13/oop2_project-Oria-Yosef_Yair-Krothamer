@@ -22,7 +22,6 @@ public:
     // �����: ���� ������ ���� (���� ����) ���� ������ ������ ���
     //void draw(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;
     void draw(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand = nullptr) const;
-    void drawKeys(sf::RenderWindow& window, bool alignRight) const;
 
     // �����: �������� ������ ����� ���� (�� �� ����� �� "����" �� ����, ��� �� ���� �����)
     Card* handleHandClick(sf::Vector2f mousePos, bool alignRight) const;
@@ -52,7 +51,8 @@ public:
 //private:
 protected:
     //void drawHand(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;
-    void drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand = nullptr) const;
+    //void drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand = nullptr) const;
+    //void drawKeys(sf::RenderWindow& window, bool alignRight) const;
 
 	std::unique_ptr<Heart> m_heart;
     // 
@@ -64,4 +64,7 @@ protected:
     //std::vector<std::shared_ptr<Monster>> m_monsters;
     std::vector<std::unique_ptr<Monster>> m_monsters;
     std::vector<std::unique_ptr<Card>> m_hand;
+private:
+    void drawKeys(sf::RenderWindow& window, bool alignRight) const;
+    void drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand = nullptr) const;
 };
