@@ -18,6 +18,7 @@ namespace Config
 
     inline constexpr float TILE_RADIUS = 48.f;
 
+    //למה הם פה? לא עדיף שהם יהיו בקלף?
     inline constexpr float CARD_WIDTH = 80.f;
     inline constexpr float CARD_HEIGHT = 100.f;
     inline constexpr float CARD_SPACING = 110.f;

@@ -7,6 +7,7 @@
 #include <memory>
 class Board; // Forward declaration - only ever used by reference in Special Ability hooks below
 
+//צריך להפוך לאבסטרקטית
 class Monster :public BoardEntity
 {
 public:
@@ -243,6 +244,7 @@ protected:
     // use. Each SpriteSheet holds a non-owning pointer into AssetsManager's
     // own texture (same lifetime assumption m_sprite already relies on for
     // m_textureKey).
+    //למה זה כאן? זה מיותר. לנסות לעשות command
     std::unique_ptr<SpriteSheet> m_walkSheet;
     std::unique_ptr<SpriteSheet> m_attackSheet;
     std::unique_ptr<SpriteSheet> m_idleSheet;

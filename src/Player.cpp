@@ -42,6 +42,7 @@ void Player::handleClick(sf::Vector2f pos)
 void Player::draw(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand) const
 {
     drawHand(window, alignRight, selectedFromHand);
+	//למה הוא לא קורא לdrawKeys? כי הוא לא קורא לdrawKeys, צריך להוסיף את זה פה
 }
 
 //void Player::draw(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
@@ -159,6 +160,7 @@ void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
 //}
 void Player::drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand) const
 {
+    //למה זה בשחקן?
     sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
     bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
     bottomPanel.setFillColor(sf::Color(40, 40, 40));
@@ -246,9 +248,10 @@ Monster* Player::playCard(Card* card)
     if (!card || card->isPlayed() || card->getCost() > m_keys)
         return nullptr;
 
+	//crate the monster and get a unique_ptr to it
     std::unique_ptr<Monster> monster = card->spawnMonster();
 
-    // הגנה: אם יצירת המפלצת נכשלה, לא מוסיפים nullptr לווקטור
+	//if the monster is nullptr, don't proceed
     if (!monster) return nullptr;
 
     reduceKeys(card->getCost());
@@ -259,39 +262,33 @@ Monster* Player::playCard(Card* card)
     return raw;
 }
 
+//למה אנחנו צריכים את הפונקציה הזאת? אם נעשה בהמשך משהו שמוחק מפלצת בקלף שהיא מתה. לא עדיף שזה ימחק מזה? יעילות
 void Player::removeDeadMonsters()
 {
-    // שלב 1: ניתוק קלפים ממונעי dangling pointers
-    // isReadyForRemoval() here (not isAlive()), same reasoning as steps 2-3
-    // below: a monster still playing its Die sheet (see Monster::isDying/
-    // isReadyForRemoval) is already dead but must stay fully intact -
-    // Card, Tile and this very unique_ptr all still need it to exist.
+	//unlink the cards from the dead monsters first, to avoid dangling pointers
     for (auto& card : m_hand)
     {
-        if (card && card->getLinkedMonster() && card->getLinkedMonster()->isReadyForRemoval())
+        if (card && card->getLinkedMonster() && !card->getLinkedMonster()->isAlive())
             card->clearLink();
     }
 
-    // שלב 2: ניתוק מפלצות מתות מהאריחים
+	//unlink dead monsters from their tiles
     for (auto& monster : m_monsters)
     {
-        if (monster && monster->isReadyForRemoval() && monster->getCurrentTile())
+        if (monster && !monster->isAlive() && monster->getCurrentTile())
             monster->getCurrentTile()->clearEntity();
     }
 
-    // שלב 3: מחיקת מצביעי null ומפלצות מתות
-    // isReadyForRemoval(), not isAlive() - destroying the unique_ptr while
-    // isAlive() is false but isReadyForRemoval() isn't yet would free the
-    // Monster out from under its own still-playing death animation, exactly
-    // the dangling-callback hazard this distinction exists to avoid.
+	//delete the dead monsters from the vector
     m_monsters.erase(
         std::remove_if(m_monsters.begin(), m_monsters.end(),
             [](const std::unique_ptr<Monster>& m) {
-                return !m || m->isReadyForRemoval();
+                return !m || !m->isAlive();
             }),
         m_monsters.end());
 }
 
+//לבדוק שהלוח לא עושה את הפעולות האלה. 
 void Player::endTurn()
 {
     // בדיקת תקינות המצביע לפני קריאה ל-isOnBoard()

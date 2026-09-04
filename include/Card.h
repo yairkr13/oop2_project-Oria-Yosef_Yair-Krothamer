@@ -38,5 +38,5 @@ private:
     int m_cost;
     std::string m_textureKey;
     PlayerSide m_side;
-    Monster* m_linkedMonster = nullptr; // observer בלבד - Player הוא ה-owner
+    Monster* m_linkedMonster = nullptr; //only observer, player is the owner
 };

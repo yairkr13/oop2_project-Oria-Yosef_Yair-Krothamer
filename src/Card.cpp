@@ -8,6 +8,7 @@ Card::Card(std::string monsterId, int cost, std::string textureKey, PlayerSide s
 {
 }
 
+//למה פה ולא בmonster factory?
 std::unique_ptr<Monster> Card::spawnMonster()
 {
     std::unique_ptr<Monster> monster = MonsterFactory::create(m_monsterId, m_side);
@@ -60,41 +61,6 @@ void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected
     {
         drawStatusText(window, drawPos, font);
     }
-    /*if (!isPlayed())
-    {
-        sf::Text costText(font);
-        costText.setString(std::to_string(m_cost));
-        costText.setCharacterSize(22);
-        costText.setFillColor(enoughKeys ? sf::Color::White : sf::Color(255, 100, 100));
-        costText.setOutlineColor(sf::Color::Black);
-        costText.setOutlineThickness(2.f);
-        costText.setPosition({ drawPos.x + 10.f, drawPos.y + 5.f });
-        window.draw(costText);
-        return;
-    }
-
-    sf::Text statusText(font);
-    int cd = m_linkedMonster->getSpecialCooldown();
-    if (cd > 0)
-    {
-        statusText.setString("CD: " + std::to_string(cd));
-        statusText.setFillColor(sf::Color::Yellow);
-    }
-    else
-    {
-        statusText.setString("READY");
-        statusText.setFillColor(sf::Color(120, 255, 120));
-    }
-    statusText.setCharacterSize(16);
-    statusText.setOutlineColor(sf::Color::Black);
-    statusText.setOutlineThickness(2.f);
-
-    sf::FloatRect bounds = statusText.getLocalBounds();
-    statusText.setPosition({
-        drawPos.x + (Config::CARD_WIDTH - bounds.size.x) / 2.f,
-        drawPos.y + (Config::CARD_HEIGHT - bounds.size.y) / 2.f
-        });
-    window.draw(statusText);*/
 }
 
 bool Card::isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPos) const
