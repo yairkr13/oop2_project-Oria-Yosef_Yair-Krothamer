@@ -48,12 +48,14 @@ void Board::draw(sf::RenderWindow& window) const
     // iteration order, so this no longer depends on movement direction.
 
     // 1. ציור כל המשבצות עצמן
+    //לא צריך לצייר אותם רק פעם אחת???
     for (auto const& [coords, tile] : m_grid)
     {
         tile->draw(window);
     }
     
     // 2. ציור כל הישויות שנמצאות על המשבצות - תמיד מעל כל המשבצות
+    //למה השחקן לא עושה את זה ??????
     for (auto const& [coords, tile] : m_grid)
     {
         tile->drawEntity(window);
@@ -62,18 +64,21 @@ void Board::draw(sf::RenderWindow& window) const
 
 // בתוך Board.cpp
 // בתוך Board.cpp
+//למה - שיחזיר את המיקומים!????
 void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart) {
     int middleRow = 3; // השורה האמצעית של הלוח
 
     // 1. מיקום הלב של שחקן 1 (הכי שמאלי)
-    Tile* p1Tile = getLeftmostTileInRow(middleRow);
+    //Tile* p1Tile = getLeftmostTileInRow(middleRow);
+	Tile* p1Tile = getExtremeTileInRow(middleRow, true);
     if (p1Tile != nullptr && p1Heart != nullptr) {
         p1Heart->spawnOnBoard(p1Tile->getQ(), p1Tile->getRow(), p1Tile->getScreenPosition());
         p1Tile->setEntity(p1Heart);
     }
 
     // 2. מיקום הלב של שחקן 2 (הכי ימני)
-    Tile* p2Tile = getRightmostTileInRow(middleRow);
+    //Tile* p2Tile = getRightmostTileInRow(middleRow);
+    Tile* p2Tile = getExtremeTileInRow(middleRow, false);
     if (p2Tile != nullptr && p2Heart != nullptr) {
         p2Heart->spawnOnBoard(p2Tile->getQ(), p2Tile->getRow(), p2Tile->getScreenPosition());
         p2Tile->setEntity(p2Heart);
@@ -105,6 +110,7 @@ bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
     }
     return false;
 }
+
 void Board::highlightSpawnTiles(PlayerSide side)
 {
     clearHighlights();
@@ -168,6 +174,7 @@ void Board::highlightNeighbors(Monster* monster)
 
 bool Board::selectEntity(BoardEntity* entity, PlayerSide side)
 {
+    //למה הוא לא שולח מפלצת???? ככה הוא שומר אותה במילא בgamestatee לא?
     if (!entity || !entity->canBeSelectedBy(side)) return false;
 
     // Which entity is currently selected is GameplayState's own interaction
@@ -232,37 +239,53 @@ void Board::updateTileEffects()
     }
 }
 
+//למה צריך את שני הפונקציות האלה??? די חוזר על עצמו
 // החזרת המשבצת הכי שמאלית בשורה מסוימת
-Tile* Board::getLeftmostTileInRow(int row) const {
-    Tile* leftmost = nullptr;
-    int minQ = std::numeric_limits<int>::max();
+//Tile* Board::getLeftmostTileInRow(int row) const {
+//    Tile* leftmost = nullptr;
+//    int minQ = std::numeric_limits<int>::max();
+//
+//    for (const auto& [coords, tile] : m_grid) {
+//        if (coords.second == row) { // אם אנחנו בשורה המבוקשת
+//            if (coords.first < minQ) {
+//                minQ = coords.first;
+//                leftmost = tile.get();
+//            }
+//        }
+//    }
+//    return leftmost;
+//}
+//
+//// החזרת המשבצת הכי ימנית בשורה מסוימת
+//Tile* Board::getRightmostTileInRow(int row) const {
+//    Tile* rightmost = nullptr;
+//    int maxQ = std::numeric_limits<int>::min();
+//
+//    for (const auto& [coords, tile] : m_grid) {
+//        if (coords.second == row) { // אם אנחנו בשורה המבוקשת
+//            if (coords.first > maxQ) {
+//                maxQ = coords.first;
+//                rightmost = tile.get();
+//            }
+//        }
+//    }
+//    return rightmost;
+//}
+Tile* Board::getExtremeTileInRow(int row, bool findLeftmost) const {
+    Tile* bestTile = nullptr;
+    int bestQ = findLeftmost ? std::numeric_limits<int>::max() : std::numeric_limits<int>::min();
 
     for (const auto& [coords, tile] : m_grid) {
-        if (coords.second == row) { // אם אנחנו בשורה המבוקשת
-            if (coords.first < minQ) {
-                minQ = coords.first;
-                leftmost = tile.get();
+        if (coords.second == row) {
+            if ((findLeftmost && coords.first < bestQ) || (!findLeftmost && coords.first > bestQ)) {
+                bestQ = coords.first;
+                bestTile = tile.get();
             }
         }
     }
-    return leftmost;
+    return bestTile;
 }
 
-// החזרת המשבצת הכי ימנית בשורה מסוימת
-Tile* Board::getRightmostTileInRow(int row) const {
-    Tile* rightmost = nullptr;
-    int maxQ = std::numeric_limits<int>::min();
-
-    for (const auto& [coords, tile] : m_grid) {
-        if (coords.second == row) { // אם אנחנו בשורה המבוקשת
-            if (coords.first > maxQ) {
-                maxQ = coords.first;
-                rightmost = tile.get();
-            }
-        }
-    }
-    return rightmost;
-}
 
 // AI_FindBestTargetForMonster עברה ל-AIPlayer::findBestTarget - היא הייתה מכילה
 // היוריסטיקה (תקיפה > תנועה שמאלה), לא שאילתה עובדתית, אז לא הייתה שייכת ל-Board.
@@ -276,7 +299,7 @@ std::vector<Tile*> Board::getSpawnableTiles(Monster* monster, PlayerSide side) c
     std::vector<Tile*> spawnable;
     if (!monster || monster->isOnBoard()) return spawnable;
 
-    int minQ = (side == PlayerSide::Left) ? 0 : 12;
+    int minQ = (side == PlayerSide::Left) ? 0 : 12; //fix this
     int maxQ = (side == PlayerSide::Left) ? 1 : 13;
 
     for (auto& [coords, tile] : m_grid)
@@ -312,9 +335,10 @@ void Board::performAction(BoardEntity* entity, Tile* targetTile)
 
     // Movement is Monster-only (Heart has no legal movement) - the one safe
     // downcast performMove needs happens here, once.
-    if (Monster* monster = entity->asMonster())
+    if (Monster* monster = entity->asMonster())//לא אוהבת את זה
         performMove(monster, targetTile);
 }
+//למה צריך את שני הפונקציות האלה???הלוח לא קשור
 
 void Board::performAttack(BoardEntity* entity, Tile* targetTile)
 {

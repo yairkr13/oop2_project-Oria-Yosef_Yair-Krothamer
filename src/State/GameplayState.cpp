@@ -34,6 +34,8 @@ GameplayState::GameplayState(sf::RenderWindow& window, GameMode mode)
     scaleBackgroundToWindow();
     m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart());
     buildMiniMenuButton();
+
+    m_turnManager.setOnPlayerSwitched([this]() { clearSelectionState(); });
 }
 
 void GameplayState::scaleBackgroundToWindow()
@@ -101,6 +103,7 @@ void GameplayState::update(sf::Time deltaTime)
     // (specialAbilityNeedsTarget() true) - those are still only ever
     // cleared synchronously, by handleSpecialTargetClick, exactly as before.
     if (m_pendingSpecialCard)
+        //למה פה??????
     {
         Monster* pendingMonster = m_pendingSpecialCard->getLinkedMonster();
         if (!pendingMonster || (!pendingMonster->specialAbilityNeedsTarget() && !pendingMonster->isSpecialReady()))
@@ -389,9 +392,13 @@ void GameplayState::handle(const sf::Event::KeyPressed& event)
         if (m_board.isAnimating())
             return;
         m_turnManager.requestEndTurn();
-        clearPendingSpecial();
-        m_selectedFromHand = nullptr;
-        m_selectedEntity = nullptr;
-        m_board.clearHighlights();
     }
+}
+
+void GameplayState::clearSelectionState()
+{
+    clearPendingSpecial();
+    m_selectedFromHand = nullptr;
+    m_selectedEntity = nullptr;
+    m_board.clearHighlights();
 }

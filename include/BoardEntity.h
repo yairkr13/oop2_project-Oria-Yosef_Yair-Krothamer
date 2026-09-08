@@ -157,7 +157,9 @@ public:
     // exactly like playAttackAnimation already does for outgoing attacks.
     // Default is a no-op, same reasoning as playAttackAnimation's default.
     virtual void playSpecialAbilityAnimation(std::unique_ptr<AttackAnimation> animation);
-
+    //אולי אחר כך?????:
+    //virtual bool canMove() const { return false; }
+    //virtual void moveAlongPath(...) { /* No-op by default */ }
 protected:
     void drawHealthBar(sf::RenderWindow& window) const;
     // ������� ������ ��� ��� ����� ��� �� ����� ���� ����� ������ ����� �����

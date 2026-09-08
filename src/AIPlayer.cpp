@@ -11,7 +11,7 @@ Tile* AIPlayer::findBestTarget(Board& board, Monster* monster) const
 {
     if (!monster || !monster->isAlive()) return nullptr;
 
-    // שאילתה עובדתית בלבד - "מה נגיש?" - Board לא בוחר כלום כאן, רק מחזיר רשימה.
+	//ask the board what tiles are reachable for this monster, and then the AI will decide what to do with them
     std::vector<Tile*> reachable = board.getReachableTiles(monster);
 
     Tile* bestAttackTarget = nullptr;
@@ -19,14 +19,14 @@ Tile* AIPlayer::findBestTarget(Board& board, Monster* monster) const
 
     for (Tile* tile : reachable)
     {
-        // עדיפות א': אויב בטווח - תוקפים אותו
+		//first priority: if there's an enemy in range, attack it
         if (tile->hasEntity() && tile->isOccupiedByEnemy(getSide()))
         {
             bestAttackTarget = tile;
-            break; // מצאנו מטרה, אין צורך להמשיך לחפש
+			break; // we found an attack target, no need to look for a move target
         }
 
-        // עדיפות ב': משבצת פנויה שמתקדמת שמאלה (Q קטן יותר)
+		//second priority: if there's an empty tile, move to the leftmost one (lowest Q)
         if (!tile->hasEntity() && tile->isPassableFor(monster))
         {
             if (!bestMoveTarget || tile->getQ() < bestMoveTarget->getQ())
@@ -36,9 +36,10 @@ Tile* AIPlayer::findBestTarget(Board& board, Monster* monster) const
         }
     }
 
-    // נחזיר קודם כל תקיפה, ואם אין - תנועה
+	// return the best attack target if it exists, otherwise return the best move target
     return bestAttackTarget ? bestAttackTarget : bestMoveTarget;
 }
+
 void AIPlayer::onTurnStart(Board& board)
 {
     // Phase 1: Spawn all affordable monsters immediately (spawning is instant, no animation)
@@ -128,3 +129,4 @@ bool AIPlayer::isBusy() const
 {
     return m_phase != AITurnPhase::Done;
 }
+

@@ -40,4 +40,7 @@ void TurnManager::switchToNextPlayer()
 
     m_currentPlayer = (m_currentPlayer == &m_player1) ? &m_player2 : &m_player1;
     m_currentPlayer->onTurnStart(m_board);
+
+    if (m_onPlayerSwitched)
+        m_onPlayerSwitched();
 }

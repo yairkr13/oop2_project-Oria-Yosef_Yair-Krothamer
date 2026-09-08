@@ -1,4 +1,5 @@
 #pragma once
+#include  <functional>
 
 class Player;
 class Board;
@@ -27,6 +28,9 @@ public:
     // be accepted - callers never need to know the underlying rule.
     bool canAcceptInput() const;
 
+    using PlayerSwitchedCallback = std::function<void()>;
+    void setOnPlayerSwitched(PlayerSwitchedCallback cb) { m_onPlayerSwitched = std::move(cb); }
+
 private:
     void switchToNextPlayer();
 
@@ -34,4 +38,6 @@ private:
     Player& m_player2;
     Board& m_board;
     Player* m_currentPlayer;
+
+    PlayerSwitchedCallback m_onPlayerSwitched;
 };

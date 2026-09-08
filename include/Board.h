@@ -141,8 +141,9 @@ private:
 	//sf::Vector2f tileToScreen(int q, int row) const;
 	//void highlightNeighbors(int q, int row, int range);
 	void highlightNeighbors(Monster* monster); // שינוי חתימה
-	Tile* getLeftmostTileInRow(int row) const;
-	Tile* getRightmostTileInRow(int row) const;
+	//Tile* getLeftmostTileInRow(int row) const;
+	//Tile* getRightmostTileInRow(int row) const;
+	Tile* getExtremeTileInRow(int row, bool findLeftmost) const;
 	std::pair<int, int> screenToTile(const sf::Vector2f& pos) const;
 
 	//bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);

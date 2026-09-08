@@ -16,8 +16,13 @@ std::unique_ptr<Monster> Card::spawnMonster()
     return monster;
 }
 
-void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const
+void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const //chege enough keys
 {
+    //if (!m_linkedMonster) //אמור לעבוד לא? כי המפלצת שהיא מתה אז מוחקים אותה מהשחקן???????
+		//return; 
+	if (m_linkedMonster && !m_linkedMonster->isAlive())//בנתיים שמתי את זה
+		return;
+
     const sf::Font& font = AssetsManager::getInstance().getFont("Lilita");
 
     if (isSelected)

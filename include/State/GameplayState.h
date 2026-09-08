@@ -25,6 +25,8 @@ public:
     MusicTrack desiredMusicTrack() const override { return MusicTrack::Gameplay; }
 
 private:
+    void clearSelectionState();
+
     void scaleBackgroundToWindow();
 
     // Builds player 2 as an AIPlayer or a plain Player depending on mode.

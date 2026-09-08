@@ -264,21 +264,22 @@ Monster* Player::playCard(Card* card)
 }
 
 //למה אנחנו צריכים את הפונקציה הזאת? אם נעשה בהמשך משהו שמוחק מפלצת בקלף שהיא מתה. לא עדיף שזה ימחק מזה? יעילות
+//האם צריך את הפונקציה הזאת בשביל להקטין את הקלפים שמישהו מת? שלא ישאר מקום ריק?????
 void Player::removeDeadMonsters()
 {
 	//unlink the cards from the dead monsters first, to avoid dangling pointers
     for (auto& card : m_hand)
     {
-        if (card && card->getLinkedMonster() && !card->getLinkedMonster()->isAlive())
+        if (card && card->getLinkedMonster() && card->getLinkedMonster()->isReadyForRemoval())
             card->clearLink();
     }
 
 	//unlink dead monsters from their tiles
-    for (auto& monster : m_monsters)
+    /*for (auto& monster : m_monsters)
     {
         if (monster && !monster->isAlive() && monster->getCurrentTile())
             monster->getCurrentTile()->clearEntity();
-    }
+    }*/
 
 	//delete the dead monsters from the vector
     m_monsters.erase(
