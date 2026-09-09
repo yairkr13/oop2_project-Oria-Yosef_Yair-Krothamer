@@ -31,7 +31,7 @@ void BoardPathfinder::recordReachability(Tile* tile,
     }
 }
 
-bool BoardPathfinder::visitNeighbor(BoardEntity* entity, Tile* tile,
+bool BoardPathfinder::visitNeighbor(const BoardEntity* entity, Tile* tile,
     const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
     int neighborDist, int range, int attackRange,
     std::vector<Tile*>& outReachable,
@@ -54,7 +54,7 @@ bool BoardPathfinder::visitNeighbor(BoardEntity* entity, Tile* tile,
     return true;
 }
 
-void BoardPathfinder::computeReachability(BoardEntity* entity,
+void BoardPathfinder::computeReachability(const BoardEntity* entity,
     std::vector<Tile*>& outReachable,
     std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
     std::vector<Tile*>* outExtendedAttackOnly) const
@@ -124,7 +124,7 @@ void BoardPathfinder::computeReachability(BoardEntity* entity,
 //    computeReachability(monster, reachable, parent);
 //    return reachable;
 //}
-std::vector<const Tile*> BoardPathfinder::getReachableTiles(BoardEntity* entity) const
+std::vector<const Tile*> BoardPathfinder::getReachableTiles(const BoardEntity* entity) const
 {
     std::vector<Tile*> reachable;
     std::map<std::pair<int, int>, std::pair<int, int>> parent; // לא בשימוש כאן, רק כי computeReachability דורש אותו
@@ -140,7 +140,7 @@ std::vector<const Tile*> BoardPathfinder::getReachableTiles(BoardEntity* entity)
 //    computeReachability(monster, reachable, parent, &extended);
 //    return extended;
 //}
-std::vector<const Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(BoardEntity* entity) const
+std::vector<const Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(const BoardEntity* entity) const
 {
     std::vector<Tile*> reachable, extended;
     std::map<std::pair<int, int>, std::pair<int, int>> parent;

@@ -62,6 +62,8 @@ private:
     std::unique_ptr<Player> m_player2;
     TurnManager m_turnManager;
 
+    sf::Text m_endTurnHintText;
+
     // Hand-selected monster awaiting placement. UI/gameplay-input state,
     // not board state.
     //Monster* m_selectedFromHand = nullptr;

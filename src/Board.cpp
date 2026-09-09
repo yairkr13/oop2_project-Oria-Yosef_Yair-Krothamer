@@ -104,24 +104,24 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
         p1Heart, p2Heart, rng());
 }
 
-bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
-{
-    if (!monster) return false;
-
-    // Same screen-position -> Tile lookup handleClick's replacement
-    // (GameplayState::handleBoardClick) and every other click-driven flow
-    // already use, instead of a second hand-rolled hypot-distance scan.
-    Tile* tile = getTileAtScreenPosition(pos);
-    if (!tile || !tile->isHighlighted()) return false;
-
-    //if (spawnMonsterOnTile(monster, tile))
-    if (spawnEntityOnTile(monster,tile))
-    {
-        clearHighlights();
-        return true;
-    }
-    return false;
-}
+//bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
+//{
+//    if (!monster) return false;
+//
+//    // Same screen-position -> Tile lookup handleClick's replacement
+//    // (GameplayState::handleBoardClick) and every other click-driven flow
+//    // already use, instead of a second hand-rolled hypot-distance scan.
+//    Tile* tile = getTileAtScreenPosition(pos);
+//    if (!tile || !tile->isHighlighted()) return false;
+//
+//    //if (spawnMonsterOnTile(monster, tile))
+//    if (spawnEntityOnTile(monster,tile))
+//    {
+//        clearHighlights();
+//        return true;
+//    }
+//    return false;
+//}
 
 void Board::highlightSpawnTiles(PlayerSide side)
 {
@@ -129,6 +129,17 @@ void Board::highlightSpawnTiles(PlayerSide side)
     for (auto& [coords, tile] : m_grid)
     {
         if (tile->hasEntity()) continue;
+
+        if ((side == PlayerSide::Left && coords.first <= 1) ||
+            (side == PlayerSide::Right && coords.first >= 12))
+        {
+            tile->setHighlighted(true);
+        }
+    }
+    /*clearHighlights();
+    for (auto& [coords, tile] : m_grid)
+    {
+        if (tile->hasEntity() || !tile->isPassableFor(monster)) continue;
 
         if (side == PlayerSide::Left && coords.first <= 1)
         {
@@ -138,7 +149,7 @@ void Board::highlightSpawnTiles(PlayerSide side)
         {
             tile->setHighlighted(true);
         }
-    }
+    }*/
 }
 
 // Board stays the public facade for all three of these (see Board.h) - the
@@ -149,7 +160,7 @@ void Board::highlightSpawnTiles(PlayerSide side)
 //{
 //    return m_pathfinder.getReachableTiles(monster);
 //}
-std::vector<const Tile*> Board::getReachableTiles(BoardEntity* entity) const
+std::vector<const Tile*> Board::getReachableTiles(const BoardEntity* entity) const
 {
     return m_pathfinder.getReachableTiles(entity);
 }
@@ -164,7 +175,7 @@ std::vector<const Tile*> Board::getReachableTiles(BoardEntity* entity) const
 //    return m_pathfinder.getPathTo(monster, target);
 //}
 
-std::vector<const Tile*> Board::getExtendedAttackOnlyTiles(BoardEntity* entity) const
+std::vector<const Tile*> Board::getExtendedAttackOnlyTiles(const BoardEntity* entity) const
 {
     return m_pathfinder.getExtendedAttackOnlyTiles(entity);
 }
@@ -197,14 +208,14 @@ std::vector<const Tile*> Board::getPathTo(BoardEntity* entity, Tile* target) con
 //    for (Tile* tile : getExtendedAttackOnlyTiles(monster))
 //        tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
 //}
-void Board::highlightNeighbors(BoardEntity* entity) //למה זה יכול להיות קבוע????
+void Board::highlightNeighbors(const BoardEntity* entity) //למה זה יכול להיות קבוע????
 {
     if (!entity) return;
 
     for (const Tile* constTile : getReachableTiles(entity))
     {
         //bool isEnemy = tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide();
-        Tile* tile = getTileAt(constTile->getQ(), constTile->getRow());
+        Tile* tile = getMutableTileAt(constTile->getQ(), constTile->getRow());
         if (tile->isOccupiedByEnemy(entity->getSide()))
             tile->setHighlighted(true, sf::Color(255, 90, 90, 180)); // אדום - ניתן לתקוף
         else
@@ -218,7 +229,7 @@ void Board::highlightNeighbors(BoardEntity* entity) //למה זה יכול לה�
     for (const Tile* constTile : getExtendedAttackOnlyTiles(entity))
     {
         /*tile->setHighlighted(true, sf::Color(190, 90, 230, 170));*/
-        Tile* tile = getTileAt(constTile->getQ(), constTile->getRow());
+        Tile* tile = getMutableTileAt(constTile->getQ(), constTile->getRow());
         if (tile)
             tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
     }
@@ -236,7 +247,7 @@ void Board::highlightNeighbors(BoardEntity* entity) //למה זה יכול לה�
 //    highlightNeighbors(entity->asMonster());
 //    return true;
 //}
-bool Board::selectEntity(BoardEntity* entity, PlayerSide side)
+bool Board::selectEntity(const BoardEntity* entity, PlayerSide side)
 {
     if (!entity || !entity->canBeSelectedBy(side)) return false;
 
@@ -245,20 +256,20 @@ bool Board::selectEntity(BoardEntity* entity, PlayerSide side)
     return true;
 }
 
-void Board::highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color)
+void Board::highlightTiles(const std::vector< Tile*>& tiles, const sf::Color& color)
 {
     /*for ( Tile* tile : tiles)
     {
         if (tile) tile->setHighlighted(true, color);
     }*/
-    for (const Tile* constTile : tiles)
+    for ( Tile* tile : tiles)
     {
-        if (!constTile) continue;
+        if (!tile) continue;
 
         // הלוח ניגש למשבצת הפנימית שלו לפי הקואורדינטות
-        Tile* internalTile = getTileAt(constTile->getQ(), constTile->getRow());
-        if (internalTile)
-            internalTile->setHighlighted(true, color);
+        /*Tile* internalTile = getTileAt(constTile->getQ(), constTile->getRow());
+        if (internalTile)*/
+        tile->setHighlighted(true, color);
     }
 }
 
@@ -363,7 +374,7 @@ Tile* Board::getExtremeTileInRow(int row, bool findLeftmost) const {
 // שאילתה עובדתית בלבד - "אילו tiles פנויים בשטח הזימון של הצד הזה?" Board לא
 // בוחר אף אחת מהן - זו הייתה בדיוק העבודה של AI_SpawnMonster הישנה, שגם אספה
 // מועמדים וגם הגרילה אחד מהם. עכשיו רק החלק הראשון (איסוף) נשאר כאן.
-std::vector<const Tile*> Board::getSpawnableTiles(Monster* monster, PlayerSide side) const
+std::vector<const Tile*> Board::getSpawnableTiles(const Monster* monster, PlayerSide side) const
 {
     std::vector<const Tile*> spawnable;
     if (!monster || monster->isOnBoard()) return spawnable;
@@ -397,7 +408,7 @@ bool Board::spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile)
     if (!entity || !targetTile) return false;
 
     // הלוח הממיר את ה-const Tile* שקיבל ל-Tile* הפנימי של הלוח
-    Tile* internalTile = getTileAt(targetTile->getQ(), targetTile->getRow());
+    Tile* internalTile = getMutableTileAt(targetTile->getQ(), targetTile->getRow());
     if (!internalTile || internalTile->hasEntity() || !internalTile->isPassableFor(entity))
         return false;
 
@@ -424,7 +435,7 @@ bool Board::spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile)
 void Board::performAction(BoardEntity* entity,const Tile* constTargetTile)
 {
     if (!entity || !constTargetTile) return;
-    Tile* targetTile = getTileAt(constTargetTile->getQ(), constTargetTile->getRow());
+    Tile* targetTile = getMutableTileAt(constTargetTile->getQ(), constTargetTile->getRow());
     if (!targetTile) return;
 
     if (targetTile->isOccupiedByEnemy(entity->getSide()))
@@ -465,7 +476,7 @@ void Board::performAttack(BoardEntity* entity, Tile* targetTile)
     // Board never needs to know which concrete entity/animation this is,
     // nor does it ever compute or inspect a damage value: that stays
     // entirely below Tile::receiveAttackFrom, inside Monster::attack().
-    BoardEntity* target = targetTile->getEntity();
+    BoardEntity* target = targetTile->getEntity(); //למה זה בלוח???????
     if (std::unique_ptr<AttackAnimation> animation = entity->createAttackAnimation(target))
     {
         animation->setOnImpact([targetTile, entity]() {
@@ -684,25 +695,32 @@ std::pair<int, int> Board::screenToTile(const sf::Vector2f& pos) const
 //// Board.cpp - הוספה, לא נוגעת ב-Card בכלל, רק ב-Tile/geometry
 bool Board::isSpawnPositionValid(const sf::Vector2f& pos) const
 {
-    Tile* tile = getTileAtScreenPosition(pos);
+    const Tile* tile = getTileAtScreenPosition(pos);
     return tile && tile->isHighlighted() && !tile->hasEntity();
 }
 
-Tile* Board::getTileAt(int q, int row) const
+const Tile* Board::getTileAt(int q, int row) const
 {
-    auto it = m_grid.find({ q, row });
-    return (it != m_grid.end()) ? it->second.get() : nullptr;
+    return getMutableTileAt(q, row);
+    //auto it = m_grid.find({ q, row });
+    //return (it != m_grid.end()) ? it->second.get() : nullptr;
 }
 
-Tile* Board::getTileAtScreenPosition(const sf::Vector2f& pos) const
+const Tile* Board::getTileAtScreenPosition(const sf::Vector2f& pos) const
 {
     auto [q, row] = screenToTile(pos);
     return getTileAt(q, row);
 }
 
-std::vector<const Tile*> Board::getOccupiedTiles() const
+Tile* Board::getMutableTileAt(int q, int row) const
 {
-    std::vector<const Tile*> occupied;
+    auto it = m_grid.find({ q, row });
+    return (it != m_grid.end()) ? it->second.get() : nullptr;
+}
+
+std::vector< Tile*> Board::getOccupiedTiles() const
+{
+    std::vector<Tile*> occupied;
     for (auto const& [coords, tile] : m_grid)
     {
         if (tile->hasEntity())
@@ -711,17 +729,40 @@ std::vector<const Tile*> Board::getOccupiedTiles() const
     return occupied;
 }
 
-//void Board::highlightValidSpecialTargets(Monster* caster)
-//{
-//    if (!caster) return;
-//
-//    // הלוח רץ על המשבצות הלא-קבועות הפנימיות שלו (Tile*)
-//    for (Tile* tile : getOccupiedTilesInternal()) // או הלולאה של המפה/ווקטור הפנימי של המשבצות
-//    {
-//        BoardEntity* candidate = tile->getEntity();
-//        if (candidate && caster->isValidSpecialTarget(*candidate))
-//        {
-//            tile->setHighlighted(true, caster->getSpecialTargetHighlightColor());
-//        }
-//    }
-//}
+void Board::highlightValidSpecialTargets(const Monster* caster)
+{
+    if (!caster) return;
+
+    // הלוח רץ על המשבצות הלא-קבועות הפנימיות שלו (Tile*)
+    for (Tile* tile : getOccupiedTiles()) // או הלולאה של המפה/ווקטור הפנימי של המשבצות
+    {
+        BoardEntity* candidate = tile->getEntity();
+        if (candidate && caster->isValidSpecialTarget(*candidate))
+        {
+            tile->setHighlighted(true, caster->getSpecialTargetHighlightColor());
+        }
+    }
+}
+
+//למה זה פה???? הלוח הוא משנה את המפלצת
+void Board::applyKnockback(BoardEntity* entity, int dq, int dr)
+{
+    if (!entity) return;
+
+    Tile* sourceTile = entity->getCurrentTile();
+    if (!sourceTile) return;
+
+    Tile* step1 = getMutableTileAt(entity->getQ() + dq, entity->getRow() + dr);
+    bool step1Valid = step1 && !step1->hasEntity() && step1->isPassableFor(entity);
+    if (!step1Valid) return; // המשבצת הראשונה חסומה/מחוץ ללוח -> אין תזוזה בכלל
+
+    Tile* step2 = getMutableTileAt(step1->getQ() + dq, step1->getRow() + dr);
+    bool step2Valid = step2 && !step2->hasEntity() && step2->isPassableFor(entity);
+
+    Tile* destination = step2Valid ? step2 : step1; // דוחף 2 אם שתיהן פנויות, אחרת רק 1
+
+    sourceTile->clearEntity();
+    destination->setEntity(entity);
+    entity->spawnOnBoard(destination->getQ(), destination->getRow(),
+        tileToScreen(destination->getQ(), destination->getRow()));
+}

@@ -33,14 +33,14 @@ public:
 
     // שכבה 1: לוגיקה טהורה - "אילו tiles המפלצת יכולה להגיע/לתקוף אליהם", בלי לצייר כלום.
     //std::vector<Tile*> getReachableTiles(Monster* monster) const;
-    std::vector<const Tile*> getReachableTiles(BoardEntity* entity) const;
+    std::vector<const Tile*> getReachableTiles(const BoardEntity* entity) const;
 
     // Enemy tiles reachable ONLY because of a monster's extended attack
     // range (Monster::getAttackRange() > getRange()) - i.e. beyond normal
     // move/attack reach but still within the extended reach. Empty for
     // every monster whose getAttackRange() == getRange() (the default).
     //std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;
-    std::vector<const Tile*> getExtendedAttackOnlyTiles(BoardEntity* entity) const;
+    std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
 
     // שלב ב': אותה שאילתה, אבל מחזירה את המסלול המדורג (לפי סדר) מהמפלצת ל-target
     // הספציפי, לא רק "מה אפשר". target חייב להיות tile שכבר יצא מ-getReachableTiles
@@ -53,7 +53,7 @@ private:
         std::vector<Tile*>& outReachable,
         std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
         std::vector<Tile*>* outExtendedAttackOnly = nullptr) const;*/
-    void computeReachability(BoardEntity* entity,
+    void computeReachability(const BoardEntity* entity,
         std::vector<Tile*>& outReachable,
         std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
         std::vector<Tile*>* outExtendedAttackOnly = nullptr) const;
@@ -66,7 +66,7 @@ private:
         std::vector<Tile*>& outReachable,
         std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
         std::vector<Tile*>* outExtendedAttackOnly) const;*/
-    bool visitNeighbor(BoardEntity* entity, Tile* tile,
+    bool visitNeighbor(const BoardEntity* entity, Tile* tile, //למה לא עשינו CONST גם למשבצת??????
         const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
         int neighborDist, int range, int attackRange,
         std::vector<Tile*>& outReachable,

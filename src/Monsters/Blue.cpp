@@ -132,22 +132,23 @@ void Blue::onSpecialAbility(Board& board, BoardEntity* target)
     // the target's current tile at fire-time (rather than capturing
     // currentTile from above) since this now runs later, not immediately.
     windEffect->setOnImpact([&board, target, dq, dr]() {
-        Tile* sourceTile = target->getCurrentTile();
-        if (!sourceTile) return;
+        //Tile* sourceTile = target->getCurrentTile();
+        //if (!sourceTile) return;
 
-        Tile* step1 = board.getTileAt(target->getQ() + dq, target->getRow() + dr);
-        bool step1Valid = step1 && !step1->hasEntity() && step1->isPassableFor(target);
-        if (!step1Valid) return; // first tile blocked/off-board -> no movement at all
+        //const Tile* step1 = board.getTileAt(target->getQ() + dq, target->getRow() + dr);
+        //bool step1Valid = step1 && !step1->hasEntity() && step1->isPassableFor(target);
+        //if (!step1Valid) return; // first tile blocked/off-board -> no movement at all
 
-        Tile* step2 = board.getTileAt(step1->getQ() + dq, step1->getRow() + dr);
-        bool step2Valid = step2 && !step2->hasEntity() && step2->isPassableFor(target);
+        //const Tile* step2 = board.getTileAt(step1->getQ() + dq, step1->getRow() + dr);
+        //bool step2Valid = step2 && !step2->hasEntity() && step2->isPassableFor(target);
 
-        Tile* destination = step2Valid ? step2 : step1; // push 2 if both clear, otherwise exactly 1
+        //const Tile* destination = step2Valid ? step2 : step1; // push 2 if both clear, otherwise exactly 1
 
-        sourceTile->clearEntity();
-        destination->setEntity(target);
-        target->spawnOnBoard(destination->getQ(), destination->getRow(),
-            board.tileToScreen(destination->getQ(), destination->getRow()));
+        //sourceTile->clearEntity();
+        //destination->setEntity(target);
+        //target->spawnOnBoard(destination->getQ(), destination->getRow(),
+        //    board.tileToScreen(destination->getQ(), destination->getRow()));
+        board.applyKnockback(target, dq, dr);
     });
 
     target->playSpecialAbilityAnimation(std::move(windEffect));

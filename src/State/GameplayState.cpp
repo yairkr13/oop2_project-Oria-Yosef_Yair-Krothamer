@@ -30,12 +30,22 @@ GameplayState::GameplayState(sf::RenderWindow& window, GameMode mode)
     , m_player1(std::make_unique<Player>(PlayerSide::Left))
     , m_player2(makePlayer2(mode))
     , m_turnManager(*m_player1, *m_player2, m_board)
+    , m_endTurnHintText(AssetsManager::getInstance().getFont("Lilita"))
 {
     scaleBackgroundToWindow();
     m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart());
     buildMiniMenuButton();
 
     m_turnManager.setOnPlayerSwitched([this]() { clearSelectionState(); });
+
+    m_endTurnHintText.setString("PRESS SPACE TO END TURN");
+    m_endTurnHintText.setCharacterSize(13); // גודל קטן
+    m_endTurnHintText.setFillColor(sf::Color(200, 200, 200, 180)); // צבע אפור-לבן עדין מעט שקוף
+
+    // מיקום במרכז X ובחלק התחתון ביותר של המסך (12 פיקסלים מהקצה)
+    float centerX = m_window.getSize().x / 2.0f;
+    float bottomY = m_window.getSize().y - 12.0f;
+    m_endTurnHintText.setPosition({ centerX, bottomY });
 }
 
 void GameplayState::scaleBackgroundToWindow()
@@ -99,6 +109,7 @@ void GameplayState::drawButtomPanel(sf::RenderWindow& window) const
     bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
     bottomPanel.setFillColor(sf::Color(40, 40, 40));
     window.draw(bottomPanel);
+    m_window.draw(m_endTurnHintText); //אם יש דרך יותר טובה...
 }
 
 void GameplayState::update(sf::Time deltaTime)
@@ -150,21 +161,45 @@ void GameplayState::handleEvent(const sf::Event& event)
     event.visit([this](const auto& e) { handle(e); });
 }
 
+//void GameplayState::handleSpawnAttempt(const sf::Vector2f& pos, Player& current)
+//{
+//    // ������ ������ *����* playCard - Board �� ���� ���� �� Card, �� �� geometry
+//    if (!m_selectedFromHand)
+//        return;
+//    if (!m_board.isSpawnPositionValid(pos))
+//        return;
+//
+//    Monster* monster = current.playCard(m_selectedFromHand); // Player ���� �cost+ownership
+//    if (!monster)
+//        return; // �� ���� ����� �� ������ ����� ����, ��� ������ �� �����
+//    
+//    if (m_board.trySpawnMonster(pos, monster)) // Board ���� Monster ����, �� Card
+//    {
+//        m_selectedFromHand = nullptr; // clearHighlights ��� ���� ���� trySpawnMonster ������
+//        m_board.clearHighlights();
+//    }
+//}
 void GameplayState::handleSpawnAttempt(const sf::Vector2f& pos, Player& current)
 {
-    // ������ ������ *����* playCard - Board �� ���� ���� �� Card, �� �� geometry
     if (!m_selectedFromHand)
         return;
-    if (!m_board.isSpawnPositionValid(pos))
+
+    // 1. משיגים את המשבצת שעליה לחצו
+    const Tile* tile = m_board.getTileAtScreenPosition(pos);
+
+    // 2. בודקים שהיא קיימת ומודגשת (כלומר חוקית לזימון)
+    if (!tile || !tile->isHighlighted())
         return;
 
-    Monster* monster = current.playCard(m_selectedFromHand); // Player ���� �cost+ownership
+    // 3. משלמים את העלות ויוצרים את המפלצת
+    Monster* monster = current.playCard(m_selectedFromHand);
     if (!monster)
-        return; // �� ���� ����� �� ������ ����� ����, ��� ������ �� �����
-    
-    if (m_board.trySpawnMonster(pos, monster)) // Board ���� Monster ����, �� Card
+        return;
+
+    // 4. מזמנים אותה ישירות על המשבצת
+    if (m_board.spawnEntityOnTile(monster, tile))
     {
-        m_selectedFromHand = nullptr; // clearHighlights ��� ���� ���� trySpawnMonster ������
+        m_selectedFromHand = nullptr;
         m_board.clearHighlights();
     }
 }
@@ -205,7 +240,7 @@ void GameplayState::handleSpecialAbilityClick(Card* card)
         m_pendingSpecialCard = card;
         m_selectedFromHand = nullptr;
         m_board.clearHighlights();
-        highlightValidSpecialTargets(*monster);
+        m_board.highlightValidSpecialTargets(monster);
     }
     else if (monster->useSpecialAbility(m_board))
     {
@@ -260,7 +295,7 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
     // no parallel targeting system. A click that doesn't land on a valid
     // target simply does nothing and stays in targeting mode, exactly like
     // an invalid spawn-position click already behaves in handleSpawnAttempt.
-    Tile* targetTile = m_board.getTileAtScreenPosition(pos);
+    const Tile* targetTile = m_board.getTileAtScreenPosition(pos);
     BoardEntity* candidate = targetTile ? targetTile->getEntity() : nullptr;
 
     if (candidate && monster->isValidSpecialTarget(*candidate))
@@ -275,7 +310,7 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
 
 void GameplayState::handleBoardClick(const sf::Vector2f& pos, Player& current)
 {
-    Tile* clickedTile = m_board.getTileAtScreenPosition(pos);
+    const Tile* clickedTile = m_board.getTileAtScreenPosition(pos);
     if (!clickedTile) return;
 
     if (m_selectedEntity)
@@ -291,11 +326,13 @@ void GameplayState::handleBoardClick(const sf::Vector2f& pos, Player& current)
     else if (BoardEntity* entity = clickedTile->getEntity())
     {
         // השורה שלך! בדיקה פולימורפית נקייה - ללא asMonster() וללא Casting
-        if (entity->canBeSelectedBy(current.getSide()))
-        {
+        /*if (entity->canBeSelectedBy(current.getSide()))
+        {*/
+            /*m_selectedEntity = entity;
+            m_board.highlightNeighbors(m_selectedEntity);*/
+        if (m_board.selectEntity(entity, current.getSide()))
             m_selectedEntity = entity;
-            m_board.highlightNeighbors(m_selectedEntity);
-        }
+       /* }*/
     }
     //else if (BoardEntity* entity = clickedTile->getEntity())
     //{
@@ -312,21 +349,21 @@ void GameplayState::clearPendingSpecial()
     m_pendingSpecialCard = nullptr;
 }
 
-void GameplayState::highlightValidSpecialTargets(Monster& caster)
-{
-    std::vector<const Tile*> validTargets;
-    for (const Tile* tile : m_board.getOccupiedTiles())
-    {
-        const BoardEntity* candidate = tile->getEntity();
-        if (candidate && caster.isValidSpecialTarget(*candidate))
-            validTargets.push_back(tile);
-    }
-
-    // Board owns painting its own Tiles - this only ever decides *which*
-    // tiles qualify and *what color*, both of which stay entirely up to
-    // `caster` (see Monster::isValidSpecialTarget/getSpecialTargetHighlightColor).
-    m_board.highlightTiles(validTargets, caster.getSpecialTargetHighlightColor());
-}
+//void GameplayState::highlightValidSpecialTargets(Monster& caster)
+//{
+//    std::vector<const Tile*> validTargets;
+//    for (const Tile* tile : m_board.getOccupiedTiles())
+//    {
+//        const BoardEntity* candidate = tile->getEntity();
+//        if (candidate && caster.isValidSpecialTarget(*candidate))
+//            validTargets.push_back(tile);
+//    }
+//
+//    // Board owns painting its own Tiles - this only ever decides *which*
+//    // tiles qualify and *what color*, both of which stay entirely up to
+//    // `caster` (see Monster::isValidSpecialTarget/getSpecialTargetHighlightColor).
+//    m_board.highlightTiles(validTargets, caster.getSpecialTargetHighlightColor());
+//}
 
 void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
 {
@@ -361,7 +398,8 @@ void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
             {
                 m_selectedFromHand = clickedCard;
                 clearPendingSpecial();
-                m_board.highlightSpawnTiles(current.getSide());
+                //למה הוא אחראי לזה??????
+                m_board.highlightSpawnTiles(current.getSide());//למה מעבירים מפלצת?????? מיותר קצת
             }
         }
         /*auto clickedMonster = current.handleHandClick(pos, isPlayer2);
