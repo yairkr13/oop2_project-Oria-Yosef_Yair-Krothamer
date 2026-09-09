@@ -2,6 +2,7 @@
 #include "SFML/Graphics.hpp"
 #include "Monsters/Monster.h"
 #include "BoardEntity.h"
+#include "Constants.h"
 #include <memory>
 //#include "StaticObject.h"
 
@@ -23,7 +24,7 @@ public:
 	// tile (drawn early, smaller q) is where the still-mid-animation moving
 	// entity is drawn from, while the tiles it's still passing over
 	// (larger q) get painted after it.
-	void drawEntity(sf::RenderWindow& window) const;
+	void drawEntity(sf::RenderWindow& window, PlayerSide currentSide) const;
 
 	int getQ() const { return m_q; }
 	int getRow() const { return m_row; }

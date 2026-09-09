@@ -47,16 +47,45 @@ public:
     // state is driving this (LoadingState) to stop calling it and move on.
     bool loadNext();
 
-    void loadTexture(const std::string& name, const std::string& filePath);
-    const sf::Texture& getTexture(const std::string& name) const;
+    //void loadTexture(const std::string& name, const std::string& filePath);
+    //const sf::Texture& getTexture(const std::string& name) const;
 
-    void loadFont(const std::string& name, const std::string& filePath);
-    const sf::Font& getFont(const std::string& name) const;
+    //void loadFont(const std::string& name, const std::string& filePath);
+    //const sf::Font& getFont(const std::string& name) const;
 
-    void loadMusic(const std::string& name, const std::string& filePath);
-    // Non-const on purpose, unlike the getters above: callers need to
-    // control playback (play/pause/stop), not just read the asset.
-    sf::Music& getMusic(const std::string& name) const;
+    //void loadMusic(const std::string& name, const std::string& filePath);
+    //// Non-const on purpose, unlike the getters above: callers need to
+    //// control playback (play/pause/stop), not just read the asset.
+    //sf::Music& getMusic(const std::string& name) const;
+    // --- פונקציית טעינה תבניתית אחת לכל הסוגים ---
+    template <typename T>
+    void load(const std::string& name, const std::string& filePath)
+    {
+        auto& map = getMap<T>();
+        if (map.find(name) != map.end())
+            return;
+
+        auto asset = std::make_unique<T>();
+        bool success = false;
+
+        // SFML משתמש ב-loadFromFile עבור הטקסטורות וב-openFromFile עבור פונטים ומוזיקה
+        if constexpr (std::is_same_v<T, sf::Texture>) {
+            success = asset->loadFromFile(filePath);
+        }
+        else {
+            success = asset->openFromFile(filePath);
+        }
+
+        if (!success) {
+            throw std::runtime_error("Failed to load asset: " + filePath);
+        }
+
+        map[name] = std::move(asset);
+    }
+
+    const sf::Texture& getTexture(const std::string& name) const { return get<sf::Texture>(name); }
+    const sf::Font& getFont(const std::string& name) const { return get<sf::Font>(name); }
+    sf::Music& getMusic(const std::string& name) { return get<sf::Music>(name); }
 
 private:
     AssetsManager() = default;
@@ -78,4 +107,20 @@ private:
     std::unordered_map<std::string, std::unique_ptr<sf::Texture>> m_textures;
     std::unordered_map<std::string, std::unique_ptr<sf::Font>> m_fonts;
     std::unordered_map<std::string, std::unique_ptr<sf::Music>> m_music;
+
+    template <typename T>
+    auto& getMap()
+    {
+        if constexpr (std::is_same_v<T, sf::Texture>)      return m_textures;
+        else if constexpr (std::is_same_v<T, sf::Font>)  return m_fonts;
+        else if constexpr (std::is_same_v<T, sf::Music>) return m_music;
+    }
+
+    template <typename T>
+    const auto& getMap() const
+    {
+        if constexpr (std::is_same_v<T, sf::Texture>)      return m_textures;
+        else if constexpr (std::is_same_v<T, sf::Font>)  return m_fonts;
+        else if constexpr (std::is_same_v<T, sf::Music>) return m_music;
+    }
 };

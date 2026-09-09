@@ -1,6 +1,5 @@
 #include "Tiles/Tile.h"
 
-
 Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)// <--- ��� ����� ������ ����� �� ����� ���!
     :m_q(q),
     m_row(row),
@@ -33,11 +32,11 @@ void Tile::draw(sf::RenderWindow& window) const
     window.draw(m_shape);
 }
 
-void Tile::drawEntity(sf::RenderWindow& window) const
+void Tile::drawEntity(sf::RenderWindow& window, PlayerSide currentSide) const
 {
     if (m_entity != nullptr)
     {
-        m_entity->draw(window); // קריאה וירטואלית (אפס RTTI, מהיר לחלוטין)
+        m_entity->draw(window, currentSide); // קריאה וירטואלית (אפס RTTI, מהיר לחלוטין)
     }
 }
 

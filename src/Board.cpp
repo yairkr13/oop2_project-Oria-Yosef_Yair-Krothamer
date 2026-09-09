@@ -21,7 +21,7 @@ void Board::createBoard()//למה לא קוראים לINIT HEART ולמשבצו�
         [this](int q, int row) { return tileAnchor(q, row); });
 }
 
-void Board::draw(sf::RenderWindow& window) const
+void Board::draw(sf::RenderWindow& window, PlayerSide currentSide) const
 {
     // Two full passes, deliberately NOT interleaved tile-by-tile (hex,
     // occupant, hex, occupant, ...): m_grid is a std::map keyed by
@@ -58,7 +58,7 @@ void Board::draw(sf::RenderWindow& window) const
     //למה השחקן לא עושה את זה ??????
     for (auto const& [coords, tile] : m_grid)
     {
-        tile->drawEntity(window);
+        tile->drawEntity(window, currentSide);
     }
 }
 

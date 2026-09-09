@@ -21,7 +21,7 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	// (see BoardGenerator.h) passed in here instead - Board's own code
 	// never needs to change to support it.
 	explicit Board(const BoardLayout& layout = BoardGenerator::standardLayout());
-	void draw(sf::RenderWindow& window) const;
+	void draw(sf::RenderWindow& window, PlayerSide currentSide) const;
 	//bool isTilePassable(Tile* start, Tile* end) const;
 
 	void update(float dt);

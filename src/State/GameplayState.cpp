@@ -78,7 +78,7 @@ void GameplayState::draw(sf::RenderWindow& window) const
     window.draw(m_background);
 
     Player& current = m_turnManager.getCurrentPlayer();
-    m_board.draw(window);
+    m_board.draw(window, current.getSide());
 
     drawButtomPanel(window);
     // Card already knows how to render its own "selected" border

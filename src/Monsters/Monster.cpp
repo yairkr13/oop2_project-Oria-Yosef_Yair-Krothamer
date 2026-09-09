@@ -100,7 +100,7 @@ bool Monster::isReadyForRemoval() const
     return m_animator.isStateFinished(static_cast<int>(AnimState::Die));
 }
 
-void Monster::draw(sf::RenderWindow& window) const
+void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
 {
     if (m_q == -1 && m_row == -1) return;
 
@@ -167,7 +167,8 @@ void Monster::draw(sf::RenderWindow& window) const
         // no meaning floating over a monster that's already dead and
         // playing its death animation.
 		drawHealthBar(window);
-        drawActionsLeft(window);
+        if (m_side ==currentTurnSide)
+            drawActionsLeft(window);
     }
 
     // This monster draws its own in-flight attack animation, if any -
@@ -353,6 +354,7 @@ bool Monster::useSpecialAbility(Board& board, BoardEntity* target)
 
 void Monster::attack(BoardEntity* target)
 {
+    //AssetsManager::getInstance()
     target->takeDamage(m_attackDamage);
     useAction();
 }
