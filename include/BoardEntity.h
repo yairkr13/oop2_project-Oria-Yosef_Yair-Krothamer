@@ -14,8 +14,8 @@ class AttackAnimation; // Forward declaration
 
 class BoardEntity {
 public:
-    BoardEntity(int q, int row, const sf::Vector2f& position, int health)
-        : m_q(q), m_row(row), m_screenPos(position), m_health(health), m_maxHealth(health)/*, m_currentTile(nullptr)*/ {
+    BoardEntity(int q, int row, const sf::Vector2f& position, int health)//למהה?????? לחשוב על למחוק את המשבצת מפה!!!!!
+        : m_q(q), m_row(row), m_screenPos(position), m_health(health), m_maxHealth(health), m_currentTile(nullptr) {
     }
 
     // ����� �����: ���������� ����� �������� ��� �� default, ���� ���� �-cpp

@@ -314,10 +314,10 @@ void GameplayState::clearPendingSpecial()
 
 void GameplayState::highlightValidSpecialTargets(Monster& caster)
 {
-    std::vector<Tile*> validTargets;
-    for (Tile* tile : m_board.getOccupiedTiles())
+    std::vector<const Tile*> validTargets;
+    for (const Tile* tile : m_board.getOccupiedTiles())
     {
-        BoardEntity* candidate = tile->getEntity();
+        const BoardEntity* candidate = tile->getEntity();
         if (candidate && caster.isValidSpecialTarget(*candidate))
             validTargets.push_back(tile);
     }

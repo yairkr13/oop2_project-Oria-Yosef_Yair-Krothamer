@@ -150,7 +150,7 @@ public:
     // isDying()/isReadyForRemoval()) and must not be targetable while its
     // death animation plays. Henrietta's and Muffintop's ally-targeted
     // overrides need the same check - see their own isValidSpecialTarget.
-    virtual bool isValidSpecialTarget(BoardEntity& candidate) const
+    virtual bool isValidSpecialTarget(const BoardEntity& candidate) const
     {
         //האם אני יכולה למחוק את הפונקציה ??????למה
         return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isEnemyOf(m_side);

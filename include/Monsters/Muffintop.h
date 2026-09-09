@@ -21,7 +21,7 @@ public:
     // default, but keeps its isAlive() requirement (see Monster's own
     // isValidSpecialTarget): a dying ally is still Tile-linked and must not
     // be targetable (e.g. healed) while its death animation plays.
-    bool isValidSpecialTarget(BoardEntity& candidate) const override
+    bool isValidSpecialTarget(const BoardEntity& candidate) const override
     {
         return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(getSide());
     }

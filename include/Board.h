@@ -33,7 +33,7 @@ public:
 	void highlightSpawnTiles(PlayerSide side);
 	void clearHighlights();
 
-	void updateTileEffects();
+	void updateTileEffects(); //למה יש לזה את השם הזה ולא את השם end turn?????
 	void initPlayerHearts(Heart* p1Heart, Heart* p2Heart); //change this funciton!!!!! 
 
 	// AI_FindBestTargetForMonster עברה ל-AIPlayer - Board נשאר "טיפש" ומספק
@@ -44,10 +44,10 @@ public:
 	// באותה רוח: Board לא בוחר איפה לזמן (זו הייתה AI_SpawnMonster הישנה - גם
 	// אם ה"החלטה" היא רק הגרלה, זו עדיין בחירה שלא שייכת ל-Board). הוא רק
 	// מספק את רשימת המשבצות החוקיות לזימון עבור הצד הזה; AIPlayer בוחר מתוכה.
-	std::vector<Tile*> getSpawnableTiles(Monster* monster, PlayerSide side) const;
+	std::vector<const Tile*> getSpawnableTiles(Monster* monster, PlayerSide side) const;
 
 	//bool AI_SpawnMonster(Monster* monster, PlayerSide side);
-	void performAction(BoardEntity* entity, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
+	void performAction(BoardEntity* entity,const Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 	//void performAction(Monster* monster, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
 	// Validates that `entity` may currently be selected by `side` and, if
@@ -60,7 +60,7 @@ public:
 	// GameplayState::m_selectedEntity) knows whether to remember `entity`.
 	// Board itself no longer tracks "who is selected" - that's interaction
 	// state, not board state.
-	bool selectEntity(BoardEntity* entity, PlayerSide side);
+	bool selectEntity(BoardEntity* entity, PlayerSide side); //למה יש את הפונקציה הזאת בלוח???? מה היא עושה?????
 	//bool selectMonster(Monster* monster, PlayerSide side);
 
 
@@ -72,7 +72,7 @@ public:
 	// about *why* these tiles are being highlighted - same "Board owns Tile
 	// painting, never a bystander" principle highlightNeighbors already
 	// follows.
-	void highlightTiles(const std::vector<Tile*>& tiles, const sf::Color& color);
+	void highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color); //למה הפונקציה הזאת היא ציבורית??????
 
 
 	// שלב א' של הפירוק: כל ה-tiles שהמפלצת יכולה להגיע/לתקוף אליהם, בלי לצייר
@@ -85,7 +85,7 @@ public:
 	// just forwards. No caller (GameplayState, AIPlayer, Board's own
 	// performMove/highlightNeighbors) needs to know that or change anything.
 	//std::vector<Tile*> getReachableTiles(Monster* monster) const;
-	std::vector<Tile*> getReachableTiles(BoardEntity* entity) const;
+	std::vector<const Tile*> getReachableTiles(BoardEntity* entity) const;
 
 	// Enemy tiles reachable ONLY because of a monster's extended attack
 	// range (Monster::getAttackRange() > getRange() - see Barzilla's
@@ -97,16 +97,16 @@ public:
 	// whose getAttackRange() == getRange() (the default for all monsters
 	// except an empowered Barzilla).
 	/*std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;*/
-	std::vector<Tile*> getExtendedAttackOnlyTiles(BoardEntity* entity) const;
+	std::vector<const Tile*> getExtendedAttackOnlyTiles(BoardEntity* entity) const;
 
 	// שלב ב': אותה שאילתה, אבל מחזירה את המסלול המדורג (לפי סדר) מהמפלצת ל-target
 	// הספציפי, לא רק "מה אפשר". target חייב להיות tile שכבר יצא מ-getReachableTiles
 	// (כלומר תנועה, לא תקיפה) - אחרת מוחזרת רשימה ריקה.
 	//std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
-	std::vector<Tile*> getPathTo(BoardEntity* entity, Tile* target) const;
+	std::vector<const Tile*> getPathTo(BoardEntity* entity, Tile* target) const;
 
 	//bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
-	bool spawnEntityOnTile(BoardEntity* entity, Tile* targetTile);
+	bool spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile);
 
 	// מקור רנדומליות אחד ומשותף לכל הלוח (במקום std::mt19937 מקומי במקום אחד ו-rand() במקום אחר)
 	static std::mt19937& rng()
@@ -132,7 +132,7 @@ public:
 	// the pending monster's own isValidSpecialTarget()) without Board ever
 	// needing to know ally/enemy rules, Special abilities, or highlight
 	// colors - it only ever answers "what's occupied," never "what's valid."
-	std::vector<Tile*> getOccupiedTiles() const;
+	std::vector<const Tile*> getOccupiedTiles() const;
 	void highlightNeighbors(BoardEntity* entity);
 private:
 	// performAction()'s two independent branches, split out so each reads

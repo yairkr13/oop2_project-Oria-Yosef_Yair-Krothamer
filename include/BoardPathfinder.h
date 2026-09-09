@@ -33,20 +33,20 @@ public:
 
     // שכבה 1: לוגיקה טהורה - "אילו tiles המפלצת יכולה להגיע/לתקוף אליהם", בלי לצייר כלום.
     //std::vector<Tile*> getReachableTiles(Monster* monster) const;
-    std::vector<Tile*> getReachableTiles(BoardEntity* entity) const;
+    std::vector<const Tile*> getReachableTiles(BoardEntity* entity) const;
 
     // Enemy tiles reachable ONLY because of a monster's extended attack
     // range (Monster::getAttackRange() > getRange()) - i.e. beyond normal
     // move/attack reach but still within the extended reach. Empty for
     // every monster whose getAttackRange() == getRange() (the default).
     //std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;
-    std::vector<Tile*> getExtendedAttackOnlyTiles(BoardEntity* entity) const;
+    std::vector<const Tile*> getExtendedAttackOnlyTiles(BoardEntity* entity) const;
 
     // שלב ב': אותה שאילתה, אבל מחזירה את המסלול המדורג (לפי סדר) מהמפלצת ל-target
     // הספציפי, לא רק "מה אפשר". target חייב להיות tile שכבר יצא מ-getReachableTiles
     // (כלומר תנועה, לא תקיפה) - אחרת מוחזרת רשימה ריקה.
    // std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
-    std::vector<Tile*> getPathTo(BoardEntity* entity, Tile* target) const;
+    std::vector<const Tile*> getPathTo(BoardEntity* entity, Tile* target) const;
 private:
     // ה-BFS המשותף (מעבר יחיד) שגם getReachableTiles וגם getPathTo נשענים עליו.
     /*void computeReachability(Monster* monster,

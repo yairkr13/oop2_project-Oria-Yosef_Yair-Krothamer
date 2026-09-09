@@ -7,17 +7,17 @@ AIPlayer::AIPlayer(PlayerSide side)
 {
 }
 
-Tile* AIPlayer::findBestTarget(Board& board, Monster* monster) const
+const Tile* AIPlayer::findBestTarget(const Board& board, Monster* monster) const
 {
     if (!monster || !monster->isAlive()) return nullptr;
 
 	//ask the board what tiles are reachable for this monster, and then the AI will decide what to do with them
-    std::vector<Tile*> reachable = board.getReachableTiles(monster);
+    std::vector<const Tile*> reachable = board.getReachableTiles(monster);
 
-    Tile* bestAttackTarget = nullptr;
-    Tile* bestMoveTarget = nullptr;
+    const Tile* bestAttackTarget = nullptr;
+    const Tile* bestMoveTarget = nullptr;
 
-    for (Tile* tile : reachable)
+    for (const Tile* tile : reachable)
     {
 		//first priority: if there's an enemy in range, attack it
         if (tile->hasEntity() && tile->isOccupiedByEnemy(getSide()))
@@ -51,12 +51,12 @@ void AIPlayer::onTurnStart(Board& board)
             continue;
 
         Monster* monster = playCard(card);
-        std::vector<Tile*> candidates = board.getSpawnableTiles(monster,getSide());
+        std::vector<const Tile*> candidates = board.getSpawnableTiles(monster,getSide());
         if (candidates.empty())
             break;
 
         std::uniform_int_distribution<size_t> dist(0, candidates.size() - 1);
-        Tile* chosenTile = candidates[dist(Board::rng())];
+        const Tile* chosenTile = candidates[dist(Board::rng())];
 
         // playCard מוריד מפתחות, מייצר Monster ומכניס ל-m_monsters
         
@@ -103,7 +103,7 @@ void AIPlayer::updateTurn(Board& board)
         }
 
         // Find best target for this monster
-        Tile* targetTile = findBestTarget(board, monster);
+        const Tile* targetTile = findBestTarget(board, monster);
 
         if (!targetTile)
         {

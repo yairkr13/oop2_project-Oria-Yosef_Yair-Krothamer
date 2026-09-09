@@ -124,12 +124,13 @@ void BoardPathfinder::computeReachability(BoardEntity* entity,
 //    computeReachability(monster, reachable, parent);
 //    return reachable;
 //}
-std::vector<Tile*> BoardPathfinder::getReachableTiles(BoardEntity* entity) const
+std::vector<const Tile*> BoardPathfinder::getReachableTiles(BoardEntity* entity) const
 {
     std::vector<Tile*> reachable;
     std::map<std::pair<int, int>, std::pair<int, int>> parent; // לא בשימוש כאן, רק כי computeReachability דורש אותו
     computeReachability(entity, reachable, parent);
-    return reachable;
+    //return reachable;
+    return { reachable.begin(), reachable.end() };//to be a const
 }
 //
 //std::vector<Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(Monster* monster) const
@@ -139,12 +140,13 @@ std::vector<Tile*> BoardPathfinder::getReachableTiles(BoardEntity* entity) const
 //    computeReachability(monster, reachable, parent, &extended);
 //    return extended;
 //}
-std::vector<Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(BoardEntity* entity) const
+std::vector<const Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(BoardEntity* entity) const
 {
     std::vector<Tile*> reachable, extended;
     std::map<std::pair<int, int>, std::pair<int, int>> parent;
     computeReachability(entity, reachable, parent, &extended);
-    return extended;
+    //return extended;
+    return { extended.begin(), extended.end() };
 }
 
 // שחזור המסלול: הולכים אחורה מה-target דרך outParent עד שמגיעים למקור, ואז
@@ -183,10 +185,10 @@ std::vector<Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(BoardEntity* enti
 //
 //    return path;
 //}
-std::vector<Tile*> BoardPathfinder::getPathTo(BoardEntity* entity, Tile* target) const
+std::vector<const Tile*> BoardPathfinder::getPathTo(BoardEntity* entity, Tile* target) const
 {
     std::vector<Tile*> path;
-    if (!entity || !target) return path;
+    if (!entity || !target) return { path.begin(), path.end() };
 
     std::vector<Tile*> reachable;
     std::map<std::pair<int, int>, std::pair<int, int>> parent;
@@ -195,8 +197,8 @@ std::vector<Tile*> BoardPathfinder::getPathTo(BoardEntity* entity, Tile* target)
     std::pair<int, int> sourceCoords = { entity->getQ(), entity->getRow() };
     std::pair<int, int> targetCoords = { target->getQ(), target->getRow() };
 
-    if (targetCoords == sourceCoords) return path;
-    if (!parent.count(targetCoords)) return path;
+    if (targetCoords == sourceCoords) return { path.begin(), path.end() };
+    if (!parent.count(targetCoords)) return { path.begin(), path.end() };
 
     std::vector<std::pair<int, int>> reversedCoords;
     std::pair<int, int> cur = targetCoords;
@@ -214,5 +216,6 @@ std::vector<Tile*> BoardPathfinder::getPathTo(BoardEntity* entity, Tile* target)
             path.push_back(it->second.get());
     }
 
-    return path;
+    //return path;
+    return { path.begin(), path.end() };
 }

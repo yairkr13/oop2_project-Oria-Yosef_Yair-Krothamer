@@ -10,7 +10,7 @@ Board::Board(const BoardLayout& layout)
     createBoard();
 }
 
-void Board::createBoard()
+void Board::createBoard()//למה לא קוראים לINIT HEART ולמשבצות המיוחדות מפה??????
 {
     // BoardGenerator owns the actual tile-construction knowledge (grid
     // shape, and - later, in generateSpecialTiles - which concrete Tile
@@ -149,7 +149,7 @@ void Board::highlightSpawnTiles(PlayerSide side)
 //{
 //    return m_pathfinder.getReachableTiles(monster);
 //}
-std::vector<Tile*> Board::getReachableTiles(BoardEntity* entity) const
+std::vector<const Tile*> Board::getReachableTiles(BoardEntity* entity) const
 {
     return m_pathfinder.getReachableTiles(entity);
 }
@@ -164,12 +164,12 @@ std::vector<Tile*> Board::getReachableTiles(BoardEntity* entity) const
 //    return m_pathfinder.getPathTo(monster, target);
 //}
 
-std::vector<Tile*> Board::getExtendedAttackOnlyTiles(BoardEntity* entity) const
+std::vector<const Tile*> Board::getExtendedAttackOnlyTiles(BoardEntity* entity) const
 {
     return m_pathfinder.getExtendedAttackOnlyTiles(entity);
 }
 
-std::vector<Tile*> Board::getPathTo(BoardEntity* entity, Tile* target) const
+std::vector<const Tile*> Board::getPathTo(BoardEntity* entity, Tile* target) const
 {
     return m_pathfinder.getPathTo(entity, target);
 }
@@ -201,9 +201,10 @@ void Board::highlightNeighbors(BoardEntity* entity) //למה זה יכול לה�
 {
     if (!entity) return;
 
-    for (Tile* tile : getReachableTiles(entity))
+    for (const Tile* constTile : getReachableTiles(entity))
     {
         //bool isEnemy = tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide();
+        Tile* tile = getTileAt(constTile->getQ(), constTile->getRow());
         if (tile->isOccupiedByEnemy(entity->getSide()))
             tile->setHighlighted(true, sf::Color(255, 90, 90, 180)); // אדום - ניתן לתקוף
         else
@@ -214,8 +215,13 @@ void Board::highlightNeighbors(BoardEntity* entity) //למה זה יכול לה�
     // every monster except an empowered Barzilla. Distinct purple, clearly
     // different from both the red attack and green move colors above:
     // "Barzilla can strike here, but cannot move here."
-    for (Tile* tile : getExtendedAttackOnlyTiles(entity))
-        tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
+    for (const Tile* constTile : getExtendedAttackOnlyTiles(entity))
+    {
+        /*tile->setHighlighted(true, sf::Color(190, 90, 230, 170));*/
+        Tile* tile = getTileAt(constTile->getQ(), constTile->getRow());
+        if (tile)
+            tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
+    }
 }
 
 //bool Board::selectEntity(BoardEntity* entity, PlayerSide side)
@@ -239,11 +245,20 @@ bool Board::selectEntity(BoardEntity* entity, PlayerSide side)
     return true;
 }
 
-void Board::highlightTiles(const std::vector<Tile*>& tiles, const sf::Color& color)
+void Board::highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color)
 {
-    for (Tile* tile : tiles)
+    /*for ( Tile* tile : tiles)
     {
         if (tile) tile->setHighlighted(true, color);
+    }*/
+    for (const Tile* constTile : tiles)
+    {
+        if (!constTile) continue;
+
+        // הלוח ניגש למשבצת הפנימית שלו לפי הקואורדינטות
+        Tile* internalTile = getTileAt(constTile->getQ(), constTile->getRow());
+        if (internalTile)
+            internalTile->setHighlighted(true, color);
     }
 }
 
@@ -348,9 +363,9 @@ Tile* Board::getExtremeTileInRow(int row, bool findLeftmost) const {
 // שאילתה עובדתית בלבד - "אילו tiles פנויים בשטח הזימון של הצד הזה?" Board לא
 // בוחר אף אחת מהן - זו הייתה בדיוק העבודה של AI_SpawnMonster הישנה, שגם אספה
 // מועמדים וגם הגרילה אחד מהם. עכשיו רק החלק הראשון (איסוף) נשאר כאן.
-std::vector<Tile*> Board::getSpawnableTiles(Monster* monster, PlayerSide side) const
+std::vector<const Tile*> Board::getSpawnableTiles(Monster* monster, PlayerSide side) const
 {
-    std::vector<Tile*> spawnable;
+    std::vector<const Tile*> spawnable;
     if (!monster || monster->isOnBoard()) return spawnable;
 
     int minQ = (side == PlayerSide::Left) ? 0 : 12; //fix this
@@ -376,11 +391,18 @@ std::vector<Tile*> Board::getSpawnableTiles(Monster* monster, PlayerSide side) c
 //    monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(), targetTile->getScreenPosition());
 //    return true;
 //}
-bool Board::spawnEntityOnTile(BoardEntity* entity, Tile* targetTile)
+bool Board::spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile)
 {
-    if (!entity || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(entity)) return false;
-    targetTile->setEntity(entity);
-    entity->spawnOnBoard(targetTile->getQ(), targetTile->getRow(), targetTile->getScreenPosition());
+    /*if (!entity || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(entity)) return false;*/
+    if (!entity || !targetTile) return false;
+
+    // הלוח הממיר את ה-const Tile* שקיבל ל-Tile* הפנימי של הלוח
+    Tile* internalTile = getTileAt(targetTile->getQ(), targetTile->getRow());
+    if (!internalTile || internalTile->hasEntity() || !internalTile->isPassableFor(entity))
+        return false;
+
+    internalTile->setEntity(entity);
+    entity->spawnOnBoard(internalTile->getQ(), internalTile->getRow(), internalTile->getScreenPosition());
     return true;
 }
 
@@ -399,9 +421,11 @@ bool Board::spawnEntityOnTile(BoardEntity* entity, Tile* targetTile)
 //    if (Monster* monster = entity->asMonster())//לא אוהבת את זה
 //        performMove(monster, targetTile);
 //}
-void Board::performAction(BoardEntity* entity, Tile* targetTile)
+void Board::performAction(BoardEntity* entity,const Tile* constTargetTile)
 {
-    if (!entity || !targetTile) return;
+    if (!entity || !constTargetTile) return;
+    Tile* targetTile = getTileAt(constTargetTile->getQ(), constTargetTile->getRow());
+    if (!targetTile) return;
 
     if (targetTile->isOccupiedByEnemy(entity->getSide()))
     {
@@ -534,7 +558,7 @@ void Board::performMove(BoardEntity* entity, Tile* targetTile)
     // than relying on getPathTo coming back empty for such a tile, since
     // the no-path fallback a few lines below would otherwise still
     // teleport the monster there directly.
-    std::vector<Tile*> reachable = getReachableTiles(entity);
+    std::vector<const Tile*> reachable = getReachableTiles(entity);
     bool isMoveLegal = !targetTile->hasEntity() && targetTile->isPassableFor(entity)
         && std::find(reachable.begin(), reachable.end(), targetTile) != reachable.end();
 
@@ -546,10 +570,10 @@ void Board::performMove(BoardEntity* entity, Tile* targetTile)
     if (sourceTile == nullptr) return;
 
     // בונים את המסלול המדורג (משבצת-משבצת) במקום לקפוץ בקו ישר ליעד
-    std::vector<Tile*> path = getPathTo(entity, targetTile);
+    std::vector<const Tile*> path = getPathTo(entity, targetTile);
     std::vector<sf::Vector2f> pathScreenPositions;
     pathScreenPositions.reserve(path.size());
-    for (Tile* step : path)
+    for (const Tile* step : path)
         pathScreenPositions.push_back(step->getScreenPosition());
 
     // רשת ביטחון: אם משום מה לא נמצא מסלול (לא אמור לקרות, כי targetTile
@@ -676,9 +700,9 @@ Tile* Board::getTileAtScreenPosition(const sf::Vector2f& pos) const
     return getTileAt(q, row);
 }
 
-std::vector<Tile*> Board::getOccupiedTiles() const
+std::vector<const Tile*> Board::getOccupiedTiles() const
 {
-    std::vector<Tile*> occupied;
+    std::vector<const Tile*> occupied;
     for (auto const& [coords, tile] : m_grid)
     {
         if (tile->hasEntity())
@@ -686,3 +710,18 @@ std::vector<Tile*> Board::getOccupiedTiles() const
     }
     return occupied;
 }
+
+//void Board::highlightValidSpecialTargets(Monster* caster)
+//{
+//    if (!caster) return;
+//
+//    // הלוח רץ על המשבצות הלא-קבועות הפנימיות שלו (Tile*)
+//    for (Tile* tile : getOccupiedTilesInternal()) // או הלולאה של המפה/ווקטור הפנימי של המשבצות
+//    {
+//        BoardEntity* candidate = tile->getEntity();
+//        if (candidate && caster->isValidSpecialTarget(*candidate))
+//        {
+//            tile->setHighlighted(true, caster->getSpecialTargetHighlightColor());
+//        }
+//    }
+//}
