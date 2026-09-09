@@ -32,29 +32,41 @@ public:
     explicit BoardPathfinder(const std::map<std::pair<int, int>, std::unique_ptr<Tile>>& grid);
 
     // שכבה 1: לוגיקה טהורה - "אילו tiles המפלצת יכולה להגיע/לתקוף אליהם", בלי לצייר כלום.
-    std::vector<Tile*> getReachableTiles(Monster* monster) const;
+    //std::vector<Tile*> getReachableTiles(Monster* monster) const;
+    std::vector<Tile*> getReachableTiles(BoardEntity* entity) const;
 
     // Enemy tiles reachable ONLY because of a monster's extended attack
     // range (Monster::getAttackRange() > getRange()) - i.e. beyond normal
     // move/attack reach but still within the extended reach. Empty for
     // every monster whose getAttackRange() == getRange() (the default).
-    std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;
+    //std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;
+    std::vector<Tile*> getExtendedAttackOnlyTiles(BoardEntity* entity) const;
 
     // שלב ב': אותה שאילתה, אבל מחזירה את המסלול המדורג (לפי סדר) מהמפלצת ל-target
     // הספציפי, לא רק "מה אפשר". target חייב להיות tile שכבר יצא מ-getReachableTiles
     // (כלומר תנועה, לא תקיפה) - אחרת מוחזרת רשימה ריקה.
-    std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
-
+   // std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
+    std::vector<Tile*> getPathTo(BoardEntity* entity, Tile* target) const;
 private:
     // ה-BFS המשותף (מעבר יחיד) שגם getReachableTiles וגם getPathTo נשענים עליו.
-    void computeReachability(Monster* monster,
+    /*void computeReachability(Monster* monster,
+        std::vector<Tile*>& outReachable,
+        std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
+        std::vector<Tile*>* outExtendedAttackOnly = nullptr) const;*/
+    void computeReachability(BoardEntity* entity,
         std::vector<Tile*>& outReachable,
         std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
         std::vector<Tile*>* outExtendedAttackOnly = nullptr) const;
 
     // The one place that answers "can this entity enter/traverse this
     // neighboring Tile" for the BFS above.
-    bool visitNeighbor(Monster* monster, Tile* tile,
+    /*bool visitNeighbor(Monster* monster, Tile* tile,
+        const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
+        int neighborDist, int range, int attackRange,
+        std::vector<Tile*>& outReachable,
+        std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
+        std::vector<Tile*>* outExtendedAttackOnly) const;*/
+    bool visitNeighbor(BoardEntity* entity, Tile* tile,
         const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
         int neighborDist, int range, int attackRange,
         std::vector<Tile*>& outReachable,

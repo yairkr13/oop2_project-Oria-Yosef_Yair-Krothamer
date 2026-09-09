@@ -110,6 +110,7 @@ private:
 	int m_row;
 	int m_q;
 	bool m_isHighlighted = false;
-	//std::weak_ptr<BoardEntity> m_entityRef;
 	BoardEntity* m_entity = nullptr;
+
+	//std::weak_ptr<BoardEntity> m_entityRef;
 };

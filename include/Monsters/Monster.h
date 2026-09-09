@@ -39,7 +39,8 @@ public:
     bool canBeSelectedBy(PlayerSide side) const override {
         return isAlive() && !isEnemyOf(side) && m_actionsLeft > 0;
     }
-    virtual Monster* asMonster() override { return this; }
+    //virtual Monster* asMonster() override { return this; }
+    virtual bool canBeTargetedBySpecial() const override { return true; }
 
     //virtual EntityType getType() const override { return EntityType::Monster; }
     bool isOnBoard() const;
@@ -55,7 +56,8 @@ public:
     // Attack) can do so for attacking only, without also letting it move
     // farther. Defaults to getRange() - i.e. no difference at all - which
     // is correct for every monster that doesn't override this.
-    virtual int getAttackRange() const { return getRange(); }
+    // 
+    //virtual int getAttackRange() const { return getRange(); }
 
     int getActionsLeft() const { return m_actionsLeft; }
     void resetActions();
@@ -70,7 +72,7 @@ public:
     // ���: ��� moveTo, ��� ����� ���� ��� ��� ���� �����, ������ ��� �� �����
     // ������ (pathScreenPositions) ����. finalQ/finalRow �������� ������ (�����
     // ��� �-moveTo ������) - �� ����� �� ������ ��� ����.
-    void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions);
+    void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) override;
 
     void walkTo(const sf::Vector2f& targetScreenPos);//chanfe to animation!!!!!!!!!!!!!!!
     void update(float dt) override;
@@ -113,7 +115,7 @@ public:
     // yet since the freeze), and resetActions() - already called exactly
     // once per owner-turn-end - clears m_frozen the next time it runs,
     // which is precisely when that one blocked turn has concluded.
-    void applyFreeze();
+    void applyFreeze() override;
 
     // Whether this monster's Special requires the player to select a
     // target before it can commit (see GameplayState). False (the default)
@@ -150,7 +152,8 @@ public:
     // overrides need the same check - see their own isValidSpecialTarget.
     virtual bool isValidSpecialTarget(BoardEntity& candidate) const
     {
-        return candidate.isAlive() && candidate.asMonster() != nullptr && candidate.isEnemyOf(m_side);
+        //האם אני יכולה למחוק את הפונקציה ??????למה
+        return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isEnemyOf(m_side);
     }
 
     // The Tile-highlight color for this monster's valid Special targets,
@@ -178,6 +181,9 @@ public:
     // its Tile - a monster with none configured falls straight through to
     // the base behavior, unchanged.
     bool isReadyForRemoval() const override;
+
+    bool canMove() const override { return isAlive() && m_actionsLeft > 0; }
+    //void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) override;
 protected:
     //virtual void onAttackHook(BoardEntity* target) {}
     virtual void onSpecialAbility(Board& board, BoardEntity* target) {}

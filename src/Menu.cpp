@@ -50,5 +50,10 @@ void Menu::draw(sf::RenderWindow& window) const
 
 void Menu::handle(const sf::Event::KeyPressed& event)
 {
+	//if (event.code == sf::Keyboard::Escape)
+	//{
+	//	// Handle Escape key press, e.g., close the menu or go back
+
+	//}
 	// Handle key press events if needed
 }

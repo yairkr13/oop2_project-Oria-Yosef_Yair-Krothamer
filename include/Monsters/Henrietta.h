@@ -22,7 +22,7 @@ public:
     // be targetable while its death animation plays.
     bool isValidSpecialTarget(BoardEntity& candidate) const override
     {
-        return candidate.isAlive() && candidate.asMonster() != nullptr && candidate.isAllyOf(getSide());
+        return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(getSide());
     }
 
     sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(255, 165, 0, 180); } // orange

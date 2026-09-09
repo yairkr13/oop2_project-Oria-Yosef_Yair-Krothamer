@@ -70,6 +70,7 @@ void GameplayState::draw(sf::RenderWindow& window) const
     Player& current = m_turnManager.getCurrentPlayer();
     m_board.draw(window);
 
+    drawButtomPanel(window);
     // Card already knows how to render its own "selected" border
     // (see Card::draw's isSelected parameter) - we just need to feed it
     // whichever Card the player currently has chosen. A not-yet-placed hand
@@ -78,13 +79,26 @@ void GameplayState::draw(sf::RenderWindow& window) const
     // construction (selecting either one always clears the other), so
     // there's always at most one to show here.
     Card* visuallySelectedCard = m_selectedFromHand ? m_selectedFromHand : m_pendingSpecialCard;
-    current.draw(window, &current == m_player2.get(), visuallySelectedCard);
+    current.draw(window, &current == m_player2.get(), visuallySelectedCard); //למה הוא מעביר את זה לשחקן. השחקן צריך לדעת את זה בעצמו????
 
     //m_player1->drawKeys(window, false);
     //m_player2->drawKeys(window, true);
 
     if (m_miniMenuButton)
         m_miniMenuButton->draw(window);
+}
+
+void GameplayState::drawButtomPanel(sf::RenderWindow& window) const
+{
+	//sf::RectangleShape bottomPanel;
+	//bottomPanel.setSize({ static_cast<float>(Config::WINDOW_WIDTH), 100.f });
+	//bottomPanel.setPosition({ 0.f, static_cast<float>(Config::WINDOW_HEIGHT) - 100.f });
+	//bottomPanel.setFillColor(sf::Color(30, 30, 50, 200)); // Darker color with some transparency
+	//m_window.draw(bottomPanel);
+    sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
+    bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
+    bottomPanel.setFillColor(sf::Color(40, 40, 40));
+    window.draw(bottomPanel);
 }
 
 void GameplayState::update(sf::Time deltaTime)
@@ -276,10 +290,19 @@ void GameplayState::handleBoardClick(const sf::Vector2f& pos, Player& current)
     }
     else if (BoardEntity* entity = clickedTile->getEntity())
     {
-        // פולימורפיזם מלא: לא צריך לדעת שזו מפלצת, רק שזו ישות שניתן לבחור כרגע
-        if (m_board.selectEntity(entity, current.getSide()))
+        // השורה שלך! בדיקה פולימורפית נקייה - ללא asMonster() וללא Casting
+        if (entity->canBeSelectedBy(current.getSide()))
+        {
             m_selectedEntity = entity;
+            m_board.highlightNeighbors(m_selectedEntity);
+        }
     }
+    //else if (BoardEntity* entity = clickedTile->getEntity())
+    //{
+    //    // פולימורפיזם מלא: לא צריך לדעת שזו מפלצת, רק שזו ישות שניתן לבחור כרגע
+    //    if (m_board.selectEntity(entity, current.getSide()))
+    //        m_selectedEntity = entity;
+    //}
 }
 
 void GameplayState::clearPendingSpecial()

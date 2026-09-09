@@ -48,6 +48,7 @@ public:
 
 	//bool AI_SpawnMonster(Monster* monster, PlayerSide side);
 	void performAction(BoardEntity* entity, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
+	//void performAction(Monster* monster, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
 	// Validates that `entity` may currently be selected by `side` and, if
 	// so, highlights its move/attack options - exactly what GameplayState
@@ -60,6 +61,8 @@ public:
 	// Board itself no longer tracks "who is selected" - that's interaction
 	// state, not board state.
 	bool selectEntity(BoardEntity* entity, PlayerSide side);
+	//bool selectMonster(Monster* monster, PlayerSide side);
+
 
 	// Highlights every Tile in `tiles` with `color` - the generic operation
 	// behind highlightNeighbors/highlightSpawnTiles below, exposed so a
@@ -71,6 +74,7 @@ public:
 	// follows.
 	void highlightTiles(const std::vector<Tile*>& tiles, const sf::Color& color);
 
+
 	// שלב א' של הפירוק: כל ה-tiles שהמפלצת יכולה להגיע/לתקוף אליהם, בלי לצייר
 	// שום דבר. לוגיקה טהורה - אין כאן שום קריאה ל-setHighlighted. גם highlightNeighbors
 	// (לקליק אנושי) וגם AIPlayer (בעתיד, לצורך ההיוריסטיקה) ישתמשו באותה פונקציה הזו,
@@ -80,7 +84,8 @@ public:
 	// actual BFS lives in BoardPathfinder (see m_pathfinder below); this
 	// just forwards. No caller (GameplayState, AIPlayer, Board's own
 	// performMove/highlightNeighbors) needs to know that or change anything.
-	std::vector<Tile*> getReachableTiles(Monster* monster) const;
+	//std::vector<Tile*> getReachableTiles(Monster* monster) const;
+	std::vector<Tile*> getReachableTiles(BoardEntity* entity) const;
 
 	// Enemy tiles reachable ONLY because of a monster's extended attack
 	// range (Monster::getAttackRange() > getRange() - see Barzilla's
@@ -91,12 +96,14 @@ public:
 	// monster can strike here but not stand here." Empty for every monster
 	// whose getAttackRange() == getRange() (the default for all monsters
 	// except an empowered Barzilla).
-	std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;
+	/*std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;*/
+	std::vector<Tile*> getExtendedAttackOnlyTiles(BoardEntity* entity) const;
 
 	// שלב ב': אותה שאילתה, אבל מחזירה את המסלול המדורג (לפי סדר) מהמפלצת ל-target
 	// הספציפי, לא רק "מה אפשר". target חייב להיות tile שכבר יצא מ-getReachableTiles
 	// (כלומר תנועה, לא תקיפה) - אחרת מוחזרת רשימה ריקה.
-	std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
+	//std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
+	std::vector<Tile*> getPathTo(BoardEntity* entity, Tile* target) const;
 
 	bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
 
@@ -125,6 +132,7 @@ public:
 	// needing to know ally/enemy rules, Special abilities, or highlight
 	// colors - it only ever answers "what's occupied," never "what's valid."
 	std::vector<Tile*> getOccupiedTiles() const;
+	void highlightNeighbors(BoardEntity* entity);
 private:
 	// performAction()'s two independent branches, split out so each reads
 	// as one responsibility. performAttack coordinates the attack (wires an
@@ -135,12 +143,16 @@ private:
 	// the existing movement coordination (reachability/path/target-tile
 	// handling) unchanged.
 	void performAttack(BoardEntity* entity, Tile* targetTile);
-	void performMove(Monster* monster, Tile* targetTile);
+	//void performMove(Monster* monster, Tile* targetTile);
+	/*void performAttack(BoardEntity* entity, Tile* targetTile);
+	void performMove(Monster* monster, Tile* targetTile);*/
+	void performMove(BoardEntity* entity, Tile* targetTile);
 
 	//void setHighlight(const sf::Vector2f& pos, int range);
 	//sf::Vector2f tileToScreen(int q, int row) const;
 	//void highlightNeighbors(int q, int row, int range);
-	void highlightNeighbors(Monster* monster); // שינוי חתימה
+	//void highlightNeighbors(Monster* monster); // שינוי חתימה
+	//void highlightNeighbors(BoardEntity* entity);
 	//Tile* getLeftmostTileInRow(int row) const;
 	//Tile* getRightmostTileInRow(int row) const;
 	Tile* getExtremeTileInRow(int row, bool findLeftmost) const;

@@ -162,10 +162,10 @@ void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
 void Player::drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand) const
 {
     //למה זה בשחקן?
-    sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
+    /*sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
     bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
     bottomPanel.setFillColor(sf::Color(40, 40, 40));
-    window.draw(bottomPanel);
+    window.draw(bottomPanel);*/
 
     for (size_t i = 0; i < m_hand.size(); ++i)
     {

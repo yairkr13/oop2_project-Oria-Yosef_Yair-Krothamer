@@ -100,10 +100,11 @@ std::unique_ptr<AttackAnimation> Mozzy::createAttackAnimation(BoardEntity* targe
 // playSpecialAbilityAnimation slot Muffintop's Heal effect already uses.
 void Mozzy::onSpecialAbility(Board& board, BoardEntity* target)
 {
-    Monster* targetMonster = target ? target->asMonster() : nullptr;
-    if (!targetMonster) return;
+    /*Monster* targetMonster = target ? target->asMonster() : nullptr;
+    if (!targetMonster) return;*/
+	if (!target->canBeTargetedBySpecial()) return;
 
-    targetMonster->applyFreeze();
+    target->applyFreeze();
 
     const sf::Texture& freezeEffectTexture = AssetsManager::getInstance().getTexture("freeze_effect");
 
@@ -111,11 +112,11 @@ void Mozzy::onSpecialAbility(Board& board, BoardEntity* target)
     // FormingEffectAnimation derives where the reveal starts (above it)
     // itself, from the texture's actual scaled size, so shifting this one
     // point up shifts the whole start-to-end path up with it.
-    sf::Vector2f freezeTargetPosition = targetMonster->getScreenPosition() - sf::Vector2f(0.f, FREEZE_EFFECT_VERTICAL_SHIFT);
+    sf::Vector2f freezeTargetPosition = target->getScreenPosition() - sf::Vector2f(0.f, FREEZE_EFFECT_VERTICAL_SHIFT);
 
     auto freezeEffect = std::make_unique<FormingEffectAnimation>(
         freezeEffectTexture, freezeTargetPosition,
         FREEZE_EFFECT_WIDTH, FREEZE_EFFECT_REVEAL_DURATION, FREEZE_EFFECT_HOLD_DURATION);
 
-    targetMonster->playSpecialAbilityAnimation(std::move(freezeEffect));
+    target->playSpecialAbilityAnimation(std::move(freezeEffect));
 }

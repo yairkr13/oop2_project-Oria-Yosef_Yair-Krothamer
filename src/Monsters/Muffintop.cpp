@@ -101,17 +101,43 @@ Muffintop::Muffintop(PlayerSide side)
 // exactly mirroring how an attacker hands an attack animation to itself:
 // here the effect's owner is whichever entity it visually belongs to, and
 // that's the healed ally's own tile, not Muffintop.
+//void Muffintop::onSpecialAbility(Board& board, BoardEntity* target)
+//{
+//    Monster* targetMonster = target ? target->asMonster() : nullptr;
+//    if (!targetMonster) return;
+//
+//    //למה שלא יטען את היכולות המיוחדות ברגע שצריך אותם ולא מהתחילה?????
+//    const sf::Texture& healEffectTexture = AssetsManager::getInstance().getTexture("heal_effect");
+//
+//    // Starts at the bottom of the target's own tile and rises to the top -
+//    // getScreenPosition() is the tile's center, so the bottom is one
+//    // TILE_RADIUS below it.
+//    sf::Vector2f bottomOfTile = targetMonster->getScreenPosition() + sf::Vector2f(0.f, Config::TILE_RADIUS);
+//
+//    auto healEffect = std::make_unique<RisingEffectAnimation>(
+//        healEffectTexture, bottomOfTile, HEAL_EFFECT_RISE_DISTANCE, HEAL_EFFECT_DURATION, HEAL_EFFECT_SIZE,
+//        HEAL_EFFECT_INSTANCE_COUNT, HEAL_EFFECT_HORIZONTAL_SPACING, HEAL_EFFECT_STAGGER_DELAY);
+//
+//    // heal() (BoardEntity) still does the actual +HP and max-HP clamp -
+//    // nothing here duplicates that math, it only decides *when* to call it.
+//    healEffect->setOnImpact([targetMonster]() {
+//        targetMonster->heal(static_cast<int>(targetMonster->getMaxHealth() * 0.25f));
+//    });
+//
+//    targetMonster->playSpecialAbilityAnimation(std::move(healEffect));
+//}
 void Muffintop::onSpecialAbility(Board& board, BoardEntity* target)
 {
-    Monster* targetMonster = target ? target->asMonster() : nullptr;
-    if (!targetMonster) return;
+    //Monster* targetMonster = target ? target->asMonster() : nullptr;
+    //if (!targetMonster) return;
 
+    //למה שלא יטען את היכולות המיוחדות ברגע שצריך אותם ולא מהתחילה?????
     const sf::Texture& healEffectTexture = AssetsManager::getInstance().getTexture("heal_effect");
 
     // Starts at the bottom of the target's own tile and rises to the top -
     // getScreenPosition() is the tile's center, so the bottom is one
     // TILE_RADIUS below it.
-    sf::Vector2f bottomOfTile = targetMonster->getScreenPosition() + sf::Vector2f(0.f, Config::TILE_RADIUS);
+    sf::Vector2f bottomOfTile = target->getScreenPosition() + sf::Vector2f(0.f, Config::TILE_RADIUS);
 
     auto healEffect = std::make_unique<RisingEffectAnimation>(
         healEffectTexture, bottomOfTile, HEAL_EFFECT_RISE_DISTANCE, HEAL_EFFECT_DURATION, HEAL_EFFECT_SIZE,
@@ -119,11 +145,11 @@ void Muffintop::onSpecialAbility(Board& board, BoardEntity* target)
 
     // heal() (BoardEntity) still does the actual +HP and max-HP clamp -
     // nothing here duplicates that math, it only decides *when* to call it.
-    healEffect->setOnImpact([targetMonster]() {
-        targetMonster->heal(static_cast<int>(targetMonster->getMaxHealth() * 0.25f));
-    });
+    healEffect->setOnImpact([target]() {
+        target->heal(static_cast<int>(target->getMaxHealth() * 0.25f));
+        });
 
-    targetMonster->playSpecialAbilityAnimation(std::move(healEffect));
+    target->playSpecialAbilityAnimation(std::move(healEffect));
 }
 
 std::unique_ptr<AttackAnimation> Muffintop::createAttackAnimation(BoardEntity* target) const

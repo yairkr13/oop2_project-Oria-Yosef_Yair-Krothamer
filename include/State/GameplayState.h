@@ -75,7 +75,8 @@ private:
     // non-owning pointer into whatever Player actually owns the Monster
     // (see Player::m_monsters). GameplayState never takes ownership here,
     // exactly like it never takes ownership of a selected Card.
-    BoardEntity* m_selectedEntity = nullptr;
+    //BoardEntity* m_selectedEntity = nullptr;
+	BoardEntity* m_selectedEntity = nullptr; // subset of m_selectedEntity - nullptr if the selected entity is a Heart
 
     std::optional<Button> m_miniMenuButton;
 
@@ -114,5 +115,7 @@ private:
     // decided entirely by `caster` (see Monster::isValidSpecialTarget /
     // getSpecialTargetHighlightColor); this only ever iterates and paints.
     void highlightValidSpecialTargets(Monster& caster);
+
+    void drawButtomPanel(sf::RenderWindow& window) const;
 
 };

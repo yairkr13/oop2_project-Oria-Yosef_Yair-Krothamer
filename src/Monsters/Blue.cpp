@@ -98,13 +98,14 @@ std::unique_ptr<AttackAnimation> Blue::createAttackAnimation(BoardEntity* target
 // "knockback" itself.
 void Blue::onSpecialAbility(Board& board, BoardEntity* target)
 {
-    Monster* targetMonster = target ? target->asMonster() : nullptr;
-    if (!targetMonster) return;
+    //Monster* targetMonster = target ? target->asMonster() : nullptr;
+    //if (!targetMonster) return;
+	if (!target || !target->canBeTargetedBySpecial()) return;
 
-    Tile* currentTile = targetMonster->getCurrentTile();
+    Tile* currentTile = target->getCurrentTile();
     if (!currentTile) return;
 
-    auto [dq, dr] = HexGrid::stepToward(m_q, m_row, targetMonster->getQ(), targetMonster->getRow());
+    auto [dq, dr] = HexGrid::stepToward(m_q, m_row, target->getQ(), target->getRow());
 
     // Wind effect: built from the target's ORIGINAL position and the
     // board's own tile-to-tile screen distance for (dq, dr) - the exact
@@ -113,9 +114,9 @@ void Blue::onSpecialAbility(Board& board, BoardEntity* target)
     // blocked, same as the ability's action/cooldown already commit
     // regardless (see Monster::useSpecialAbility): the wind still visually
     // hits the target either way.
-    sf::Vector2f originalScreenPos = targetMonster->getScreenPosition();
-    sf::Vector2f stepVector = board.tileToScreen(targetMonster->getQ() + dq, targetMonster->getRow() + dr)
-        - board.tileToScreen(targetMonster->getQ(), targetMonster->getRow());
+    sf::Vector2f originalScreenPos = target->getScreenPosition();
+    sf::Vector2f stepVector = board.tileToScreen(target->getQ() + dq, target->getRow() + dr)
+        - board.tileToScreen(target->getQ(), target->getRow());
 
     sf::Vector2f windOrigin = originalScreenPos - stepVector * WIND_EFFECT_APPROACH_TILES;
     sf::Vector2f windTarget = originalScreenPos + stepVector * WIND_EFFECT_OVERSHOOT_TILES;
@@ -130,24 +131,24 @@ void Blue::onSpecialAbility(Board& board, BoardEntity* target)
     // still traveling and only flies backward once it "hits". Re-fetches
     // the target's current tile at fire-time (rather than capturing
     // currentTile from above) since this now runs later, not immediately.
-    windEffect->setOnImpact([&board, targetMonster, dq, dr]() {
-        Tile* sourceTile = targetMonster->getCurrentTile();
+    windEffect->setOnImpact([&board, target, dq, dr]() {
+        Tile* sourceTile = target->getCurrentTile();
         if (!sourceTile) return;
 
-        Tile* step1 = board.getTileAt(targetMonster->getQ() + dq, targetMonster->getRow() + dr);
-        bool step1Valid = step1 && !step1->hasEntity() && step1->isPassableFor(targetMonster);
+        Tile* step1 = board.getTileAt(target->getQ() + dq, target->getRow() + dr);
+        bool step1Valid = step1 && !step1->hasEntity() && step1->isPassableFor(target);
         if (!step1Valid) return; // first tile blocked/off-board -> no movement at all
 
         Tile* step2 = board.getTileAt(step1->getQ() + dq, step1->getRow() + dr);
-        bool step2Valid = step2 && !step2->hasEntity() && step2->isPassableFor(targetMonster);
+        bool step2Valid = step2 && !step2->hasEntity() && step2->isPassableFor(target);
 
         Tile* destination = step2Valid ? step2 : step1; // push 2 if both clear, otherwise exactly 1
 
         sourceTile->clearEntity();
-        destination->setEntity(targetMonster);
-        targetMonster->spawnOnBoard(destination->getQ(), destination->getRow(),
+        destination->setEntity(target);
+        target->spawnOnBoard(destination->getQ(), destination->getRow(),
             board.tileToScreen(destination->getQ(), destination->getRow()));
     });
 
-    targetMonster->playSpecialAbilityAnimation(std::move(windEffect));
+    target->playSpecialAbilityAnimation(std::move(windEffect));
 }

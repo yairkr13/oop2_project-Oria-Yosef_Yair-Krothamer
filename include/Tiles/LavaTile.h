@@ -14,7 +14,11 @@ public:
         if (hasEntity())
         {
             if (auto entity = getEntity())
+            {
+                if (entity->canFly())
+                    return; // מעופפים לא נפגעים מלבה
                 entity->takeDamage(20); // ���� ������ 20 ���� ������ ������ ����
+            }
         }
     }
 

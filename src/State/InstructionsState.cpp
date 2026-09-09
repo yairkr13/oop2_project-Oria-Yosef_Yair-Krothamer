@@ -41,4 +41,12 @@ void InstructionsState::update(sf::Time deltaTime)
 void InstructionsState::handleEvent(const sf::Event& event)
 {
     m_menu.handleEvent(event);
+
+    if (auto* keyPressed = event.getIf<sf::Event::KeyPressed>())
+    {
+        if (keyPressed->code == sf::Keyboard::Key::Escape)
+        {
+            onBackClicked(); // חזרה למסך הקודם
+        }
+    }
 }

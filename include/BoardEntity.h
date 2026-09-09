@@ -39,7 +39,7 @@ public:
     bool isEnemyOf(PlayerSide otherSide) const { return getSide() != otherSide; }
     bool isAllyOf(PlayerSide otherSide) const { return getSide() == otherSide; }
     virtual void attack(BoardEntity* target) {}
-
+    virtual int getAttackRange() const { return getRange(); }
     virtual int getRange() const { return 0; }
 
     // Encapsulated "cannot currently receive damage" state (see Henrietta's
@@ -126,7 +126,8 @@ public:
     virtual void update(float dt) {}
     virtual bool canFly() const { return false; }
     sf::Vector2f getScreenPosition() const { return m_screenPos; }
-    virtual Monster* asMonster() { return nullptr; }
+    //virtual Monster* asMonster() { return nullptr; }
+    virtual bool canBeTargetedBySpecial() const { return false; }
 
     // Optional visual for this entity's attack: nullptr (the default, used
     // by every entity that doesn't override this) means "no animation" -
@@ -158,8 +159,9 @@ public:
     // Default is a no-op, same reasoning as playAttackAnimation's default.
     virtual void playSpecialAbilityAnimation(std::unique_ptr<AttackAnimation> animation);
     //אולי אחר כך?????:
-    //virtual bool canMove() const { return false; }
-    //virtual void moveAlongPath(...) { /* No-op by default */ }
+    virtual bool canMove() const { return false; }
+    virtual void applyFreeze() {}
+    virtual void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) { /* No-op by default */ }
 protected:
     void drawHealthBar(sf::RenderWindow& window) const;
     // ������� ������ ��� ��� ����� ��� �� ����� ���� ����� ������ ����� �����
