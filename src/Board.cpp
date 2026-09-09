@@ -65,24 +65,35 @@ void Board::draw(sf::RenderWindow& window) const
 // בתוך Board.cpp
 // בתוך Board.cpp
 //למה - שיחזיר את המיקומים!????
-void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart) {
-    int middleRow = 3; // השורה האמצעית של הלוח
+//void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart) {
+//    int middleRow = 3; // השורה האמצעית של הלוח
+//
+//    // 1. מיקום הלב של שחקן 1 (הכי שמאלי)
+//    //Tile* p1Tile = getLeftmostTileInRow(middleRow);
+//	Tile* p1Tile = getExtremeTileInRow(middleRow, true);
+//    if (p1Tile != nullptr && p1Heart != nullptr) {
+//        p1Heart->spawnOnBoard(p1Tile->getQ(), p1Tile->getRow(), p1Tile->getScreenPosition());
+//        p1Tile->setEntity(p1Heart);
+//    }
+//
+//    // 2. מיקום הלב של שחקן 2 (הכי ימני)
+//    //Tile* p2Tile = getRightmostTileInRow(middleRow);
+//    Tile* p2Tile = getExtremeTileInRow(middleRow, false);
+//    if (p2Tile != nullptr && p2Heart != nullptr) {
+//        p2Heart->spawnOnBoard(p2Tile->getQ(), p2Tile->getRow(), p2Tile->getScreenPosition());
+//        p2Tile->setEntity(p2Heart);
+//    }
+//    generateSpecialTiles(p1Heart, p2Heart);
+//}
+void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart)
+{
+    int middleRow = 3;
 
-    // 1. מיקום הלב של שחקן 1 (הכי שמאלי)
-    //Tile* p1Tile = getLeftmostTileInRow(middleRow);
-	Tile* p1Tile = getExtremeTileInRow(middleRow, true);
-    if (p1Tile != nullptr && p1Heart != nullptr) {
-        p1Heart->spawnOnBoard(p1Tile->getQ(), p1Tile->getRow(), p1Tile->getScreenPosition());
-        p1Tile->setEntity(p1Heart);
-    }
+    if (p1Heart != nullptr)
+        spawnEntityOnTile(p1Heart, getExtremeTileInRow(middleRow, true));
+    if (p2Heart != nullptr)
+        spawnEntityOnTile(p2Heart, getExtremeTileInRow(middleRow, false));
 
-    // 2. מיקום הלב של שחקן 2 (הכי ימני)
-    //Tile* p2Tile = getRightmostTileInRow(middleRow);
-    Tile* p2Tile = getExtremeTileInRow(middleRow, false);
-    if (p2Tile != nullptr && p2Heart != nullptr) {
-        p2Heart->spawnOnBoard(p2Tile->getQ(), p2Tile->getRow(), p2Tile->getScreenPosition());
-        p2Tile->setEntity(p2Heart);
-    }
     generateSpecialTiles(p1Heart, p2Heart);
 }
 
@@ -103,7 +114,8 @@ bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
     Tile* tile = getTileAtScreenPosition(pos);
     if (!tile || !tile->isHighlighted()) return false;
 
-    if (spawnMonsterOnTile(monster, tile))
+    //if (spawnMonsterOnTile(monster, tile))
+    if (spawnEntityOnTile(monster,tile))
     {
         clearHighlights();
         return true;
@@ -185,7 +197,7 @@ std::vector<Tile*> Board::getPathTo(BoardEntity* entity, Tile* target) const
 //    for (Tile* tile : getExtendedAttackOnlyTiles(monster))
 //        tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
 //}
-void Board::highlightNeighbors(BoardEntity* entity)
+void Board::highlightNeighbors(BoardEntity* entity) //למה זה יכול להיות קבוע????
 {
     if (!entity) return;
 
@@ -357,11 +369,18 @@ std::vector<Tile*> Board::getSpawnableTiles(Monster* monster, PlayerSide side) c
 
     return spawnable;
 }
-bool Board::spawnMonsterOnTile(Monster* monster, Tile* targetTile)
+//bool Board::spawnMonsterOnTile(Monster* monster, Tile* targetTile)
+//{
+//    if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(monster)) return false;
+//    targetTile->setEntity(monster);
+//    monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(), targetTile->getScreenPosition());
+//    return true;
+//}
+bool Board::spawnEntityOnTile(BoardEntity* entity, Tile* targetTile)
 {
-    if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(monster)) return false;
-    targetTile->setEntity(monster);
-    monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(), targetTile->getScreenPosition());
+    if (!entity || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(entity)) return false;
+    targetTile->setEntity(entity);
+    entity->spawnOnBoard(targetTile->getQ(), targetTile->getRow(), targetTile->getScreenPosition());
     return true;
 }
 

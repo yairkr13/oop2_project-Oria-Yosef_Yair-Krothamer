@@ -105,7 +105,8 @@ public:
 	//std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
 	std::vector<Tile*> getPathTo(BoardEntity* entity, Tile* target) const;
 
-	bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
+	//bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
+	bool spawnEntityOnTile(BoardEntity* entity, Tile* targetTile);
 
 	// מקור רנדומליות אחד ומשותף לכל הלוח (במקום std::mt19937 מקומי במקום אחד ו-rand() במקום אחר)
 	static std::mt19937& rng()

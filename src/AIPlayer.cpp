@@ -62,7 +62,8 @@ void AIPlayer::onTurnStart(Board& board)
         
         if (monster)
         {
-            board.spawnMonsterOnTile(monster, chosenTile);
+            //board.spawnMonsterOnTile(monster, chosenTile);
+            board.spawnEntityOnTile(monster, chosenTile);
         }
     }
 
