@@ -16,7 +16,7 @@
 // m_button is mutable because that refresh is a visual sync, not a change
 // to this object's own state, so draw() can stay const like every other
 // State::draw().
-class MusicToggleButton
+class MusicToggleButton //למה זה לא יורש מהכפתור?????
 {
 public:
     // `position` is the button's top-left corner, `width` its on-screen

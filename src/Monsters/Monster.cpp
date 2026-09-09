@@ -354,7 +354,8 @@ bool Monster::useSpecialAbility(Board& board, BoardEntity* target)
 
 void Monster::attack(BoardEntity* target)
 {
-    //AssetsManager::getInstance()
+    //const sf::Sound& attackSound = AssetsManager::getInstance().getSound(m_textureKey);
+    //attackSound.
     target->takeDamage(m_attackDamage);
     useAction();
 }

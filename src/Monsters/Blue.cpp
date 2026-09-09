@@ -7,7 +7,7 @@
 #include "Tiles/Tile.h"
 #include "HexGrid.h"
 
-namespace
+namespace //מה זה?????כולם יכולים לראות את זה?????
 {
     // Normal-attack burst (WindBlast): several rapid shots, staggered, only
     // the last one deals damage - see BurstProjectileAnimation.
