@@ -234,9 +234,11 @@ Card* Player::handleHandClick(sf::Vector2f mousePos, bool alignRight) const
 
         if (m_hand[i]->isCardClicked(mousePos, { startX, Config::CARD_START_Y }))
         {
-            // תיקון: התעלמות מקלפים שכבר על הלוח או שאין מספיק מפתחות עבורם
-            if (/*m_hand[i]->isPlayed() ||*/ m_hand[i]->getCost() > m_keys)
+            if (!m_hand[i]->isPlayed() &&
+                m_hand[i]->getCost() > m_keys)
+            {
                 return nullptr;
+            }
 
             return m_hand[i].get();
         }
