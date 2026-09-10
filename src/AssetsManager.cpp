@@ -96,13 +96,21 @@ bool AssetsManager::loadNext()
     if (m_nextPendingIndex >= m_pendingAssets.size())
         return false;
 
-    const PendingAsset& asset = m_pendingAssets[m_nextPendingIndex++];
+    const PendingAsset& asset = m_pendingAssets[m_nextPendingIndex];
     switch (asset.kind)
     {
     case PendingAsset::Kind::Texture: loadTexture(asset.name, asset.filePath); break;
     case PendingAsset::Kind::Font:    loadFont(asset.name, asset.filePath);    break;
     case PendingAsset::Kind::Music:   loadMusic(asset.name, asset.filePath);   break;
+    default:
+        throw std::logic_error("AssetsManager::loadNext: unhandled PendingAsset::Kind for queued asset '"
+            + asset.name + "'");
     }
+
+    // Advance only once the asset above actually loaded - if loadX threw, the
+    // index still points at the failed entry (irrelevant while we unwind to
+    // main(), but keeps this function's own state honest).
+    ++m_nextPendingIndex;
     return true;
 }
 
@@ -113,14 +121,20 @@ void AssetsManager::loadTexture(const std::string& name, const std::string& file
 
     auto texture = std::make_unique<sf::Texture>();
     if (!texture->loadFromFile(filePath))
-        throw std::runtime_error("Failed to load texture: " + filePath);
+        throw std::runtime_error("AssetsManager: failed to load texture '" + name
+            + "' from \"" + filePath + "\" (file missing, unreadable, or not a valid image)");
 
     m_textures[name] = std::move(texture);
 }
 
 const sf::Texture& AssetsManager::getTexture(const std::string& name) const
 {
-    return *m_textures.at(name);
+    auto it = m_textures.find(name);
+    if (it == m_textures.end())
+        throw std::out_of_range("AssetsManager: no texture registered under '" + name
+            + "' (asset was never loaded - check the key spelling and queueRemainingAssets())");
+
+    return *it->second;
 }
 
 void AssetsManager::loadFont(const std::string& name, const std::string& filePath)
@@ -130,14 +144,20 @@ void AssetsManager::loadFont(const std::string& name, const std::string& filePat
 
     auto font = std::make_unique<sf::Font>();
     if (!font->openFromFile(filePath))
-        throw std::runtime_error("Failed to load font: " + filePath);
+        throw std::runtime_error("AssetsManager: failed to load font '" + name
+            + "' from \"" + filePath + "\" (file missing, unreadable, or not a valid font)");
 
     m_fonts[name] = std::move(font);
 }
 
 const sf::Font& AssetsManager::getFont(const std::string& name) const
 {
-    return *m_fonts.at(name);
+    auto it = m_fonts.find(name);
+    if (it == m_fonts.end())
+        throw std::out_of_range("AssetsManager: no font registered under '" + name
+            + "' (asset was never loaded - check the key spelling and queueRemainingAssets())");
+
+    return *it->second;
 }
 
 void AssetsManager::loadMusic(const std::string& name, const std::string& filePath)
@@ -147,12 +167,18 @@ void AssetsManager::loadMusic(const std::string& name, const std::string& filePa
 
     auto music = std::make_unique<sf::Music>();
     if (!music->openFromFile(filePath))
-        throw std::runtime_error("Failed to load music: " + filePath);
+        throw std::runtime_error("AssetsManager: failed to load music '" + name
+            + "' from \"" + filePath + "\" (file missing, unreadable, or not a valid audio file)");
 
     m_music[name] = std::move(music);
 }
 
 sf::Music& AssetsManager::getMusic(const std::string& name) const
 {
-    return *m_music.at(name);
+    auto it = m_music.find(name);
+    if (it == m_music.end())
+        throw std::out_of_range("AssetsManager: no music registered under '" + name
+            + "' (asset was never loaded - check the key spelling and queueRemainingAssets())");
+
+    return *it->second;
 }
