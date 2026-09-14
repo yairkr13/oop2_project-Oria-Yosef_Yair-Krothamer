@@ -3,11 +3,13 @@
 
 void AssetsManager::loadBootAssets()
 {
-    loadTexture("await_bg", "resources/Menu/AwaitScreen.png");
-    loadTexture("spinner", "resources/Menu/Spinner.png");
+   /* loadTexture("await_bg", "resources/Menu/AwaitScreen.png");
+    loadTexture("spinner", "resources/Menu/Spinner.png");*/
+    load<sf::Texture>("await_bg", "resources/Menu/AwaitScreen.png");
+    load<sf::Texture>("spinner", "resources/Menu/Spinner.png");
 }
 
-void AssetsManager::queueRemainingAssets()
+void AssetsManager::queueRemainingAssets() //למה הכל פה? האם אפשר לשים נגיד את היכולות המיוחדות בחלק אחר??????
 {
     using Kind = PendingAsset::Kind;
 
@@ -35,6 +37,8 @@ void AssetsManager::queueRemainingAssets()
     { Kind::Texture, "GenericButton", "resources/Button/Button.png" },
     { Kind::Texture, "VolumeUpButton", "resources/Button/VolumeUpButton.png" },
     { Kind::Texture, "VolumeMuteButton", "resources/Button/VolumeMuteButton.png" },
+    { Kind::Texture, "SoundMuteButton", "resources/Button/sound_off_button2.png" },
+    { Kind::Texture, "SoundUpButton", "resources/Button/sound_on_button.png" },
     { Kind::Texture, "GoToMiniMenuButton", "resources/Button/GoToMiniMenuButton.png" },
 
     { Kind::Texture, "heart100", "resources/Heart/Heart100.png" },
@@ -86,6 +90,14 @@ void AssetsManager::queueRemainingAssets()
     { Kind::Texture, "freeze_effect", "resources/SpecialAttack/FreezeEffect.png" },
     { Kind::Texture, "wind_effect", "resources/SpecialAttack/WindEffect.png" },
     { Kind::Texture, "shield_effect", "resources/SpecialAttack/ShieldEffect.png" },
+
+    { Kind::SoundBuffer, "attack_hit", "resources/Sounds/attack_hit.mp3" },
+    { Kind::SoundBuffer, "hover_on_button", "resources/Sounds/hover_button.mp3" },
+    { Kind::SoundBuffer, "button_click", "resources/Sounds/click-button.mp3" },
+    { Kind::SoundBuffer, "dead_sound", "resources/Sounds/death-bong.mp3" },
+    { Kind::SoundBuffer, "summon_sound", "resources/Sounds/summon.mp3" },
+    { Kind::SoundBuffer, "activate_card", "resources/Sounds/card_sound.mp3" },
+    { Kind::SoundBuffer, "parry_attack", "resources/Sounds/sword-deflection.mp3" },
     };
 
     m_nextPendingIndex = 0;
@@ -97,88 +109,196 @@ bool AssetsManager::loadNext()
         return false;
 
     const PendingAsset& asset = m_pendingAssets[m_nextPendingIndex];
+
     switch (asset.kind)
     {
-    case PendingAsset::Kind::Texture: loadTexture(asset.name, asset.filePath); break;
-    case PendingAsset::Kind::Font:    loadFont(asset.name, asset.filePath);    break;
-    case PendingAsset::Kind::Music:   loadMusic(asset.name, asset.filePath);   break;
+    case PendingAsset::Kind::Texture:     load<sf::Texture>(asset.name, asset.filePath); break;
+    case PendingAsset::Kind::Font:        load<sf::Font>(asset.name, asset.filePath);    break;
+    case PendingAsset::Kind::Music:       load<sf::Music>(asset.name, asset.filePath);   break;
+    case PendingAsset::Kind::SoundBuffer: load<sf::SoundBuffer>(asset.name, asset.filePath); break;
     default:
         throw std::logic_error("AssetsManager::loadNext: unhandled PendingAsset::Kind for queued asset '"
             + asset.name + "'");
     }
 
-    // Advance only once the asset above actually loaded - if loadX threw, the
-    // index still points at the failed entry (irrelevant while we unwind to
-    // main(), but keeps this function's own state honest).
+   /*  Advance only once the asset above actually loaded - if loadX threw, the
+     index still points at the failed entry (irrelevant while we unwind to
+     main(), but keeps this function's own state honest).*/
     ++m_nextPendingIndex;
+
     return true;
 }
 
-void AssetsManager::loadTexture(const std::string& name, const std::string& filePath)
-{
-    if (m_textures.find(name) != m_textures.end())
-        return;
+//bool AssetsManager::loadNext()
+//{
+//    if (m_nextPendingIndex >= m_pendingAssets.size())
+//        return false;
+//
+//    const PendingAsset& asset = m_pendingAssets[m_nextPendingIndex];
+//    switch (asset.kind)
+//    {//למה צריך את כל הבדיקה הזאת????אפשר לעשות פונקציה תבניתית
+//    case PendingAsset::Kind::Texture: loadTexture(asset.name, asset.filePath); break;
+//    case PendingAsset::Kind::Font:    loadFont(asset.name, asset.filePath);    break;
+//    case PendingAsset::Kind::Music:   loadMusic(asset.name, asset.filePath);   break;
+//    case PendingAsset::Kind::SoundBuffer: loadSoundBuffer(asset.name, asset.filePath); break;
+//    default:
+//        throw std::logic_error("AssetsManager::loadNext: unhandled PendingAsset::Kind for queued asset '"
+//            + asset.name + "'");
+//    }
+//
+//    // Advance only once the asset above actually loaded - if loadX threw, the
+//    // index still points at the failed entry (irrelevant while we unwind to
+//    // main(), but keeps this function's own state honest).
+//    ++m_nextPendingIndex;
+//    return true;
+//}
 
-    auto texture = std::make_unique<sf::Texture>();
-    if (!texture->loadFromFile(filePath))
-        throw std::runtime_error("AssetsManager: failed to load texture '" + name
-            + "' from \"" + filePath + "\" (file missing, unreadable, or not a valid image)");
+//
+//template <typename T>
+//void AssetsManager::loadAsset(std::unordered_map<std::string, std::unique_ptr<T>>& map,
+//    const std::string& name, const std::string& filePath,
+//    bool (T::* openMethod)(const std::string&), const char* typeLabel)
+//{
+//    if (map.find(name) != map.end())
+//        return;
+//
+//    auto asset = std::make_unique<T>();
+//    if (!((*asset).*openMethod)(filePath))
+//        throw std::runtime_error(std::string("AssetsManager: failed to load ") + typeLabel + " '" + name
+//            + "' from \"" + filePath + "\" (file missing, unreadable, or not a valid " + typeLabel + ")");
+//
+//    map[name] = std::move(asset);
+//}
+//
+//template <typename T>
+//const T& AssetsManager::getAsset(const std::unordered_map<std::string, std::unique_ptr<T>>& map,
+//    const std::string& name, const char* typeLabel) const
+//{
+//    auto it = map.find(name);
+//    if (it == map.end())
+//        throw std::out_of_range(std::string("AssetsManager: no ") + typeLabel + " registered under '" + name
+//            + "' (asset was never loaded - check the key spelling and queueRemainingAssets())");
+//
+//    return *it->second;
+//}
+//
+//
+//
 
-    m_textures[name] = std::move(texture);
-}
+//void AssetsManager::loadTexture(const std::string& name, const std::string& filePath)
+//{
+//    loadAsset(m_textures, name, filePath, &sf::Texture::loadFromFile, "texture");
+//}
+//
+//const sf::Texture& AssetsManager::getTexture(const std::string& name) const
+//{
+//    return getAsset(m_textures, name, "texture");
+//}
+//
+//void AssetsManager::loadFont(const std::string& name, const std::string& filePath)
+//{
+//    loadAsset(m_fonts, name, filePath, &sf::Font::openFromFile, "font");
+//}
+//
+//const sf::Font& AssetsManager::getFont(const std::string& name) const
+//{
+//    return getAsset(m_fonts, name, "font");
+//}
+//
+//void AssetsManager::loadMusic(const std::string& name, const std::string& filePath)
+//{
+//    loadAsset(m_music, name, filePath, &sf::Music::openFromFile, "music track");
+//}
+//
+//sf::Music& AssetsManager::getMusic(const std::string& name) const
+//{
+//    // אותה getAsset<T> הגנרית בדיוק כמו הטקסטורות/פונטים - ה-const_cast כאן
+//    // ממוקד ומתועד: unique_ptr<T>::operator* תמיד מחזיר T& לא-קבוע (ה-constness
+//    // לא "עובר דרכו"), אז אין סיבה טכנית אמיתית לשכפל את לוגיקת ה-lookup רק
+//    // כדי לקבל סוג החזרה שונה - רק להוריד את ה-const שגובר כאן מיותר.
+//    return const_cast<sf::Music&>(getAsset(m_music, name, "music track"));
+//}
+//
+//void AssetsManager::loadSoundBuffer(const std::string& name, const std::string& filePath)
+//{
+//    loadAsset(m_soundBuffers, name, filePath, &sf::SoundBuffer::loadFromFile, "sound buffer");
+//}
+//
+//const sf::SoundBuffer& AssetsManager::getSoundBuffer(const std::string& name) const
+//{
+//    return getAsset(m_soundBuffers, name, "sound buffer");
+//}
 
-const sf::Texture& AssetsManager::getTexture(const std::string& name) const
-{
-    auto it = m_textures.find(name);
-    if (it == m_textures.end())
-        throw std::out_of_range("AssetsManager: no texture registered under '" + name
-            + "' (asset was never loaded - check the key spelling and queueRemainingAssets())");
 
-    return *it->second;
-}
 
-void AssetsManager::loadFont(const std::string& name, const std::string& filePath)
-{
-    if (m_fonts.find(name) != m_fonts.end())
-        return;
 
-    auto font = std::make_unique<sf::Font>();
-    if (!font->openFromFile(filePath))
-        throw std::runtime_error("AssetsManager: failed to load font '" + name
-            + "' from \"" + filePath + "\" (file missing, unreadable, or not a valid font)");
 
-    m_fonts[name] = std::move(font);
-}
 
-const sf::Font& AssetsManager::getFont(const std::string& name) const
-{
-    auto it = m_fonts.find(name);
-    if (it == m_fonts.end())
-        throw std::out_of_range("AssetsManager: no font registered under '" + name
-            + "' (asset was never loaded - check the key spelling and queueRemainingAssets())");
-
-    return *it->second;
-}
-
-void AssetsManager::loadMusic(const std::string& name, const std::string& filePath)
-{
-    if (m_music.find(name) != m_music.end())
-        return;
-
-    auto music = std::make_unique<sf::Music>();
-    if (!music->openFromFile(filePath))
-        throw std::runtime_error("AssetsManager: failed to load music '" + name
-            + "' from \"" + filePath + "\" (file missing, unreadable, or not a valid audio file)");
-
-    m_music[name] = std::move(music);
-}
-
-sf::Music& AssetsManager::getMusic(const std::string& name) const
-{
-    auto it = m_music.find(name);
-    if (it == m_music.end())
-        throw std::out_of_range("AssetsManager: no music registered under '" + name
-            + "' (asset was never loaded - check the key spelling and queueRemainingAssets())");
-
-    return *it->second;
-}
+//void AssetsManager::loadTexture(const std::string& name, const std::string& filePath)
+//{
+//    if (m_textures.find(name) != m_textures.end())
+//        return;
+//
+//    auto texture = std::make_unique<sf::Texture>();
+//    if (!texture->loadFromFile(filePath))
+//        throw std::runtime_error("AssetsManager: failed to load texture '" + name
+//            + "' from \"" + filePath + "\" (file missing, unreadable, or not a valid image)");
+//
+//    m_textures[name] = std::move(texture);
+//}
+//
+//const sf::Texture& AssetsManager::getTexture(const std::string& name) const
+//{
+//    auto it = m_textures.find(name);
+//    if (it == m_textures.end())
+//        throw std::out_of_range("AssetsManager: no texture registered under '" + name
+//            + "' (asset was never loaded - check the key spelling and queueRemainingAssets())");
+//
+//    return *it->second;
+//}
+//
+//void AssetsManager::loadFont(const std::string& name, const std::string& filePath)
+//{
+//    if (m_fonts.find(name) != m_fonts.end())
+//        return;
+//
+//    auto font = std::make_unique<sf::Font>();
+//    if (!font->openFromFile(filePath))
+//        throw std::runtime_error("AssetsManager: failed to load font '" + name
+//            + "' from \"" + filePath + "\" (file missing, unreadable, or not a valid font)");
+//
+//    m_fonts[name] = std::move(font);
+//}
+//
+//const sf::Font& AssetsManager::getFont(const std::string& name) const
+//{
+//    auto it = m_fonts.find(name);
+//    if (it == m_fonts.end())
+//        throw std::out_of_range("AssetsManager: no font registered under '" + name
+//            + "' (asset was never loaded - check the key spelling and queueRemainingAssets())");
+//
+//    return *it->second;
+//}
+//
+//void AssetsManager::loadMusic(const std::string& name, const std::string& filePath)
+//{
+//    if (m_music.find(name) != m_music.end())
+//        return;
+//
+//    auto music = std::make_unique<sf::Music>();
+//    if (!music->openFromFile(filePath))
+//        throw std::runtime_error("AssetsManager: failed to load music '" + name
+//            + "' from \"" + filePath + "\" (file missing, unreadable, or not a valid audio file)");
+//
+//    m_music[name] = std::move(music);
+//}
+//
+//sf::Music& AssetsManager::getMusic(const std::string& name) const
+//{
+//    auto it = m_music.find(name);
+//    if (it == m_music.end())
+//        throw std::out_of_range("AssetsManager: no music registered under '" + name
+//            + "' (asset was never loaded - check the key spelling and queueRemainingAssets())");
+//
+//    return *it->second;
+//}

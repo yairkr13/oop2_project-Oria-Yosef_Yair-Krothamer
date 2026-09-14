@@ -32,6 +32,7 @@ public:
 private:
     void initSprite(sf::IntRect rect);
 
+    bool m_isHovered = false;
     sf::IntRect m_rect;
 	sf::Sprite m_sprite;
     Func m_func;

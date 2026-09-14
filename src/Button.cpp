@@ -1,4 +1,5 @@
 #include "button.h"
+#include "SoundPlayer.h"
 
 Button::Button(sf::IntRect rect, const sf::Texture& texture, Func func, sf::Vector2f scale)
     : m_rect(rect), m_func(func), m_sprite(texture), m_scale(scale)
@@ -50,6 +51,17 @@ void Button::draw(sf::RenderWindow& window) const
 }
 void Button::setHovered(bool hovered)
 {
+	if (m_isHovered == hovered)
+		return;
+
+	m_isHovered = hovered;
+
+	// הצליל מושמע רק ברגע הכניסה לכפתור (מעבר מ-false ל-true)
+	if (m_isHovered)
+	{
+		SoundPlayer::getInstance().play("hover_on_button");
+	}
+	
 	float hoverFactor = hovered ? 1.1f : 1.f;
 	m_sprite.setScale({ m_scale.x * hoverFactor, m_scale.y * hoverFactor });
 }
@@ -66,7 +78,11 @@ void Button::handle(const sf::Event::MouseButtonPressed& event)
 		sf::Vector2i clickPos(event.position.x, event.position.y);
 		if (m_rect.contains(clickPos))
 		{
-			m_func();
+			SoundPlayer::getInstance().play("button_click");
+			if (m_func) // בדיקה שה-std::function אינו ריק
+			{
+				m_func();
+			}
 		}
 	}
 }

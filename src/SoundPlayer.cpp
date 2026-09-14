@@ -1,0 +1,17 @@
+#include "SoundPlayer.h"
+#include "AssetsManager.h"
+#include <algorithm>
+
+void SoundPlayer::play(const std::string& name)
+{
+    if (m_muted) return;
+    // מנקים קודם צלילים שכבר נגמרו - כדי שהרשימה לא תגדל בלי גבול לאורך משחק ארוך.
+    m_activeSounds.erase(
+        std::remove_if(m_activeSounds.begin(), m_activeSounds.end(),
+            [](const sf::Sound& sound) { return sound.getStatus() == sf::Sound::Status::Stopped; }),
+        m_activeSounds.end());
+
+    const sf::SoundBuffer& buffer = AssetsManager::getInstance().getSoundBuffer(name);
+    m_activeSounds.emplace_back(buffer);
+    m_activeSounds.back().play();
+}

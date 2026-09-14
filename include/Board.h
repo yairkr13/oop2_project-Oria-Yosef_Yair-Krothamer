@@ -207,6 +207,6 @@ private:
 	BoardPathfinder m_pathfinder;
 
 	// Board layout constants
-	static constexpr float START_X = 320.f;
+	static constexpr float START_X = 320.f; //לעשות עוד ללוח ?????נגיד הקצוות
 	static constexpr float START_Y = 30.f;
 };

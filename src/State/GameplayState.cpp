@@ -396,6 +396,8 @@ void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
             }
             else
             {
+                SoundPlayer::getInstance().play("activate_card");
+
                 m_selectedFromHand = clickedCard;
                 clearPendingSpecial();
                 //למה הוא אחראי לזה??????

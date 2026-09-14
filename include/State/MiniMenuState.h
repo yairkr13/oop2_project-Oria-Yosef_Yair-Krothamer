@@ -1,7 +1,8 @@
 #pragma once
 #include "State/State.h"
 #include "Menu.h"
-#include "MusicToggleButton.h"
+//#include "MusicToggleButton.h"
+#include "AudioToggleButton.h"
 #include <functional>
 
 // Pause-style overlay pushed on top of GameplayState (Escape, or the
@@ -38,6 +39,7 @@ private:
 
     // Not part of m_menu: a single fixed-position icon, not a stacked list.
     MusicToggleButton m_volumeButton;
+    SoundToggleButton m_soundOnButton;
 
     std::function<void()> m_onExitGame;
     std::function<void()> m_onRestartGame;

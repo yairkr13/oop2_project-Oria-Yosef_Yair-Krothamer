@@ -1,7 +1,8 @@
 #pragma once
 #include "State/State.h"
 #include "Menu.h"
-#include "MusicToggleButton.h"
+//#include "MusicToggleButton.h"
+#include "AudioToggleButton.h"
 
 // The game's main menu: background image plus Start Game / Instructions / Exit
 // buttons. Retrieves its assets from AssetsManager (loaded up front by
@@ -32,4 +33,5 @@ private:
 
     // Not part of m_menu: a single fixed-position icon, not a stacked list.
     MusicToggleButton m_volumeButton;
+    SoundToggleButton m_soundOnButton;
 };

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <utility>
 #include "Constants.h"
+#include "SoundPlayer.h"
 
 Board::Board(const BoardLayout& layout)
     : m_layout(layout), m_pathfinder(m_grid)
@@ -414,6 +415,8 @@ bool Board::spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile)
 
     internalTile->setEntity(entity);
     entity->spawnOnBoard(internalTile->getQ(), internalTile->getRow(), internalTile->getScreenPosition());
+
+    SoundPlayer::getInstance().play("summon_sound");
     return true;
 }
 

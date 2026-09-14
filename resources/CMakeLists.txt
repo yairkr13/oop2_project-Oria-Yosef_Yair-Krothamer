@@ -16,6 +16,8 @@ configure_file("Button/BackButton.png" ${CMAKE_BINARY_DIR}/resources/Button/Back
 configure_file("Button/FriendButton.png" ${CMAKE_BINARY_DIR}/resources/Button/FriendButton.png COPYONLY)
 configure_file("Button/VolumeUpButton.png" ${CMAKE_BINARY_DIR}/resources/Button/VolumeUpButton.png COPYONLY)
 configure_file("Button/VolumeMuteButton.png" ${CMAKE_BINARY_DIR}/resources/Button/VolumeMuteButton.png COPYONLY)
+configure_file("Button/sound_off_button2.png" ${CMAKE_BINARY_DIR}/resources/Button/sound_off_button2.png COPYONLY)
+configure_file("Button/sound_on_button.png" ${CMAKE_BINARY_DIR}/resources/Button/sound_on_button.png COPYONLY)
 configure_file("Button/Button.png" ${CMAKE_BINARY_DIR}/resources/Button/Button.png COPYONLY)
 configure_file("Button/GoToMiniMenuButton.png" ${CMAKE_BINARY_DIR}/resources/Button/GoToMiniMenuButton.png COPYONLY)
 
@@ -90,3 +92,11 @@ configure_file("Tile/Tile3.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile3.png COP
 
 configure_file("Music/BackGround/BackGroundMusic.mp3" ${CMAKE_BINARY_DIR}/resources/Music/BackGround/BackGroundMusic.mp3 COPYONLY)
 configure_file("Music/BackGround/InGameMusic.mp3" ${CMAKE_BINARY_DIR}/resources/Music/BackGround/InGameMusic.mp3 COPYONLY)
+
+configure_file("Sounds/sword-deflection.mp3" ${CMAKE_BINARY_DIR}/resources/Sounds/sword-deflection.mp3 COPYONLY)
+configure_file("Sounds/card_sound.mp3" ${CMAKE_BINARY_DIR}/resources/Sounds/card_sound.mp3 COPYONLY)
+configure_file("Sounds/summon.mp3" ${CMAKE_BINARY_DIR}/resources/Sounds/summon.mp3 COPYONLY)
+configure_file("Sounds/death-bong.mp3" ${CMAKE_BINARY_DIR}/resources/Sounds/death-bong.mp3 COPYONLY)
+configure_file("Sounds/click-button.mp3" ${CMAKE_BINARY_DIR}/resources/Sounds/click-button.mp3 COPYONLY)
+configure_file("Sounds/hover_button.mp3" ${CMAKE_BINARY_DIR}/resources/Sounds/hover_button.mp3 COPYONLY)
+configure_file("Sounds/attack_hit.mp3" ${CMAKE_BINARY_DIR}/resources/Sounds/attack_hit.mp3 COPYONLY)

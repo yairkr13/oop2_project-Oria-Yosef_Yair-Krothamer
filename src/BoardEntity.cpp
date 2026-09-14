@@ -2,6 +2,7 @@
 #include "Tiles/Tile.h" // �-include ��� ���� ���!
 #include "Attacks/AttackAnimation.h" // complete type needed for the unique_ptr default below
 #include <algorithm>
+#include "SoundPlayer.h"
 
 void BoardEntity::spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) {
     m_q = q;
@@ -34,9 +35,14 @@ bool BoardEntity::isAlive() const
 
 void BoardEntity::takeDamage(int damage)
 {
+    //קול אחר בשביל התקפה על מגן!!!!!
     if (m_protected) return; // encapsulated here so no caller ever needs to ask first
     m_health -= damage;
-    if (m_health < 0) m_health = 0;
+    if (m_health < 0)
+    {
+        SoundPlayer::getInstance().play("dead_sound");
+        m_health = 0;
+    }
 }
 
 void BoardEntity::heal(int amount)

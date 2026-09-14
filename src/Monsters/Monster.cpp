@@ -2,6 +2,7 @@
 #include "Constants.h"
 #include "AssetsManager.h"
 #include "Attacks/AttackAnimation.h" // complete type needed for the destructor and m_attackAnimation below
+#include "SoundPlayer.h"
 
 // Defined here (not "= default" inline in the header): destroying
 // m_attackAnimation (a unique_ptr<AttackAnimation>) requires the complete
@@ -356,12 +357,19 @@ void Monster::attack(BoardEntity* target)
 {
     //const sf::Sound& attackSound = AssetsManager::getInstance().getSound(m_textureKey);
     //attackSound.
+    /*SoundPlayer::getInstance().play("attack_hit"); *///מאוחר מדי!!!! לחשוב על מקום אחר לפני שנשים את זה
     target->takeDamage(m_attackDamage);
     useAction();
+    if (target->isProtected()) //לגרום ללב בהמשך להיות מוגן!!!!!
+        SoundPlayer::getInstance().play("parry_attack");
+        //make hit the shild sound
+    if (target->isAlive()) //make the attack sound only when the enemy attacks
+        SoundPlayer::getInstance().play("attack_hit");
 }
 
 void Monster::playAttackAnimation(std::unique_ptr<AttackAnimation> animation)
 {
+    //SoundPlayer::getInstance().play("attack_launch"); // נשמע מיד עם תחילת האנימציה!
     m_attackAnimation = std::move(animation);
 }
 
