@@ -31,12 +31,17 @@ GameplayState::GameplayState(sf::RenderWindow& window, GameMode mode)
     , m_player2(makePlayer2(mode))
     , m_turnManager(*m_player1, *m_player2, m_board)
     , m_endTurnHintText(AssetsManager::getInstance().getFont("Lilita"))
+    , m_tooltip(AssetsManager::getInstance().getFont("Lilita"))
 {
     scaleBackgroundToWindow();
     m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart());
     buildMiniMenuButton();
 
     m_turnManager.setOnPlayerSwitched([this]() { clearSelectionState(); });
+
+    m_bottomPanel.setSize({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
+    m_bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
+    m_bottomPanel.setFillColor(sf::Color(40, 40, 40));
 
     m_endTurnHintText.setString("PRESS SPACE TO END TURN");
     m_endTurnHintText.setCharacterSize(13); // גודל קטן
@@ -96,6 +101,8 @@ void GameplayState::draw(sf::RenderWindow& window) const
 
     if (m_miniMenuButton)
         m_miniMenuButton->draw(window);
+
+    m_tooltip.draw(window);
 }
 
 void GameplayState::drawButtomPanel(sf::RenderWindow& window) const
@@ -105,11 +112,16 @@ void GameplayState::drawButtomPanel(sf::RenderWindow& window) const
 	//bottomPanel.setPosition({ 0.f, static_cast<float>(Config::WINDOW_HEIGHT) - 100.f });
 	//bottomPanel.setFillColor(sf::Color(30, 30, 50, 200)); // Darker color with some transparency
 	//m_window.draw(bottomPanel);
-    sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
-    bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
-    bottomPanel.setFillColor(sf::Color(40, 40, 40));
-    window.draw(bottomPanel);
-    m_window.draw(m_endTurnHintText); //אם יש דרך יותר טובה...
+    //sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
+    //bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
+    //bottomPanel.setFillColor(sf::Color(40, 40, 40));
+    //window.draw(bottomPanel);
+    //m_window.draw(m_endTurnHintText); //אם יש דרך יותר טובה...
+
+    
+    window.draw(m_bottomPanel);
+    window.draw(m_endTurnHintText);
+    
 }
 
 void GameplayState::update(sf::Time deltaTime)
@@ -159,6 +171,27 @@ void GameplayState::handleEvent(const sf::Event& event)
         m_miniMenuButton->handleEvent(event);
 
     event.visit([this](const auto& e) { handle(e); });
+}
+
+void GameplayState::handle(const sf::Event::MouseMoved& event)
+{
+    sf::Vector2f mousePos = m_window.mapPixelToCoords(event.position);
+
+    Player& current = m_turnManager.getCurrentPlayer();
+
+    if (mousePos.y > Config::BOTTOM_PANEL_Y)
+    {
+        // Player מחזיר רק טקסט - הקפסולציה נשמרה לחלוטין!
+        std::string tooltipText = current.getCardTooltipAt(mousePos);
+
+        if (!tooltipText.empty())
+        {
+            m_tooltip.show(tooltipText, mousePos);
+            return;
+        }
+    }
+
+    m_tooltip.hide();
 }
 
 //void GameplayState::handleSpawnAttempt(const sf::Vector2f& pos, Player& current)

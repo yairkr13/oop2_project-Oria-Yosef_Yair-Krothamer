@@ -13,7 +13,7 @@ class Board; // Forward declaration - only ever used by reference in Special Abi
 class Monster :public BoardEntity
 {
 public:
-    Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int baseCooldown/*, int cost,*/ ,int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
+    Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int baseCooldown/*, int cost,*/, int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
     // Declared here, defined "= default" out-of-line in Monster.cpp: m_attackAnimation
     // below is a unique_ptr<AttackAnimation>, and AttackAnimation is only
     // forward-declared in this header (via BoardEntity.h) - same reason
@@ -44,7 +44,7 @@ public:
 
     //virtual EntityType getType() const override { return EntityType::Monster; }
     bool isOnBoard() const;
-	bool isClicked(sf::Vector2f mousePos) const; //why we dont use this function in the game??????
+    bool isClicked(sf::Vector2f mousePos) const; //why we dont use this function in the game??????
     /*bool isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPosition) const;*/
 
     //int getCost() const { return m_cost; }
@@ -138,6 +138,7 @@ public:
     // select (nothing was ever armed, so there is nothing to undo).
     virtual void cancelSpecialAbility() {}
 
+    virtual std::string getSpecialAbilityDescription() const = 0;
     // Whether `candidate` is a legal target for this monster's Special,
     // once one is required. Default: any on-board enemy Monster - covers
     // Mozzy's Freeze and Blue's Knockback without either needing to
@@ -186,7 +187,7 @@ public:
     //void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) override;
 protected:
     //virtual void onAttackHook(BoardEntity* target) {}
-    virtual void onSpecialAbility(Board& board, BoardEntity* target) {}
+    virtual void onSpecialAbility(Board& board, BoardEntity* target) = 0;
 
     // Opt-in: gives this monster a looping sprite-sheet animation, shown
     // only while isMoving() is true (see update()/draw()) - swapped back to
@@ -316,7 +317,7 @@ private:
     // more value here plus one more addAnimationState() call somewhere -
     // nothing else in Monster, and nothing at all in SpriteAnimator, needs
     // to change.
-    enum class AnimState : int { Idle, Walk, Attack, Die };
+    enum class AnimState : int { Idle, Walk, Attack, Die }; //אנחנו משתמשים בזה??????
 
     // Shared by setWalkAnimation/setAttackSpriteAnimation/etc: registers
     // one more state with m_animator under the given id/priority. Kept as

@@ -3,11 +3,11 @@
 #include "Constants.h"
 #include <memory>
 class Monster; // Forward declaration
-
-enum class EntityType {
-    Monster,
-    Heart
-};
+//
+//enum class EntityType {
+//    Monster,
+//    Heart
+//};
 
 class Tile; // Forward declaration
 class AttackAnimation; // Forward declaration

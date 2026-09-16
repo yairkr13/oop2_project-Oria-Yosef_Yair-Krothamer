@@ -48,6 +48,7 @@ public:
 
     Monster* playCard(Card* card); // כבר לא מוחק מ-m_hand!
     void removeDeadMonsters();
+    std::string getCardTooltipAt(const sf::Vector2f& pos) const;
 //private:
 protected:
     //void drawHand(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;
@@ -65,6 +66,16 @@ protected:
     std::vector<std::unique_ptr<Monster>> m_monsters;
     std::vector<std::unique_ptr<Card>> m_hand;
 private:
+    Card* getCardAtPosition(const sf::Vector2f& mousePos, bool alignRight) const;
+
+    sf::Vector2f getCardPosition(size_t index, bool alignRight) const
+    {
+        float xPos = alignRight ?
+            (Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (index * Config::CARD_SPACING)) :
+            (20.f + (index * Config::CARD_SPACING));
+
+        return { xPos, Config::CARD_START_Y };
+    }
     void drawKeys(sf::RenderWindow& window, bool alignRight) const;
     void drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand = nullptr) const;
 };

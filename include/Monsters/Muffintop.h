@@ -16,7 +16,10 @@ public:
     std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
 
     bool specialAbilityNeedsTarget() const override { return true; }
-
+    // בתוך class Muffintop (תחת public):
+    virtual std::string getSpecialAbilityDescription() const override {
+        return "Heal: Restores health to a targeted friendly monster.";
+    }
     // Heal Ally targets a friendly Monster - flips the base (enemy)
     // default, but keeps its isAlive() requirement (see Monster's own
     // isValidSpecialTarget): a dying ally is still Tile-linked and must not

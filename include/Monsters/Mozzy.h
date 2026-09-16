@@ -16,7 +16,10 @@ public:
     //void attack(Monster& target) override;
 
     std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
-
+    // בתוך class Mozzy (תחת public):
+    virtual std::string getSpecialAbilityDescription() const override {
+        return "Freeze: Freezes an enemy monster, preventing it from taking actions during its next turn.";
+    }
     // Freeze targets an enemy Monster - the base Monster::isValidSpecialTarget
     // default (enemy + Monster) already expresses exactly that, so no
     // override is needed here.

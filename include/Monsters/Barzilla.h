@@ -38,6 +38,10 @@ public:
     // action/cooldown - neither was ever consumed by arming in the first
     // place.
     void cancelSpecialAbility() override { m_empoweredAttack = false; }
+    // בתוך class Barzilla (תחת public):
+    virtual std::string getSpecialAbilityDescription() const override {
+        return "Empowered Attack: Doubles damage (2x) and doubles attack range for the next attack.";
+    }
 private:
     void onSpecialAbility(Board& board, BoardEntity* target) override;
 

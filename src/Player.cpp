@@ -98,8 +98,38 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedF
         // תיקון: <= בודק אם יש מספיק מפתחות
         bool enoughKeys = (m_hand[i]->getCost() <= m_keys);
 
-        m_hand[i]->draw(window, { startX, Config::CARD_START_Y }, isSelected, enoughKeys);
+        m_hand[i]->draw(window, getCardPosition(i, alignRight), isSelected, enoughKeys);
     }
+}
+
+// Player.cpp
+std::string Player::getCardTooltipAt(const sf::Vector2f& pos) const
+{
+    Card* card = getCardAtPosition(pos, m_side == PlayerSide::Right);
+    if (!card)
+        return "";
+
+    // 3. הגנה: בדיקה אם לקלף יש מפלצת מקושרת (m_linkedMonster != nullptr)
+    Monster* monster = card->getLinkedMonster();
+    if (!monster)
+        return "";
+
+    // 4. החזרת התיאור בבטחה
+    return monster->getSpecialAbilityDescription();
+    //Card* card = getCardAtPosition(pos, m_side == PlayerSide::Right); // Determine alignment based on player side
+    //Monster* monster = card->getLinkedMonster();
+    //if (monster)
+    //    return monster->getSpecialAbilityDescription();
+    ///*for (const auto& card : m_hand)
+    //{
+    //    if (card->getBounds().contains(pos))
+    //    {
+    //        Monster* monster = card->getLinkedMonster();
+    //        if (monster)
+    //            return monster->getSpecialAbilityDescription();
+    //    }
+    //}*/
+    //return ""; // אם העכבר לא מעל אף קלף
 }
 
 //std::shared_ptr<Monster> Player::handleHandClick(sf::Vector2f mousePos, bool alignRight) const
@@ -146,24 +176,31 @@ Card* Player::handleHandClick(sf::Vector2f mousePos, bool alignRight) const
 {
     if (mousePos.y < Config::BOTTOM_PANEL_Y) return nullptr;
 
-    for (size_t i = 0; i < m_hand.size(); ++i)
-    {
-        float startX = alignRight ?
-            (Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING)) :
-            (20.f + (i * Config::CARD_SPACING));
+    Card* card = getCardAtPosition(mousePos, alignRight);
+    if (card && !card->isPlayed() && card->getCost() > m_keys)
+        return nullptr;
 
-        if (m_hand[i]->isCardClicked(mousePos, { startX, Config::CARD_START_Y }))
-        {
-            if (!m_hand[i]->isPlayed() &&
-                m_hand[i]->getCost() > m_keys)
-            {
-                return nullptr;
-            }
+    return card;
+    //if (mousePos.y < Config::BOTTOM_PANEL_Y) return nullptr;
 
-            return m_hand[i].get();
-        }
-    }
-    return nullptr;
+    //for (size_t i = 0; i < m_hand.size(); ++i)
+    //{
+    //    /*float startX = alignRight ?
+    //        (Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING)) :
+    //        (20.f + (i * Config::CARD_SPACING));*/
+
+    //    if (m_hand[i]->isCardClicked(mousePos, getCardPosition(i,alignRight) ))
+    //    {
+    //        if (!m_hand[i]->isPlayed() &&
+    //            m_hand[i]->getCost() > m_keys)
+    //        {
+    //            return nullptr;
+    //        }
+
+    //        return m_hand[i].get();
+    //    }
+    //}
+    //return nullptr;
 }
 
 Monster* Player::playCard(Card* card)
@@ -204,12 +241,23 @@ void Player::removeDeadMonsters()
     }*/
 
 	//delete the dead monsters from the vector
-    m_monsters.erase(
+    /*m_monsters.erase(
         std::remove_if(m_monsters.begin(), m_monsters.end(),
             [](const std::unique_ptr<Monster>& m) {
                 return !m || !m->isAlive();
             }),
-        m_monsters.end());
+        m_monsters.end());*/
+    std::erase_if(m_monsters, [](const auto& m) { return !m || !m->isAlive(); });
+}
+
+Card* Player::getCardAtPosition(const sf::Vector2f& mousePos, bool alignRight) const
+{
+    for (size_t i = 0; i < m_hand.size(); ++i)
+    {
+        if (m_hand[i] && m_hand[i]->isCardClicked(mousePos, getCardPosition(i, alignRight)))
+            return m_hand[i].get();
+    }
+    return nullptr;
 }
 
 //לבדוק שהלוח לא עושה את הפעולות האלה. 

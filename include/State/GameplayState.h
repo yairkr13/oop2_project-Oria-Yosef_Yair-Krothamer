@@ -6,6 +6,7 @@
 #include "TurnManager.h"
 #include "Button.h"
 #include <optional>
+#include "Tooltip.h"
 
 class Card;
 class Monster;
@@ -45,6 +46,7 @@ private:
 
     void handle(const sf::Event::MouseButtonPressed& event);
     void handle(const sf::Event::KeyPressed& event);
+    void handle(const sf::Event::MouseMoved& event);
     void handle(const auto& event) {}
 
     sf::RenderWindow& m_window;
@@ -62,7 +64,9 @@ private:
     std::unique_ptr<Player> m_player2;
     TurnManager m_turnManager;
 
+    sf::RectangleShape m_bottomPanel;
     sf::Text m_endTurnHintText;
+    Tooltip m_tooltip;
 
     // Hand-selected monster awaiting placement. UI/gameplay-input state,
     // not board state.
