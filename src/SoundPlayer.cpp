@@ -12,6 +12,7 @@ void SoundPlayer::play(const std::string& name)
         m_activeSounds.end());
 
     const sf::SoundBuffer& buffer = AssetsManager::getInstance().getSoundBuffer(name);
+	//create a new sf::Sound object and add it to the vector of active sounds
     m_activeSounds.emplace_back(buffer);
     m_activeSounds.back().play();
 }

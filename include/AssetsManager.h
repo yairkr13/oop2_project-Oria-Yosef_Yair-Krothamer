@@ -184,7 +184,16 @@ public:
 
     // --- 3. מעטפות נוחות לשמירה על תאימות עם הקוד הקיים בפרויקט ---
     const sf::Texture& getTexture(const std::string& name) const { return get<sf::Texture>(name); }
-    const sf::Font& getFont(const std::string& name) const { return get<sf::Font>(name); }
+    const sf::Font& getFont(const std::string& name) const {
+		/*try {
+			return get<sf::Font>(name);
+		}
+		catch (const std::out_of_range&) {
+			return get<
+		}*/
+		// בא לי שאם לא מצאנו את הפונט שביקושנו, ננסה להחזיר את הפונט ברירת המחדל (DefaultFont) במקום לזרוק חריגה. זה יכול להיות שימושי במצבים שבהם הפונט לא קריטי, או כשאנחנו רוצים להבטיח שהמשחק ימשיך לרוץ גם אם נכס מסוים חסר.
+        return get<sf::Font>(name); 
+    }
     sf::Music& getMusic(const std::string& name) const { return const_cast<sf::Music&>(get<sf::Music>(name)); }
     const sf::SoundBuffer& getSoundBuffer(const std::string& name) const { return get<sf::SoundBuffer>(name); }
 
