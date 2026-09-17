@@ -29,6 +29,14 @@ public:
         return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(getSide());
     }
 
+    // AI preference: whoever is missing the most HP benefits most from a
+    // heal - a full-health ally scores 0 (never preferred over someone
+    // actually hurt).
+    float scoreAsSpecialTarget(const BoardEntity& candidate) const override
+    {
+        return static_cast<float>(candidate.getMaxHealth() - candidate.getHealth());
+    }
+
     sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(0, 100, 0, 180); } // dark green
 private:
     void onSpecialAbility(Board& board, BoardEntity* target) override;

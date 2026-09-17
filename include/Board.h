@@ -87,17 +87,28 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	//std::vector<Tile*> getReachableTiles(Monster* monster) const;
 	std::vector<const Tile*> getReachableTiles(const BoardEntity* entity) const;
 
+	// Same reachability query, narrowed to tiles that actually hold
+	// something - a pure occupancy fact on top of getReachableTiles, same
+	// spirit as the old (now-removed) getOccupiedTiles but range-bound.
+	// Decides nothing about ally/enemy validity - that stays entirely with
+	// Monster::isValidSpecialTarget, callers still ask that themselves.
+	// Shared by highlightValidSpecialTargets (painting) and AIPlayer
+	// (deciding which Special target to use), so neither re-derives
+	// "which reachable tiles are occupied" on its own.
+	std::vector<const Tile*> getReachableOccupiedTiles(const BoardEntity* entity) const;
+
 	// Enemy tiles reachable ONLY because of a monster's extended attack
-	// range (Monster::getAttackRange() > getRange() - see Barzilla's
-	// Empowered Attack) - i.e. beyond normal move/attack reach but still
-	// within the extended reach. NOT movement-legal (never appears in
-	// getReachableTiles, so performAction's movement branch already rejects
-	// them - see there), purely an additional set for highlighting "this
-	// monster can strike here but not stand here." Empty for every monster
-	// whose getAttackRange() == getRange() (the default for all monsters
-	// except an empowered Barzilla).
+	// range (Monster::getAttackRange() > getRange()) - i.e. beyond normal
+	// move/attack reach but still within the extended reach. NOT movement-legal
+	// (never appears in getReachableTiles, so performAction's movement branch
+	// already rejects them - see there), purely an additional set for
+	// highlighting "this monster can strike here but not stand here."
+	// Commented out (not deleted): this served Barzilla's OLD Empowered
+	// Attack, which used to extend his own getAttackRange() - now that it's
+	// ally-targeted instead (see Barzilla.h), no monster overrides
+	// getAttackRange() any more, so this would always be empty for everyone.
 	/*std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;*/
-	std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
+	//std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
 
 	// שלב ב': אותה שאילתה, אבל מחזירה את המסלול המדורג (לפי סדר) מהמפלצת ל-target
 	// הספציפי, לא רק "מה אפשר". target חייב להיות tile שכבר יצא מ-getReachableTiles
@@ -117,6 +128,22 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	// Board.h - להוסיף תחת public:
 	bool isSpawnPositionValid(const sf::Vector2f& pos) const;
 
+	// The board's own vertical center row - forwards to BoardLayout's own
+	// computation (see BoardGenerator.h) rather than Board re-deriving it
+	// from m_layout.rows itself. Public so a caller like AIPlayer can ask
+	// "where's the middle of the board" as a pure geometry fact, with no
+	// need to know Hearts exist there at all (see getExtremeTileInRow below -
+	// that's the other half of the same fact: Board::initPlayerHearts places
+	// each side's Heart at the extreme tile of exactly this row).
+	int getMiddleRow() const { return m_layout.middleRow(); }
+
+	// The extreme (leftmost/rightmost) Tile in `row` - a plain board-shape
+	// fact, same spirit as getTileAt. Public (moved up from the private
+	// section below) so AIPlayer can use it - together with getMiddleRow()
+	// above - to find "the tile at the opponent's back row" as pure
+	// geometry, without needing to know a Heart lives there.
+	const Tile* getExtremeTileInRow(int row, bool findLeftmost) const;
+
 	// Board-fact lookups reused by anything that needs "what tile is at
 	// this coordinate/screen position" - e.g. Blue's knockback (coordinate
 	// arithmetic -> Tile) and special-ability target selection (a screen
@@ -127,21 +154,37 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	const Tile* getTileAtScreenPosition(const sf::Vector2f& pos) const;
 
 
-	// Every currently-occupied Tile - a plain board-occupancy fact, exactly
-	// like the queries above. This is what lets GameplayState discover
-	// candidate Special-ability targets (by pairing each Tile's entity with
-	// the pending monster's own isValidSpecialTarget()) without Board ever
-	// needing to know ally/enemy rules, Special abilities, or highlight
-	// colors - it only ever answers "what's occupied," never "what's valid."
+	// Every currently-occupied Tile, board-wide - a plain occupancy fact.
+	// Commented out (not deleted): its only caller, highlightValidSpecialTargets,
+	// now bounds candidates by range (getReachableTiles) instead of checking
+	// the whole board, so this is unused - kept in case a future need for
+	// "every occupied tile, unbounded by range" comes up again.
 	/*std::vector<const Tile*> getOccupiedTiles() const;*/
 	//void highlightNeighbors(const BoardEntity* entity); //למה זה ציבורי??????
 	void highlightValidSpecialTargets(const Monster* caster);
-	void applyKnockback(BoardEntity* entity, int dq, int dr);
+	// Pushes `entity` up to `maxTiles` steps in direction (dq, dr), stopping
+	// at the first blocked/occupied/off-board tile - purely mechanical
+	// (finding tiles, checking passability/occupancy, relocating the
+	// entity), same as performMove. `maxTiles` is NOT a Board-owned number -
+	// it's the caller's own Special's balance value (see Blue::onSpecialAbility,
+	// which passes its own Knockback distance) so Board never hardcodes a
+	// specific ability's numbers.
+	void applyKnockback(BoardEntity* entity, int dq, int dr, int maxTiles);
 private:
 	Tile* getMutableTileAt(int q, int row) const;
 	void highlightNeighbors(const BoardEntity* entity); //למה זה ציבורי??????
-	void highlightTiles(const std::vector< Tile*>& tiles, const sf::Color& color); //למה הפונקציה הזאת היא ציבורית??????
-	std::vector<Tile*> getOccupiedTiles() const;
+
+	// Generic "paint these tiles this color" primitive - private (an
+	// internal implementation detail Board uses on itself), now actually
+	// shared by highlightNeighbors/highlightSpawnTiles/highlightValidSpecialTargets
+	// instead of each repeating its own get-mutable-then-setHighlighted loop.
+	// Takes const Tile* (what every tile query - getReachableTiles included -
+	// already returns) and does the mutable lookup internally via
+	// getMutableTileAt, so no caller needs to do that conversion itself.
+	// Default color matches Tile::setHighlighted's own default (plain green -
+	// "movable"), so a caller that just wants that doesn't need to repeat it.
+	void highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color = sf::Color(150, 220, 150, 180));
+	//std::vector<Tile*> getOccupiedTiles() const;
 	// performAction()'s two independent branches, split out so each reads
 	// as one responsibility. performAttack coordinates the attack (wires an
 	// animation if the attacker supplies one, otherwise resolves through
@@ -163,7 +206,7 @@ private:
 	//void highlightNeighbors(BoardEntity* entity);
 	//Tile* getLeftmostTileInRow(int row) const;
 	//Tile* getRightmostTileInRow(int row) const;
-	Tile* getExtremeTileInRow(int row, bool findLeftmost) const;
+	// getExtremeTileInRow moved up to the public section above.
 	std::pair<int, int> screenToTile(const sf::Vector2f& pos) const;
 
 	//bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);

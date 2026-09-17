@@ -25,6 +25,14 @@ public:
     // override is needed here.
     bool specialAbilityNeedsTarget() const override { return true; }
 
+    // AI preference: the enemy with the MOST HP is the biggest ongoing
+    // threat (takes longest to kill), so the most worth freezing out of a
+    // turn - the opposite direction from Heal/Protection's "least HP" above.
+    float scoreAsSpecialTarget(const BoardEntity& candidate) const override
+    {
+        return static_cast<float>(candidate.getHealth());
+    }
+
     // White - matches the base default too, but declared explicitly so a
     // reader never has to wonder whether that's deliberate or coincidental.
     sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(255, 255, 255, 180); }

@@ -29,6 +29,14 @@ public:
         // הנרייטה יכולה להגן על כל בעל ברית חי - מפלצת או לב!
         return candidate.isAlive() && candidate.isAllyOf(m_side);
     }
+
+    // AI preference: whoever has the least HP is the most vulnerable, so
+    // the most worth shielding - same formula as Muffintop's Heal, just
+    // repurposed for "who needs protecting" instead of "who needs healing."
+    float scoreAsSpecialTarget(const BoardEntity& candidate) const override
+    {
+        return static_cast<float>(candidate.getMaxHealth() - candidate.getHealth());
+    }
     // בתוך class Henrietta (תחת public):
     virtual std::string getSpecialAbilityDescription() const override {
         return "Protection: Grants a shield to an ally or the Heart, blocking all damage until the next turn.";

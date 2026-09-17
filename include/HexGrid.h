@@ -40,4 +40,12 @@ namespace HexGrid
     // reachable-tiles/path machinery - e.g. a knockback, a pull, or a dash
     // toward/away from a target.
     Offset stepToward(int fromQ, int fromRow, int toQ, int toRow);
+
+    // Hex-grid distance (number of steps) between two tiles - the standard
+    // cube-coordinate formula, built on the exact same (q,row)->cube
+    // conversion stepToward above already uses internally. Useful for
+    // anything that needs "how far apart are these two tiles" rather than
+    // just a direction - e.g. AIPlayer ranking several reachable move tiles
+    // by how much closer each gets to a target that's out of range.
+    int distance(int fromQ, int fromRow, int toQ, int toRow);
 }

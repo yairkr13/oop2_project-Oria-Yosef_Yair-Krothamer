@@ -1,6 +1,8 @@
 #include "AIPlayer.h"
 #include "Tiles/Tile.h"
+#include "HexGrid.h"
 #include <iostream>
+#include <limits>
 
 AIPlayer::AIPlayer(PlayerSide side)
     : Player(side)
@@ -15,22 +17,42 @@ const Tile* AIPlayer::findBestTarget(const Board& board, Monster* monster) const
     std::vector<const Tile*> reachable = board.getReachableTiles(monster);
 
     const Tile* bestAttackTarget = nullptr;
+    float bestAttackScore = -std::numeric_limits<float>::infinity();
     const Tile* bestMoveTarget = nullptr;
+    int bestMoveDistance = std::numeric_limits<int>::max();
+
+    // Where this monster advances toward when it has nothing to attack -
+    // the enemy's own back row. Board::initPlayerHearts always places each
+    // side's Heart at the extreme tile of the board's middle row - this
+    // asks for that same tile purely by geometry (middle row + which side's
+    // extreme), never by asking Board "where is the enemy's Heart".
+    bool enemyIsLeft = (getSide() == PlayerSide::Right);
+    const Tile* goalTile = board.getExtremeTileInRow(board.getMiddleRow(), enemyIsLeft);
 
     for (const Tile* tile : reachable)
     {
-		//first priority: if there's an enemy in range, attack it
+		//first priority: if there's an enemy in range, attack the best-scoring one
         if (tile->hasEntity() && tile->isOccupiedByEnemy(getSide()))
         {
-            bestAttackTarget = tile;
-			break; // we found an attack target, no need to look for a move target
+            float score = tile->getEntity()->scoreAsAttackTarget();
+            if (score > bestAttackScore)
+            {
+                bestAttackScore = score;
+                bestAttackTarget = tile;
+            }
+            continue; // still need to check the remaining enemies' scores
         }
 
-		//second priority: if there's an empty tile, move to the leftmost one (lowest Q)
+		//second priority: if there's an empty tile, move to whichever gets closest to goalTile
         if (!tile->hasEntity() && tile->isPassableFor(monster))
         {
-            if (!bestMoveTarget || tile->getQ() < bestMoveTarget->getQ())
+            int dist = goalTile
+                ? HexGrid::distance(tile->getQ(), tile->getRow(), goalTile->getQ(), goalTile->getRow())
+                : tile->getQ(); // no goal tile (shouldn't happen) - falls back to the old Q-only heuristic
+
+            if (!bestMoveTarget || dist < bestMoveDistance)
             {
+                bestMoveDistance = dist;
                 bestMoveTarget = tile;
             }
         }
@@ -38,6 +60,32 @@ const Tile* AIPlayer::findBestTarget(const Board& board, Monster* monster) const
 
 	// return the best attack target if it exists, otherwise return the best move target
     return bestAttackTarget ? bestAttackTarget : bestMoveTarget;
+}
+
+const Tile* AIPlayer::findBestSpecialTarget(const Board& board, Monster* monster) const
+{
+    if (!monster || !monster->canUseSpecialAbilityNow()) return nullptr;
+
+    // Only ever occupied tiles - a Special never targets an empty tile, so
+    // there's no reason to look at getReachableTiles' full range here (that
+    // one matters for findBestTarget above, where an empty tile IS a valid
+    // move destination).
+    const Tile* best = nullptr;
+    float bestScore = -std::numeric_limits<float>::infinity();
+    for (const Tile* tile : board.getReachableOccupiedTiles(monster))
+    {
+        const BoardEntity* candidate = tile->getEntity();
+        if (!monster->isValidSpecialTarget(*candidate))
+            continue;
+
+        float score = monster->scoreAsSpecialTarget(*candidate);
+        if (score > bestScore)
+        {
+            bestScore = score;
+            best = tile;
+        }
+    }
+    return best;
 }
 
 void AIPlayer::onTurnStart(Board& board)
@@ -100,6 +148,33 @@ void AIPlayer::updateTurn(Board& board)
             m_currentMonsterIdx++;
             m_safetyCounter = 0;
             continue;
+        }
+
+        // Try the Special before a normal move/attack - mirrors the priority
+        // GameplayState leaves to the human player's own choice, but the AI
+        // has to decide it itself: use the Special this action if it can and
+        // there's something worth using it on.
+        if (monster->canUseSpecialAbilityNow())
+        {
+            if (!monster->specialAbilityNeedsTarget())
+            {
+                // Self/no-target Special (none currently exist, but the hook
+                // stays generic - see Monster::specialAbilityNeedsTarget) -
+                // no target search needed at all, just commit it.
+                m_safetyCounter++;
+                monster->useSpecialAbility(board);
+                return;
+            }
+
+            const Tile* specialTarget = findBestSpecialTarget(board, monster);
+            if (specialTarget)
+            {
+                m_safetyCounter++;
+                monster->useSpecialAbility(board, specialTarget->getEntity());
+                return;
+            }
+            // No valid target in range right now - fall through to a normal
+            // move/attack instead of wasting this action doing nothing.
         }
 
         // Find best target for this monster

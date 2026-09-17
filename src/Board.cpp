@@ -88,7 +88,7 @@ void Board::draw(sf::RenderWindow& window, PlayerSide currentSide) const
 //}
 void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart)
 {
-    int middleRow = 3;
+    int middleRow = getMiddleRow(); // was hardcoded to 3 - now follows m_layout.rows, whatever the layout
 
     if (p1Heart != nullptr)
         spawnEntityOnTile(p1Heart, getExtremeTileInRow(middleRow, true));
@@ -127,6 +127,8 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
 void Board::highlightSpawnTiles(PlayerSide side)
 {
     clearHighlights();
+
+    std::vector<const Tile*> spawnTiles;
     for (auto& [coords, tile] : m_grid)
     {
         if (tile->hasEntity()) continue;
@@ -134,9 +136,11 @@ void Board::highlightSpawnTiles(PlayerSide side)
         if ((side == PlayerSide::Left && coords.first <= 1) ||
             (side == PlayerSide::Right && coords.first >= 12))
         {
-            tile->setHighlighted(true);
+            spawnTiles.push_back(tile.get());
         }
     }
+    highlightTiles(spawnTiles); // default green, same as before
+
     /*clearHighlights();
     for (auto& [coords, tile] : m_grid)
     {
@@ -166,6 +170,15 @@ std::vector<const Tile*> Board::getReachableTiles(const BoardEntity* entity) con
     return m_pathfinder.getReachableTiles(entity);
 }
 
+std::vector<const Tile*> Board::getReachableOccupiedTiles(const BoardEntity* entity) const
+{
+    std::vector<const Tile*> occupied;
+    for (const Tile* tile : getReachableTiles(entity))
+        if (tile->hasEntity())
+            occupied.push_back(tile);
+    return occupied;
+}
+
 //std::vector<Tile*> Board::getExtendedAttackOnlyTiles(Monster* monster) const
 //{
 //    return m_pathfinder.getExtendedAttackOnlyTiles(monster);
@@ -176,10 +189,13 @@ std::vector<const Tile*> Board::getReachableTiles(const BoardEntity* entity) con
 //    return m_pathfinder.getPathTo(monster, target);
 //}
 
-std::vector<const Tile*> Board::getExtendedAttackOnlyTiles(const BoardEntity* entity) const
-{
-    return m_pathfinder.getExtendedAttackOnlyTiles(entity);
-}
+// Commented out (not deleted) along with its caller in highlightNeighbors
+// below and BoardPathfinder's own version - see Board.h for why: currently
+// always empty now that no monster overrides getAttackRange().
+//std::vector<const Tile*> Board::getExtendedAttackOnlyTiles(const BoardEntity* entity) const
+//{
+//    return m_pathfinder.getExtendedAttackOnlyTiles(entity);
+//}
 
 std::vector<const Tile*> Board::getPathTo(BoardEntity* entity, Tile* target) const
 {
@@ -213,27 +229,28 @@ void Board::highlightNeighbors(const BoardEntity* entity) //למה זה יכול
 {
     if (!entity) return;
 
-    for (const Tile* constTile : getReachableTiles(entity))
-    {
-        //bool isEnemy = tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide();
-        Tile* tile = getMutableTileAt(constTile->getQ(), constTile->getRow());
-        if (tile->isOccupiedByEnemy(entity->getSide()))
-            tile->setHighlighted(true, sf::Color(255, 90, 90, 180)); // אדום - ניתן לתקוף
-        else
-            tile->setHighlighted(true); // ירוק (ברירת המחדל) - ניתן לזוז
-    }
+    // Split into the two groups highlightTiles paints separately below,
+    // instead of each tile deciding-and-painting itself inline - same
+    // reachable-tiles source as before, just routed through the shared
+    // primitive now.
+    std::vector<const Tile*> enemyTiles, moveTiles;
+    for (const Tile* tile : getReachableTiles(entity))
+        (tile->isOccupiedByEnemy(entity->getSide()) ? enemyTiles : moveTiles).push_back(tile);
 
-    // Extended attack-only band (see getExtendedAttackOnlyTiles) - empty for
-    // every monster except an empowered Barzilla. Distinct purple, clearly
-    // different from both the red attack and green move colors above:
-    // "Barzilla can strike here, but cannot move here."
-    for (const Tile* constTile : getExtendedAttackOnlyTiles(entity))
-    {
-        /*tile->setHighlighted(true, sf::Color(190, 90, 230, 170));*/
-        Tile* tile = getMutableTileAt(constTile->getQ(), constTile->getRow());
-        if (tile)
-            tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
-    }
+    highlightTiles(moveTiles);                              // ירוק (ברירת המחדל) - ניתן לזוז
+    highlightTiles(enemyTiles, sf::Color(255, 90, 90, 180)); // אדום - ניתן לתקוף
+
+    // Extended attack-only band - commented out (not deleted) along with
+    // getExtendedAttackOnlyTiles itself (see Board.h): this used to be
+    // distinct purple for an empowered Barzilla ("can strike here, but
+    // cannot move here"), and is currently always empty since no monster
+    // overrides getAttackRange() any more.
+    //for (const Tile* constTile : getExtendedAttackOnlyTiles(entity))
+    //{
+    //    Tile* tile = getMutableTileAt(constTile->getQ(), constTile->getRow());
+    //    if (tile)
+    //        tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
+    //}
 }
 
 //bool Board::selectEntity(BoardEntity* entity, PlayerSide side)
@@ -257,20 +274,17 @@ bool Board::selectEntity(const BoardEntity* entity, PlayerSide side)
     return true;
 }
 
-void Board::highlightTiles(const std::vector< Tile*>& tiles, const sf::Color& color)
+void Board::highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color)
 {
-    /*for ( Tile* tile : tiles)
+    for (const Tile* constTile : tiles)
     {
-        if (tile) tile->setHighlighted(true, color);
-    }*/
-    for ( Tile* tile : tiles)
-    {
-        if (!tile) continue;
+        if (!constTile) continue;
 
-        // הלוח ניגש למשבצת הפנימית שלו לפי הקואורדינטות
-        /*Tile* internalTile = getTileAt(constTile->getQ(), constTile->getRow());
-        if (internalTile)*/
-        tile->setHighlighted(true, color);
+        // constTile came from a read-only query (getReachableTiles, etc.) -
+        // look up the real, mutable Tile* by coordinates, same pattern every
+        // other caller already used before this was centralized here.
+        Tile* tile = getMutableTileAt(constTile->getQ(), constTile->getRow());
+        if (tile) tile->setHighlighted(true, color);
     }
 }
 
@@ -352,7 +366,7 @@ void Board::updateTileEffects()
 //    }
 //    return rightmost;
 //}
-Tile* Board::getExtremeTileInRow(int row, bool findLeftmost) const {
+const Tile* Board::getExtremeTileInRow(int row, bool findLeftmost) const {
     Tile* bestTile = nullptr;
     int bestQ = findLeftmost ? std::numeric_limits<int>::max() : std::numeric_limits<int>::min();
 
@@ -566,9 +580,10 @@ void Board::performAttack(BoardEntity* entity, Tile* targetTile)
 void Board::performMove(BoardEntity* entity, Tile* targetTile)
 {
     // Movement is only ever legal onto a tile within this monster's NORMAL
-    // range - an extended attack-only range (see Monster::getAttackRange,
-    // Barzilla's Empowered Attack) lets it strike farther, never walk
-    // farther. Checked explicitly against getReachableTiles here rather
+    // range - an extended attack-only range (see Monster::getAttackRange;
+    // currently never overridden by any monster, but the check stays
+    // correct either way) would let it strike farther, never walk farther.
+    // Checked explicitly against getReachableTiles here rather
     // than relying on getPathTo coming back empty for such a tile, since
     // the no-path fallback a few lines below would otherwise still
     // teleport the monster there directly.
@@ -721,48 +736,84 @@ Tile* Board::getMutableTileAt(int q, int row) const
     return (it != m_grid.end()) ? it->second.get() : nullptr;
 }
 
-std::vector< Tile*> Board::getOccupiedTiles() const
-{
-    std::vector<Tile*> occupied;
-    for (auto const& [coords, tile] : m_grid)
-    {
-        if (tile->hasEntity())
-            occupied.push_back(tile.get());
-    }
-    return occupied;
-}
+// Commented out (not deleted) - its only caller was highlightValidSpecialTargets
+// below, which now bounds valid targets by range (getReachableTiles) instead
+// of checking every occupied tile on the whole board.
+//std::vector< Tile*> Board::getOccupiedTiles() const
+//{
+//    std::vector<Tile*> occupied;
+//    for (auto const& [coords, tile] : m_grid)
+//    {
+//        if (tile->hasEntity())
+//            occupied.push_back(tile.get());
+//    }
+//    return occupied;
+//}
 
 void Board::highlightValidSpecialTargets(const Monster* caster)
 {
     if (!caster) return;
 
-    // הלוח רץ על המשבצות הלא-קבועות הפנימיות שלו (Tile*)
-    for (Tile* tile : getOccupiedTiles()) // או הלולאה של המפה/ווקטור הפנימי של המשבצות
+    // Bounded by range now (getReachableTiles - the exact same reachability
+    // query move/attack highlighting already uses) instead of checking every
+    // occupied tile on the whole board. getReachableTiles already includes
+    // ally-occupied tiles, not just enemies - Tile::isPassableFor only ever
+    // checks terrain, never occupancy, so an ally standing on ordinary
+    // ground is reached by this BFS exactly like an empty tile would be.
+    std::vector<const Tile*> inRange = getReachableTiles(caster);
+
+    // Whole range shown first, in the caster's own Special color but
+    // lighter (halved alpha) - so the player sees the full reach, not only
+    // the tiles that happen to hold a valid target right now. Reuses the
+    // same per-monster color isValidSpecialTarget's highlight already comes
+    // from (see getSpecialTargetHighlightColor) rather than a separate,
+    // unrelated "range" color - so it's immediately obvious which range
+    // belongs to which caster's Special.
+    sf::Color rangeColor = caster->getSpecialTargetHighlightColor();
+    rangeColor.a /= 2;
+    highlightTiles(inRange, rangeColor);
+
+    // Then the actual valid targets, at full color, on top - standing out
+    // from the plain range around them. Filters the SAME inRange computed
+    // above (one BFS call total) rather than calling getReachableOccupiedTiles,
+    // which would run getReachableTiles a second time for no reason - this
+    // function already has the full range in hand. getReachableOccupiedTiles
+    // itself stays as the shared query for a caller (AIPlayer) that only
+    // ever needs the occupied subset and never computes the full range at all.
+    std::vector<const Tile*> validTargets;
+    for (const Tile* tile : inRange)
     {
-        BoardEntity* candidate = tile->getEntity();
-        if (candidate && caster->isValidSpecialTarget(*candidate))
-        {
-            tile->setHighlighted(true, caster->getSpecialTargetHighlightColor());
-        }
+        if (tile->hasEntity() && caster->isValidSpecialTarget(*tile->getEntity()))
+            validTargets.push_back(tile);
     }
+    highlightTiles(validTargets, caster->getSpecialTargetHighlightColor());
 }
 
-//למה זה פה???? הלוח הוא משנה את המפלצת
-void Board::applyKnockback(BoardEntity* entity, int dq, int dr)
+// Generic push, N tiles bounded by the CALLER's own maxTiles (see Board.h) -
+// no ability-specific number lives here any more. Walks one step at a time,
+// stopping at the first tile that's off-board/occupied/impassable; lands on
+// the last valid tile reached (nullptr if even the first step is blocked,
+// in which case there's no movement at all).
+void Board::applyKnockback(BoardEntity* entity, int dq, int dr, int maxTiles)
 {
     if (!entity) return;
 
     Tile* sourceTile = entity->getCurrentTile();
     if (!sourceTile) return;
 
-    Tile* step1 = getMutableTileAt(entity->getQ() + dq, entity->getRow() + dr);
-    bool step1Valid = step1 && !step1->hasEntity() && step1->isPassableFor(entity);
-    if (!step1Valid) return; // המשבצת הראשונה חסומה/מחוץ ללוח -> אין תזוזה בכלל
+    Tile* current = sourceTile;
+    Tile* destination = nullptr;
+    for (int step = 0; step < maxTiles; ++step)
+    {
+        Tile* next = getMutableTileAt(current->getQ() + dq, current->getRow() + dr);
+        bool nextValid = next && !next->hasEntity() && next->isPassableFor(entity);
+        if (!nextValid) break;
 
-    Tile* step2 = getMutableTileAt(step1->getQ() + dq, step1->getRow() + dr);
-    bool step2Valid = step2 && !step2->hasEntity() && step2->isPassableFor(entity);
+        destination = next;
+        current = next;
+    }
 
-    Tile* destination = step2Valid ? step2 : step1; // דוחף 2 אם שתיהן פנויות, אחרת רק 1
+    if (!destination) return; // first step already blocked/off-board -> no movement at all
 
     sourceTile->clearEntity();
     destination->setEntity(entity);

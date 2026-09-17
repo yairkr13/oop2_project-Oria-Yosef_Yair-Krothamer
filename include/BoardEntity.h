@@ -33,6 +33,12 @@ public:
     void heal(int amount);
     int getMaxHealth() const { return m_maxHealth; }
 
+    // Current HP - mirrors getMaxHealth(), added so AI scoring
+    // (Monster::scoreAsSpecialTarget - Heal/Protection preferring whoever's
+    // hurt most) has a public way to ask "how much health does this have
+    // right now" without reaching into m_health directly.
+    int getHealth() const { return m_health; }
+
     virtual bool isAlive() const;
     //virtual int getHealth() const = 0;
     virtual PlayerSide getSide() const = 0;
@@ -159,8 +165,30 @@ public:
     // Default is a no-op, same reasoning as playAttackAnimation's default.
     virtual void playSpecialAbilityAnimation(std::unique_ptr<AttackAnimation> animation);
     //אולי אחר כך?????:
+    // How valuable this entity is as an ATTACK target - used only by AI
+    // (AIPlayer::findBestTarget) to rank among several reachable enemies.
+    // Higher = more worth attacking. Default: prefers low current HP -
+    // finishing off whoever's closest to dying is worth more than chipping
+    // a healthy one. Heart overrides this (see Heart.h) to always outrank
+    // any Monster's own health-based score - the AI never checks "is this a
+    // Heart" itself, it only ever asks this same question of every
+    // candidate and follows the highest answer.
+    virtual float scoreAsAttackTarget() const { return -static_cast<float>(getHealth()); }
+
     virtual bool canMove() const { return false; }
     virtual void applyFreeze() {}
+
+    // Grants "next attack deals damage * multiplier" - see Monster::attack()
+    // for where this is actually consumed. `multiplier` is the CALLER's own
+    // ability balance number (e.g. Barzilla's Empowered Attack passes its
+    // own 2x) - never hardcoded here, same reasoning as
+    // Board::applyKnockback's own maxTiles parameter. Same shape as
+    // applyFreeze() above: a no-op default here (Heart never attacks, so has
+    // nothing to boost), overridden by Monster to actually store it. Used by
+    // Barzilla's Empowered Attack, which targets an ALLY and grants them
+    // this buff (mirrors Henrietta's Protection - the effect lives on the
+    // recipient, not the caster).
+    virtual void applyEmpoweredAttack(float multiplier) {}
     virtual void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) { /* No-op by default */ }
 protected:
     void drawHealthBar(sf::RenderWindow& window) const;

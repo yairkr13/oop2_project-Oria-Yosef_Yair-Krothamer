@@ -12,44 +12,50 @@ public:
 
     Barzilla(PlayerSide side);
 
-    // Overridden (not the base Monster::attack) so the next successful
-    // attack after Empowered Attack is armed can apply the ×2 multiplier
-    // and commit it - see m_empoweredAttack below.
-    void attack(BoardEntity* target) override;
+    // Empowered Attack is now ally-targeted (see onSpecialAbility) - Barzilla
+    // no longer buffs its own next attack, so it no longer needs to override
+    // attack()/getAttackRange(), or defer-and-cancel the Special the way the
+    // old self-buff version did. Old code kept as comments immediately below
+    // each removed member, not deleted, per request.
+    //
+    // void attack(BoardEntity* target) override;
+    // int getAttackRange() const override { return m_empoweredAttack ? m_range * 2 : m_range; }
+    // bool specialAbilityCommitsOnSelect() const override { return false; }
+    // void cancelSpecialAbility() override { m_empoweredAttack = false; }
 
     std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
 
-    // Empowered Attack also doubles how far Barzilla can strike (not how
-    // far he can move - see Monster::getAttackRange/Board's reachability
-    // handling of it). Tied to the exact same flag as the damage bonus, so
-    // both appear and disappear together with zero extra bookkeeping.
-    int getAttackRange() const override { return m_empoweredAttack ? m_range * 2 : m_range; }
+    // Empowered Attack now targets an ally (mirrors Henrietta's Protection -
+    // the buff lives on the recipient, granted immediately on selection, not
+    // armed on Barzilla for later).
+    bool specialAbilityNeedsTarget() const override { return true; }
 
-    // Self/no-target Special - the base Monster::specialAbilityNeedsTarget()
-    // default (false) already fits, no override needed.
-
-    // Selecting the Card only arms the bonus; it does not itself use an
-    // action or reset the cooldown. Barzilla::attack() commits both, only
-    // once the empowered attack actually resolves.
-    bool specialAbilityCommitsOnSelect() const override { return false; }
-
-    // Un-arms an activated-but-not-yet-attacked bonus (Card clicked again,
-    // or the player switched to a different pending Card) without touching
-    // action/cooldown - neither was ever consumed by arming in the first
-    // place.
-    void cancelSpecialAbility() override { m_empoweredAttack = false; }
-    // בתוך class Barzilla (תחת public):
-    virtual std::string getSpecialAbilityDescription() const override {
-        return "Empowered Attack: Doubles damage (2x) and doubles attack range for the next attack.";
+    // Ally-targeted, like Muffintop's Heal/Henrietta's Protection - flips
+    // the base (enemy) default. Barzilla can target himself too (same side),
+    // same as those two Specials already allow.
+    bool isValidSpecialTarget(const BoardEntity& candidate) const override
+    {
+        return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(getSide());
     }
+
+    //
+    virtual std::string getSpecialAbilityDescription() const override {
+        return "Empowered Attack: Doubles the damage of a chosen ally's next attack.";
+    }
+
+    // Distinct from every other monster's color (and from Mozzy, which
+    // shares the base Monster default white) - same purple family the
+    // project's old extended-attack-range highlight used to use.
+    sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(190, 90, 230, 180); } // purple
 private:
     void onSpecialAbility(Board& board, BoardEntity* target) override;
 
-    // Safety net for the case GameplayState can't directly observe: the
-    // turn ends (by any path, not just the Space key) with the bonus still
-    // armed but unused. Expires it rather than letting it carry into a
-    // future turn.
-    void onTurnBoundary() override;
-
-    bool m_empoweredAttack = false;
+    // No longer needed: the armed bonus used to live on Barzilla himself and
+    // had to expire if never spent (see BoardEntity::onTurnBoundary's own
+    // generic per-turn tick, still used by Protection). Now it lives on
+    // whichever ally received it (m_empoweredAttack on Monster), the same
+    // place Protection's flag lives - and unlike Protection it has no
+    // turn-count expiry of its own, it simply waits for that ally's next
+    // attack to consume it.
+    // void onTurnBoundary() override;
 };

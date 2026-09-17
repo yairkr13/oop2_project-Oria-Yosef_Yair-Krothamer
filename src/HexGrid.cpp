@@ -1,5 +1,6 @@
 #include "HexGrid.h"
 #include <limits>
+#include <cstdlib>
 
 namespace
 {
@@ -39,5 +40,12 @@ namespace HexGrid
         }
 
         return kNeighborOffsets[bestIndex];
+    }
+
+    int distance(int fromQ, int fromRow, int toQ, int toRow)
+    {
+        Cube from = toCube(fromQ, fromRow);
+        Cube to = toCube(toQ, toRow);
+        return (std::abs(to.x - from.x) + std::abs(to.y - from.y) + std::abs(to.z - from.z)) / 2;
     }
 }

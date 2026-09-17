@@ -7,7 +7,7 @@
 #include "Tiles/Tile.h"
 #include "HexGrid.h"
 
-namespace //îä æä?????ëåìí éëåìéí ìøàåú àú æä?????
+namespace //ï¿½ï¿½ ï¿½ï¿½?????ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½?????
 {
     // Normal-attack burst (WindBlast): several rapid shots, staggered, only
     // the last one deals damage - see BurstProjectileAnimation.
@@ -27,6 +27,11 @@ namespace //îä æä?????ëåìí éëåìéí ìøàåú àú æä?????
     constexpr float WIND_EFFECT_OVERSHOOT_TILES = 0.5f;
     constexpr float WIND_EFFECT_DURATION = 0.4f;
     constexpr float WIND_EFFECT_SIZE = Config::MONSTER_BOARD_SIZE * 0.9f;
+
+    // How far Knockback actually pushes the target (see Board::applyKnockback,
+    // which is purely mechanical and takes this as a plain parameter - the
+    // ability's own balance number belongs here, not buried inside Board).
+    constexpr int KNOCKBACK_DISTANCE_TILES = 2;
 
     // Walking/movement sprite sheet: Blue is a flying monster, so its
     // BlueFly.png sheet is used for its board-travel animation instead of a
@@ -148,7 +153,7 @@ void Blue::onSpecialAbility(Board& board, BoardEntity* target)
         //destination->setEntity(target);
         //target->spawnOnBoard(destination->getQ(), destination->getRow(),
         //    board.tileToScreen(destination->getQ(), destination->getRow()));
-        board.applyKnockback(target, dq, dr);
+        board.applyKnockback(target, dq, dr, KNOCKBACK_DISTANCE_TILES);
     });
 
     target->playSpecialAbilityAnimation(std::move(windEffect));

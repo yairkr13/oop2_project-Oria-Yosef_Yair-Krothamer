@@ -129,23 +129,23 @@ void GameplayState::update(sf::Time deltaTime)
     m_board.update(deltaTime.asSeconds());
     m_turnManager.update();
 
-    // A Special that doesn't need a target click to commit (Barzilla's
-    // Empowered Attack) can be committed by something GameplayState never
-    // directly calls - a normal attack resolving at animation impact, deep
-    // inside m_board.update() above. There's no synchronous call site to
-    // clear m_pendingSpecialCard from in that case, so this reacts instead:
-    // once the pending monster's cooldown is no longer 0, its Special must
-    // have committed elsewhere, so it's no longer "pending a decision" and
-    // the highlight should stop. Never engages for a targeted Special
-    // (specialAbilityNeedsTarget() true) - those are still only ever
-    // cleared synchronously, by handleSpecialTargetClick, exactly as before.
-    if (m_pendingSpecialCard)
-        //למה פה??????
-    {
-        Monster* pendingMonster = m_pendingSpecialCard->getLinkedMonster();
-        if (!pendingMonster || (!pendingMonster->specialAbilityNeedsTarget() && !pendingMonster->isSpecialReady()))
-            m_pendingSpecialCard = nullptr;
-    }
+    // Old safety net, kept as a comment - it existed for a Special that
+    // doesn't need a target click to commit (Barzilla's old self-buff
+    // Empowered Attack, committed later by a normal attack resolving deep
+    // inside m_board.update() above, with no synchronous call site to clear
+    // m_pendingSpecialCard from). Now that every monster's Special commits
+    // synchronously on target selection (specialAbilityNeedsTarget() is true
+    // for all five - see Monster.h), m_pendingSpecialCard is always cleared
+    // directly by handleSpecialTargetClick, and this reactive check would
+    // never trigger (its guard condition can no longer be true for any
+    // monster):
+    //
+    // if (m_pendingSpecialCard)
+    // {
+    //     Monster* pendingMonster = m_pendingSpecialCard->getLinkedMonster();
+    //     if (!pendingMonster || (!pendingMonster->specialAbilityNeedsTarget() && !pendingMonster->isSpecialReady()))
+    //         m_pendingSpecialCard = nullptr;
+    // }
 
     if (m_player1->isDead() || m_player2->isDead())
     {

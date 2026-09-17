@@ -1,6 +1,7 @@
 #pragma once
 #include "BoardEntity.h"
 #include "AssetsManager.h"
+#include <limits>
 
 class Heart : public BoardEntity {
 public:
@@ -39,6 +40,11 @@ public:
  //   int getHealth() const override { return m_health; }
     PlayerSide getSide() const override { return m_side; }
     //EntityType getType() const override { return EntityType::Heart; }
+
+    // Always outranks any Monster's own scoreAsAttackTarget() (bounded,
+    // since it's based on current HP) - the Heart is always the AI's top
+    // attack priority once reachable, regardless of its own current HP.
+    float scoreAsAttackTarget() const override { return std::numeric_limits<float>::infinity(); }
 
 private:
     //int m_health;

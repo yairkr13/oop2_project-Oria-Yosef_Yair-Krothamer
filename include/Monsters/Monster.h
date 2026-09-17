@@ -108,6 +108,14 @@ public:
     // (for a UI indicator, or a future ability that cares) later.
     bool isFrozen() const { return m_frozen; }
 
+    // True while this monster's next attack is empowered (see
+    // BoardEntity::applyEmpoweredAttack / Monster::attack()) - granted by an
+    // ally's Special (Barzilla's Empowered Attack), not by this monster's
+    // own. Kept explicit and named, same reasoning as isFrozen() above.
+    // Derived from m_attackMultiplier itself (no separate flag needed) -
+    // 1.f is the multiplicative identity, i.e. "no effect", by construction.
+    bool isEmpowered() const { return m_attackMultiplier != 1.f; }
+
     // Applied by an external Freeze-style ability. Fits the existing turn
     // system rather than a new timer: it zeroes this monster's actions
     // immediately (so it cannot act during its own owner's very next turn,
@@ -117,6 +125,11 @@ public:
     // which is precisely when that one blocked turn has concluded.
     void applyFreeze() override;
 
+    // See BoardEntity::applyEmpoweredAttack - stores `multiplier`, which
+    // Monster::attack() itself applies and resets on this monster's own
+    // next attack.
+    void applyEmpoweredAttack(float multiplier) override;
+
     // Whether this monster's Special requires the player to select a
     // target before it can commit (see GameplayState). False (the default)
     // covers self-only Specials.
@@ -124,11 +137,12 @@ public:
 
     // Whether useSpecialAbility() commits (consumes the action, resets the
     // cooldown) at the moment it's called - true (the default) is correct
-    // for every Special where being selected/targeted IS using it. A
-    // monster whose Special is instead armed now and actually used at some
-    // later, separate event overrides this to false - see Barzilla, whose
-    // Card click only arms its next attack; the attack itself is what
-    // commits (see Barzilla::attack()).
+    // for every Special where being selected/targeted IS using it, which as
+    // of Barzilla's Empowered Attack becoming ally-targeted (it commits the
+    // instant the ally target is chosen, exactly like every other Special)
+    // is currently every monster in the game. Kept as an extensibility
+    // point (not removed) for a future Special that still needs to arm now
+    // and commit later at some separate event.
     virtual bool specialAbilityCommitsOnSelect() const { return true; }
 
     // Un-arms a Special that was armed (see specialAbilityCommitsOnSelect())
@@ -156,6 +170,17 @@ public:
         //האם אני יכולה למחוק את הפונקציה ??????למה
         return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isEnemyOf(m_side);
     }
+
+    // How valuable `candidate` is as a Special target - used only by
+    // AIPlayer, to rank among several already-valid candidates
+    // (isValidSpecialTarget above already decided who's legal at all; this
+    // only orders them). Higher is more worth using the Special on. Default:
+    // neutral (0) for every candidate - correct for a Special where any
+    // legal target is as good as another (Mozzy's Freeze, Blue's Knockback -
+    // no monster overrides this yet). A monster whose Special should prefer
+    // a specific kind of target (e.g. Muffintop's Heal preferring low HP)
+    // would override this - not done yet, kept for that later.
+    virtual float scoreAsSpecialTarget(const BoardEntity& candidate) const { return 0.f; }
 
     // The Tile-highlight color for this monster's valid Special targets,
     // shown while target-selection is pending (see GameplayState). Only
@@ -245,6 +270,14 @@ protected:
     const PlayerSide m_side;  // �� ���� ������ ���� ������ - ��������� ���� "����" �� ��
     bool m_flying;
     bool m_frozen = false;
+
+    // Set by an ally's Barzilla granting Empowered Attack (see
+    // applyEmpoweredAttack()/Monster::attack()) - lives here, not on
+    // Barzilla, since the buff is consumed by whichever monster's own next
+    // attack actually happens, not by Barzilla's. The multiplier itself IS
+    // the state - 1.f is the neutral/"no effect" value, so Monster::attack()
+    // never needs a separate bool to know whether to apply it.
+    float m_attackMultiplier = 1.f;
     std::string m_textureKey;
     //sf::Vector2f m_targetPos;//private od protected??????????????????????????????
     std::deque<sf::Vector2f> m_pathQueue; // ���: ��� ������ ������, ���� m_targetPos ������
@@ -285,10 +318,11 @@ protected:
     int m_specialCooldown;
     int m_actionsLeft = 2;
 
-    // useAction() is protected (not private): concrete monsters that
-    // override attack() (see Barzilla, to apply its empowered-attack
-    // multiplier) still need to consume an action exactly like the base
-    // Monster::attack() does.
+    // useAction() is protected (not private): a concrete monster that ever
+    // needs to override attack() still needs to consume an action exactly
+    // like the base Monster::attack() does. (The empowered-attack multiplier
+    // no longer needs such an override at all - see Monster::attack(), which
+    // now applies it directly for every monster.)
 protected:
     void useAction() { if (m_actionsLeft > 0) m_actionsLeft--; }
 private:

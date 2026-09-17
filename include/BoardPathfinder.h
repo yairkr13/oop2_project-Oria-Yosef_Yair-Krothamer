@@ -14,10 +14,11 @@ class Monster; // Forward declaration - Tile.h already pulls in the full type, b
 //
 // Only ever constructed and owned by Board (see Board::m_pathfinder) - not
 // part of Board's own public API. Board keeps its existing public
-// getReachableTiles/getExtendedAttackOnlyTiles/getPathTo methods and simply
-// forwards to this internally, so no other caller (GameplayState, AIPlayer,
-// Board's own performMove/highlightNeighbors) needs to know this class
-// exists or change how it talks to Board at all.
+// getReachableTiles/getPathTo methods (and, commented out for now, its
+// getExtendedAttackOnlyTiles - see below) and simply forwards to this
+// internally, so no other caller (GameplayState, AIPlayer, Board's own
+// performMove/highlightNeighbors) needs to know this class exists or
+// change how it talks to Board at all.
 //
 // Reads Board's own tile grid (given by reference at construction - the
 // exact same grid object Board owns and populates/mutates over its
@@ -38,9 +39,15 @@ public:
     // Enemy tiles reachable ONLY because of a monster's extended attack
     // range (Monster::getAttackRange() > getRange()) - i.e. beyond normal
     // move/attack reach but still within the extended reach. Empty for
-    // every monster whose getAttackRange() == getRange() (the default).
+    // every monster whose getAttackRange() == getRange() (the default) -
+    // which as of Barzilla's Empowered Attack becoming ally-targeted
+    // (see Barzilla.h) is now every monster in the game, so this is
+    // currently never anything but empty. Kept commented (not deleted) -
+    // the underlying attackRange/outExtendedAttackOnly plumbing inside
+    // computeReachability below is left in place either way, since it's
+    // shared with getReachableTiles/getPathTo and harmless while unused.
     //std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;
-    std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
+    //std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
 
     // שלב ב': אותה שאילתה, אבל מחזירה את המסלול המדורג (לפי סדר) מהמפלצת ל-target
     // הספציפי, לא רק "מה אפשר". target חייב להיות tile שכבר יצא מ-getReachableTiles

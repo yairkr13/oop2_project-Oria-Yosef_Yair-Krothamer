@@ -38,7 +38,7 @@ void BoardEntity::takeDamage(int damage)
     //קול אחר בשביל התקפה על מגן!!!!!
     if (m_protected) return; // encapsulated here so no caller ever needs to ask first
     m_health -= damage;
-    if (m_health < 0)
+    if (m_health <= 0)
     {
         SoundPlayer::getInstance().play("dead_sound");
         m_health = 0;

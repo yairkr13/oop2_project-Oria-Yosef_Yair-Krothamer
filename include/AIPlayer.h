@@ -33,6 +33,13 @@ private:
     // ובין תנועות - זו שמתקדמת הכי שמאלה. Board לא מעורב בהחלטה בכלל, רק מספק עובדות.
     const Tile* findBestTarget(const Board& board, Monster* monster) const;
 
+    // Same shape as findBestTarget above - Board only ever answers factual
+    // queries (getReachableOccupiedTiles), AIPlayer decides. Returns nullptr
+    // if the monster's Special isn't usable right now, or no valid target is
+    // currently in range (specialAbilityNeedsTarget() must still be checked
+    // by the caller first - a no-target Special never needs this at all).
+    const Tile* findBestSpecialTarget(const Board& board, Monster* monster) const;
+
     AITurnPhase m_phase = AITurnPhase::Done;
     int m_currentMonsterIdx = 0;
     int m_safetyCounter = 0;

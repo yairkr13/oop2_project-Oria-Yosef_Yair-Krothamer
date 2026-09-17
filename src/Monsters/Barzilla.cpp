@@ -14,27 +14,32 @@ namespace
     // reference) rather than FireBlast.png's raw pixel height.
     constexpr float FIRE_BLAST_THICKNESS = Config::MONSTER_BOARD_SIZE * 0.5f;
 
-    // Empowered Attack's projectile: several FireBlast copies traveling
-    // together with only a small stagger between them, reusing
-    // BurstProjectileAnimation exactly as Blue/Henrietta already do for
-    // their own normal attacks - only the texture/count/timing differ. The
-    // short interval (vs. e.g. Blue's 0.08s) is what keeps the 3 copies
-    // reading as one grouped burst rather than three separate shots.
-    constexpr int EMPOWERED_FIRE_BLAST_COUNT = 3;
-    constexpr float EMPOWERED_FIRE_BLAST_LAUNCH_INTERVAL = 0.04f;
-    constexpr float EMPOWERED_FIRE_BLAST_TRAVEL_DURATION = 0.4f;
-    constexpr float EMPOWERED_FIRE_BLAST_SIZE = Config::MONSTER_BOARD_SIZE * 0.55f;
+    // Old empowered-projectile constants, kept as a comment - Barzilla's own
+    // attack no longer varies visually by m_empoweredAttack (see
+    // createAttackAnimation below):
+    //
+    // constexpr int EMPOWERED_FIRE_BLAST_COUNT = 3;
+    // constexpr float EMPOWERED_FIRE_BLAST_LAUNCH_INTERVAL = 0.04f;
+    // constexpr float EMPOWERED_FIRE_BLAST_TRAVEL_DURATION = 0.4f;
+    // constexpr float EMPOWERED_FIRE_BLAST_SIZE = Config::MONSTER_BOARD_SIZE * 0.55f;
 
-    // Empowered Attack's impact flash: reuses GrowingEffectAnimation (built
-    // for Henrietta's Protection shield) and the existing fire_blast
-    // texture - a quick, prominent grow-and-fade on the target, so landing
-    // an empowered hit visibly reads as stronger than a normal one. No
-    // fade-in hold needed for an impact flash - it grows, sits for a
-    // beat, then is gone.
+    // Empowered Attack's "grant" visual, played on the ALLY the instant
+    // Barzilla empowers them (see Barzilla::onSpecialAbility) - repurposed
+    // from what used to be this same GrowingEffectAnimation/fire_blast
+    // texture playing as an impact flash on a landed empowered hit. Still a
+    // quick, prominent grow-and-fade - now reading as "this ally now glows
+    // with Barzilla's fire" instead. No fade-in hold needed - it grows,
+    // sits for a beat, then is gone.
     constexpr float EMPOWERED_IMPACT_SIZE = Config::MONSTER_BOARD_SIZE * 1.3f;
     constexpr float EMPOWERED_IMPACT_GROW_DURATION = 0.12f;
     constexpr float EMPOWERED_IMPACT_HOLD_DURATION = 0.08f;
     constexpr float EMPOWERED_IMPACT_FADE_DURATION = 0.15f;
+
+    // Empowered Attack's own damage multiplier (see
+    // BoardEntity::applyEmpoweredAttack/Monster::attack(), which are purely
+    // mechanical and take this as a plain parameter - Barzilla's own balance
+    // number belongs here, not hardcoded inside Monster).
+    constexpr float EMPOWERED_ATTACK_MULTIPLIER = 2.f;
 
     // Walking sprite sheet: 6 columns x 4 rows (24 frames total), read row
     // by row left-to-right - verified against the actual file, same layout
@@ -79,60 +84,61 @@ Barzilla::Barzilla(PlayerSide side)
     setDieSpriteAnimation("barzilla_die", DIE_SHEET_COLUMNS, DIE_SHEET_ROWS, DIE_FRAME_DURATION);
 }
 
-// Empowered Attack: doubles the damage of the next successful attack only.
-// The multiplier is read here, at the moment an attack actually resolves -
-// since damage now applies at animation-impact time (see
-// createAttackAnimation/Tile::receiveAttackFrom), this is naturally also
-// exactly when the bonus is consumed, with no extra plumbing needed for
-// that timing to line up. This is also the Special's actual commit point:
-// arming it (onSpecialAbility, below) deliberately left the action/cooldown
-// untouched, so committing them here - only once the empowered attack has
-// genuinely happened - is what makes "select Special" and "use Special"
-// two different events instead of one.
-void Barzilla::attack(BoardEntity* target)
-{
-    bool empowered = m_empoweredAttack;
-    int damage = empowered ? m_attackDamage * 2 : m_attackDamage;
+// Old self-buff version, kept as a comment (not deleted) per request - see
+// Barzilla.h for why this no longer applies now that Empowered Attack
+// targets an ally instead of arming Barzilla's own next attack:
+//
+// void Barzilla::attack(BoardEntity* target)
+// {
+//     bool empowered = m_empoweredAttack;
+//     int damage = empowered ? m_attackDamage * 2 : m_attackDamage;
+//     if (empowered)
+//     {
+//         m_empoweredAttack = false;
+//         m_specialCooldown = m_baseCooldown;
+//         const sf::Texture& impactTexture = AssetsManager::getInstance().getTexture("fire_blast");
+//         auto impactFlash = std::make_unique<GrowingEffectAnimation>(
+//             impactTexture, target->getScreenPosition(), EMPOWERED_IMPACT_SIZE,
+//             EMPOWERED_IMPACT_GROW_DURATION, EMPOWERED_IMPACT_HOLD_DURATION, EMPOWERED_IMPACT_FADE_DURATION);
+//         target->playSpecialAbilityAnimation(std::move(impactFlash));
+//     }
+//     target->takeDamage(damage);
+//     useAction();
+// }
 
-    if (empowered)
-    {
-        m_empoweredAttack = false;
-        m_specialCooldown = m_baseCooldown;
-
-        // Stronger impact flash so an empowered hit visibly reads as
-        // different from a normal one - played on the TARGET via the same
-        // playSpecialAbilityAnimation slot Henrietta's shield/Mozzy's
-        // freeze/Muffintop's heal already use for an incoming effect.
-        // attack() only ever runs here as the animation's own onImpact
-        // callback (see Board::performAction), so this fires at exactly
-        // the same synchronized moment the grouped FireBlast burst
-        // (createAttackAnimation, below) actually lands - the target is
-        // never hit before the projectiles visually arrive.
-        const sf::Texture& impactTexture = AssetsManager::getInstance().getTexture("fire_blast");
-        auto impactFlash = std::make_unique<GrowingEffectAnimation>(
-            impactTexture, target->getScreenPosition(), EMPOWERED_IMPACT_SIZE,
-            EMPOWERED_IMPACT_GROW_DURATION, EMPOWERED_IMPACT_HOLD_DURATION, EMPOWERED_IMPACT_FADE_DURATION);
-        target->playSpecialAbilityAnimation(std::move(impactFlash));
-    }
-
-    target->takeDamage(damage);
-    useAction(); // an attack always costs an action, empowered or not
-}
-
-// Arms the bonus for the next attack - does not itself consume an action or
-// touch the cooldown (see Monster::useSpecialAbility /
-// specialAbilityCommitsOnSelect()). Selecting the Special is not using it.
+// Empowered Attack: grants the chosen ally's next attack double damage -
+// see BoardEntity::applyEmpoweredAttack/Monster::attack() for where that's
+// actually consumed (on the ally's own attack, not Barzilla's). Commits
+// immediately, like every other Special now (base
+// Monster::useSpecialAbility already handles the action/cooldown
+// bookkeeping - nothing extra needed here).
+//
+// The visual is played on the TARGET at the moment the buff is granted
+// (same "grow" effect the old self-buff version played at impact time,
+// reused here as the moment Barzilla's fire empowers his ally instead) -
+// same playSpecialAbilityAnimation slot Henrietta's shield/Mozzy's
+// freeze/Muffintop's heal already use for an incoming effect.
 void Barzilla::onSpecialAbility(Board& board, BoardEntity* target)
 {
-    m_empoweredAttack = true;
+    if (!target) return;
+
+    target->applyEmpoweredAttack(EMPOWERED_ATTACK_MULTIPLIER);
+
+    const sf::Texture& impactTexture = AssetsManager::getInstance().getTexture("fire_blast");
+    auto empowerEffect = std::make_unique<GrowingEffectAnimation>(
+        impactTexture, target->getScreenPosition(), EMPOWERED_IMPACT_SIZE,
+        EMPOWERED_IMPACT_GROW_DURATION, EMPOWERED_IMPACT_HOLD_DURATION, EMPOWERED_IMPACT_FADE_DURATION);
+    target->playSpecialAbilityAnimation(std::move(empowerEffect));
 }
 
-void Barzilla::onTurnBoundary()
-{
-    BoardEntity::onTurnBoundary();
-    // Unconsumed bonus does not carry into a future turn.
-    m_empoweredAttack = false;
-}
+// Old onTurnBoundary override, kept as a comment - see Barzilla.h for why
+// it's no longer needed (the buff now lives on the ally, not on Barzilla):
+//
+// void Barzilla::onTurnBoundary()
+// {
+//     BoardEntity::onTurnBoundary();
+//     m_empoweredAttack = false;
+// }
 
 std::unique_ptr<AttackAnimation> Barzilla::createAttackAnimation(BoardEntity* target) const
 {
@@ -140,19 +146,17 @@ std::unique_ptr<AttackAnimation> Barzilla::createAttackAnimation(BoardEntity* ta
 
     const sf::Texture& fireBlastTexture = AssetsManager::getInstance().getTexture("fire_blast");
 
-    // Empowered Attack gets a visibly different projectile - several
-    // FireBlast copies traveling together (reusing BurstProjectileAnimation
-    // exactly as Blue/Henrietta's own normal attacks already do, just with
-    // a much shorter stagger so they read as one grouped burst) - instead
-    // of the normal single reveal-band. The normal attack (below) is
-    // completely untouched.
-    if (m_empoweredAttack)
-    {
-        return std::make_unique<BurstProjectileAnimation>(
-            fireBlastTexture, m_screenPos, target->getScreenPosition(),
-            EMPOWERED_FIRE_BLAST_COUNT, EMPOWERED_FIRE_BLAST_LAUNCH_INTERVAL,
-            EMPOWERED_FIRE_BLAST_TRAVEL_DURATION, EMPOWERED_FIRE_BLAST_SIZE);
-    }
+    // Old empowered-burst branch, kept as a comment - Barzilla's own attack
+    // no longer varies by m_empoweredAttack (that flag no longer lives on
+    // Barzilla at all - see Monster.h):
+    //
+    // if (m_empoweredAttack)
+    // {
+    //     return std::make_unique<BurstProjectileAnimation>(
+    //         fireBlastTexture, m_screenPos, target->getScreenPosition(),
+    //         EMPOWERED_FIRE_BLAST_COUNT, EMPOWERED_FIRE_BLAST_LAUNCH_INTERVAL,
+    //         EMPOWERED_FIRE_BLAST_TRAVEL_DURATION, EMPOWERED_FIRE_BLAST_SIZE);
+    // }
 
     // Normal attack - unchanged: "grows/reveals from attacker toward
     // target" mechanism, same as Mozzy's acid splash, reusing

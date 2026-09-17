@@ -26,6 +26,13 @@ struct BoardLayout
 {
     int rows;
     int cols;
+
+    // The board's own vertical center - depends only on rows, which this
+    // struct already owns, so it computes it itself rather than a caller
+    // reaching into `rows` and dividing by hand (and risking a hardcoded
+    // literal drifting out of sync with the actual layout - see
+    // Board::initPlayerHearts, which used to hardcode this).
+    int middleRow() const { return rows / 2; }
     int lavaTileCount;
     int holeTileCount;
     int panicPointCount; // expected to be 0 or 1 - kept as a count rather

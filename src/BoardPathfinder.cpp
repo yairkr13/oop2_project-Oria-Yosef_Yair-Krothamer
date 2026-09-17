@@ -67,7 +67,7 @@ void BoardPathfinder::computeReachability(const BoardEntity* entity,
     int q = entity->getQ();
     int row = entity->getRow();
     int range = entity->getRange();
-    int attackRange = entity->getAttackRange(); // == range for every monster except an empowered Barzilla
+    int attackRange = entity->getAttackRange(); // == range for every monster currently in the game (see Board.h's now-commented-out getExtendedAttackOnlyTiles)
     int bfsLimit = std::max(range, attackRange); // walk far enough to find extended-only enemies too
 
     std::map<std::pair<int, int>, int> visited; // מרחק בלבד - פנימי לחישוב, לא מוחזר
@@ -133,6 +133,12 @@ std::vector<const Tile*> BoardPathfinder::getReachableTiles(const BoardEntity* e
     return { reachable.begin(), reachable.end() };//to be a const
 }
 //
+// Commented out (not deleted) - its only caller was Board::getExtendedAttackOnlyTiles,
+// itself commented out for the same reason (see Board.cpp/BoardPathfinder.h):
+// currently always empty, since no monster overrides getAttackRange() to
+// differ from getRange() any more now that Barzilla's Empowered Attack is
+// ally-targeted instead of self-extending its own reach.
+//
 //std::vector<Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(Monster* monster) const
 //{
 //    std::vector<Tile*> reachable, extended;
@@ -140,14 +146,13 @@ std::vector<const Tile*> BoardPathfinder::getReachableTiles(const BoardEntity* e
 //    computeReachability(monster, reachable, parent, &extended);
 //    return extended;
 //}
-std::vector<const Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(const BoardEntity* entity) const
-{
-    std::vector<Tile*> reachable, extended;
-    std::map<std::pair<int, int>, std::pair<int, int>> parent;
-    computeReachability(entity, reachable, parent, &extended);
-    //return extended;
-    return { extended.begin(), extended.end() };
-}
+//std::vector<const Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(const BoardEntity* entity) const
+//{
+//    std::vector<Tile*> reachable, extended;
+//    std::map<std::pair<int, int>, std::pair<int, int>> parent;
+//    computeReachability(entity, reachable, parent, &extended);
+//    return { extended.begin(), extended.end() };
+//}
 
 // שחזור המסלול: הולכים אחורה מה-target דרך outParent עד שמגיעים למקור, ואז
 // הופכים את הסדר (כי בנינו אותו מהסוף להתחלה). אם target לא הופיע ב-parent

@@ -216,6 +216,11 @@ void Monster::applyFreeze()
     m_actionsLeft = 0;
 }
 
+void Monster::applyEmpoweredAttack(float multiplier)
+{
+    m_attackMultiplier = multiplier;
+}
+
 void Monster::walkTo(const sf::Vector2f& targetScreenPos)
 {
     // צעד יחיד = תור עם פריט אחד. אין יותר m_targetPos נפרד - front() של התור
@@ -358,7 +363,18 @@ void Monster::attack(BoardEntity* target)
     //const sf::Sound& attackSound = AssetsManager::getInstance().getSound(m_textureKey);
     //attackSound.
     /*SoundPlayer::getInstance().play("attack_hit"); *///מאוחר מדי!!!! לחשוב על מקום אחר לפני שנשים את זה
-    target->takeDamage(m_attackDamage);
+
+    // Empowered Attack (granted by an ally's Barzilla - see
+    // applyEmpoweredAttack) consumed here, at the moment THIS monster's own
+    // attack actually resolves - the one place every monster's attack
+    // already goes through, so no per-monster override is needed the way
+    // Barzilla::attack() used to need one for its own (now-removed) self-buff.
+    // No branch needed: m_attackMultiplier is 1.f (neutral) whenever nothing
+    // was granted, so multiplying and resetting are always safe unconditionally.
+    int damage = static_cast<int>(m_attackDamage * m_attackMultiplier);
+    m_attackMultiplier = 1.f;
+
+    target->takeDamage(damage);
     useAction();
     if (target->isProtected()) //לגרום ללב בהמשך להיות מוגן!!!!!
         SoundPlayer::getInstance().play("parry_attack");
