@@ -7,6 +7,7 @@
 #include "Button.h"
 #include <optional>
 #include "Tooltip.h"
+#include "State/BottomPanel.h"
 
 class Card;
 class Monster;
@@ -64,8 +65,7 @@ private:
     std::unique_ptr<Player> m_player2;
     TurnManager m_turnManager;
 
-    sf::RectangleShape m_bottomPanel;
-    sf::Text m_endTurnHintText;
+    BottomPanel m_bottomPanel;
     Tooltip m_tooltip;
 
     // Hand-selected monster awaiting placement. UI/gameplay-input state,
@@ -103,7 +103,7 @@ private:
     // place and share the same shape - Board now only exposes the
     // primitives (getTileAtScreenPosition/selectEntity/performAction/
     // clearHighlights) this calls, never the interaction decision itself.
-    void handleBoardClick(const sf::Vector2f& pos, Player& current);
+    void handleBoardClick(const sf::Vector2f& pos, const Player& current);
 
     // The one place m_pendingSpecialCard is abandoned before it reached its
     // own commit event (toggled off, superseded by a different selection,
@@ -113,15 +113,4 @@ private:
     // so a Special can never stay silently armed once its Card stops
     // showing as selected.
     void clearPendingSpecial();
-
-    // Highlights every currently-valid target Tile for `caster`'s pending
-    // Special - derived fresh from Board::getOccupiedTiles() and
-    // caster.isValidSpecialTarget() each time selection begins, not stored
-    // anywhere new. Which Tiles qualify and what color they get are both
-    // decided entirely by `caster` (see Monster::isValidSpecialTarget /
-    // getSpecialTargetHighlightColor); this only ever iterates and paints.
-    void highlightValidSpecialTargets(Monster& caster);
-
-    void drawButtomPanel(sf::RenderWindow& window) const;
-
 };

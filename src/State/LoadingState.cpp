@@ -62,8 +62,7 @@ LoadingState::LoadingState(sf::RenderWindow& window)
     // SPINNER_DISPLAY_SIZE rather than Spinner.png's real pixel size
     // (1278x1230) - without this the sprite drew at native resolution,
     // nearly covering the whole 1280x720 window.
-    float maxSpinnerDim = static_cast<float>(std::max(spinnerSize.x, spinnerSize.y));
-    float spinnerScale = (maxSpinnerDim > 0.f) ? (SPINNER_DISPLAY_SIZE / maxSpinnerDim) : 1.f;
+    float spinnerScale = SpriteUtils::maxDimensionScale(spinnerSize, SPINNER_DISPLAY_SIZE);
     m_spinner.setScale({ spinnerScale, spinnerScale });
 
     // Everything except this state's own two assets (already loaded by

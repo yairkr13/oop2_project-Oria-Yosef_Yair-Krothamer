@@ -3,11 +3,10 @@
 #include <memory>
 #include <string>
 #include <functional>
-#include <map>
 #include "Monsters/Monster.h"
 
-// д-Factory деа дочен дйзйг бчег щолйш аъ лм озмчеъ дофмцеъ дчерчшийеъ.
-// лм озмчд азшъ (Player, Board, Game...) олйшд шч аъ Monster (дбсйс доефщи).
+// пїЅ-Factory пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ (Player, Board, Game...) пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ Monster (пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ).
 
 class Card; // forward declaration
 class MonsterFactory
@@ -15,12 +14,30 @@ class MonsterFactory
 public:
     using Creator = std::function<std::unique_ptr<Monster>(PlayerSide)>; // + PlayerSide
 
-    static void registerMonster(const std::string& name, Creator creator);
     static std::unique_ptr<Monster> create(const std::string& monsterName, PlayerSide side); // + side
 
-    // дйд: createStandardDeck -> vector<unique_ptr<Monster>>
-    static std::vector<std::unique_ptr<Card>> createStandardHand(PlayerSide side); // озжйш Card, ма Monster
+    // пїЅпїЅпїЅ: createStandardDeck -> vector<unique_ptr<Monster>>
+    static std::vector<std::unique_ptr<Card>> createStandardHand(PlayerSide side); // пїЅпїЅпїЅпїЅпїЅ Card, пїЅпїЅ Monster
 
 private:
-    static std::map<std::string, Creator>& getRegistry();
+    // One entry per known monster - name, how to build it, and its Card's
+    // own cost/texture. The single source of truth both create() (looks
+    // one up by name) and createStandardHand() (builds a Card for every
+    // one, in this same order) read from, so there's exactly one place
+    // that knows "which monsters exist" - not two separately-maintained
+    // lists that could silently drift apart.
+    struct MonsterDefinition
+    {
+        std::string name;
+        Creator creator;
+        int cost;
+        std::string cardTextureKey;
+    };
+
+    // A std::vector (not the old std::map) deliberately - createStandardHand()'s
+    // resulting hand order (Muffintop, Blue, Barzilla, Henrietta, Mozzy) is a
+    // chosen gameplay order, not alphabetical; a map would silently
+    // re-sort it by key. Only 5 entries, so create()'s linear search here
+    // costs nothing worth optimizing.
+    static const std::vector<MonsterDefinition>& getCatalog();
 };

@@ -52,11 +52,6 @@ void GameOverState::onRestartClicked()
     }
 }
 
-void GameOverState::onExitClicked()
-{
-    m_window.close();
-}
-
 void GameOverState::onMainMenuClicked()
 {
     // ���� ����� ������ �����

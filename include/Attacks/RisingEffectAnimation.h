@@ -1,6 +1,5 @@
 #pragma once
-#include "Attacks/AttackAnimation.h"
-#include <vector>
+#include "Attacks/StaggeredInstancesAnimation.h"
 
 // Used by Muffintop for its special ability (the HealEffect that plays on
 // the healed ally).
@@ -18,15 +17,16 @@
 // single target (rather than a projectile between two) tends to need.
 // Where it does borrow from a sibling: multiple simultaneous, individually
 // staggered copies converging on one shared completion is the same idea
-// BurstProjectileAnimation already uses for its projectiles - reused here
-// instead of inventing a second "many instances of one effect" mechanism.
+// BurstProjectileAnimation uses for its projectiles - both now share that
+// mechanism for real, via the common StaggeredInstancesAnimation base,
+// instead of each independently reimplementing it.
 //
 // Deliberately knows nothing about Muffintop, healing, HP, or which entity
 // it's attached to - it only animates the rising sprite(s) and reports when
 // they're all done, exactly like its AttackAnimation siblings. Generic and
 // reusable by any future Special wanting this "rises in place" look, with a
 // different texture/duration/size/rise distance/instance count.
-class RisingEffectAnimation : public AttackAnimation
+class RisingEffectAnimation : public StaggeredInstancesAnimation
 {
 public:
     // `position` is the starting (bottom) point the effect rises from - the
@@ -47,23 +47,12 @@ public:
         float riseDistance, float duration, float size,
         int instanceCount = 1, float horizontalSpacing = 0.f, float staggerDelay = 0.f);
 
-    void update(float dt) override;
-    void draw(sf::RenderWindow& window) const override;
-
 private:
-    struct Riser
-    {
-        sf::Sprite sprite;
-        sf::Vector2f bottomPosition;
-        float startDelay;
-        float elapsed = 0.f;
-        bool started = false;
-        bool finished = false;
-    };
+    // The one thing StaggeredInstancesAnimation can't share - every
+    // instance rises straight up from its own anchor (see Instance::anchor,
+    // set per-instance at construction to its horizontally-spread starting
+    // point), a plain vertical offset by progress.
+    void positionInstance(Instance& instance, float progress) override;
 
     float m_riseDistance;
-    float m_duration;
-    float m_totalElapsed = 0.f;
-    int m_finishedCount = 0;
-    std::vector<Riser> m_risers;
 };

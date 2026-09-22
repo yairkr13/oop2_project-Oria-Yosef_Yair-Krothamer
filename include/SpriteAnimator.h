@@ -30,7 +30,7 @@ class SpriteAnimator
 public:
     // Registers one animation state. `id` is an opaque, caller-defined
     // value (e.g. a scoped enum cast to int) - this class only ever
-    // compares it for equality (see isStateFinished/getActiveStateId),
+    // compares it for equality (see isStateFinished),
     // never interprets it. `sheet` is this state's own SpriteSheet -
     // ownership moves in; this class drives it (update/reset) from here
     // on. `isActive` is a predicate the owner supplies (typically a lambda
@@ -77,13 +77,6 @@ public:
     // The active state's own base scale (see SpriteSheet::getBaseScale).
     // Meaningless (returns 1.f) while hasActiveState() is false.
     float getActiveBaseScale() const;
-
-    // The active state's own id, exactly as passed to addState() - lets an
-    // owner ask "is THIS specific one of my states showing right now"
-    // without this class needing to know what the id represents. -1 while
-    // hasActiveState() is false (never a valid id a caller would have
-    // registered, by convention - ids are expected to start at 0).
-    int getActiveStateId() const;
 
     // Whether the state registered under `id` has finished playing its
     // current animation (see SpriteSheet::isFinished - always false for a

@@ -60,7 +60,7 @@ public:
     // הספציפי, לא רק "מה אפשר". target חייב להיות tile שכבר יצא מ-getReachableTiles
     // (כלומר תנועה, לא תקיפה) - אחרת מוחזרת רשימה ריקה.
    // std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
-    std::vector<const Tile*> getPathTo(BoardEntity* entity, Tile* target) const;
+    std::vector<const Tile*> getPathTo(const BoardEntity* entity, const Tile* target) const;
 private:
     // ה-BFS המשותף (מעבר יחיד) שגם getReachableTiles וגם getPathTo נשענים עליו.
     /*void computeReachability(Monster* monster,

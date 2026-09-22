@@ -17,7 +17,7 @@ public:
         std::string mutedTexture = getDefaultTextures().second)
         : m_unmutedTexture(std::move(unmutedTexture))
         , m_mutedTexture(std::move(mutedTexture))
-        , m_button(makeRect(position, width), currentIconTexture(), [this]() { onClicked(); }, makeScale(width))
+        , m_button(Button::fromTextureWidth(position, currentIconTexture(), width, [this]() { onClicked(); }))
     {
     }
 
@@ -69,20 +69,6 @@ private:
         auto& am = AssetsManager::getInstance();
         bool muted = AudioService::getInstance().isMuted();
         return am.getTexture(muted ? m_mutedTexture : m_unmutedTexture);
-    }
-
-    sf::IntRect makeRect(sf::Vector2i position, unsigned int width) const
-    {
-        auto textureSize = currentIconTexture().getSize();
-        float scale = static_cast<float>(width) / static_cast<float>(textureSize.x);
-        int scaledHeight = static_cast<int>(textureSize.y * scale);
-        return sf::IntRect(position, { static_cast<int>(width), scaledHeight });
-    }
-
-    sf::Vector2f makeScale(unsigned int width) const
-    {
-        float scale = static_cast<float>(width) / static_cast<float>(currentIconTexture().getSize().x);
-        return { scale, scale };
     }
 
     std::string m_unmutedTexture;

@@ -39,5 +39,5 @@ public:
 
     sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(0, 100, 0, 180); } // dark green
 private:
-    void onSpecialAbility(Board& board, BoardEntity* target) override;
+    void onSpecialAbility(const Board& board, BoardEntity* target) override;
 };

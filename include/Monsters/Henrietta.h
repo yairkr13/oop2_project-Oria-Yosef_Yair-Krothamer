@@ -43,6 +43,6 @@ public:
     }
     sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(255, 165, 0, 180); } // orange
 private:
-    void onSpecialAbility(Board& board, BoardEntity* target) override;
+    void onSpecialAbility(const Board& board, BoardEntity* target) override;
     //void attack(Monster& target) override;
 };

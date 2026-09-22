@@ -22,15 +22,6 @@ public:
     }
 
     //bool isHole() const override { return true; } // ���� ������� ��������� ������ ������ �-Tile.h
-    void setHighlighted(bool highlighted, const sf::Color& defaultHighlightColor = sf::Color(150, 220, 150, 180)) override
-    {
-        if (highlighted) {
-            Tile::setHighlighted(true, sf::Color(30, 30, 30, 200));
-        }
-        else {
-            // �� ����� �� �����, ���� ��������� ��� ������ �� ���� �-m_color ����� �� ����
-            Tile::setHighlighted(false, sf::Color::Transparent);
-        }
-    }
-private:
+protected:
+    std::optional<sf::Color> ownHighlightColor() const override { return sf::Color(30, 30, 30, 200); }
 };

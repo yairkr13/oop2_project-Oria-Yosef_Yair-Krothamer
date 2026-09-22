@@ -46,7 +46,7 @@ void Tile::setHighlighted(bool highlighted,const sf::Color& highlightColor)
     m_isHighlighted = highlighted;
     if (highlighted)
     {
-        m_shape.setFillColor(highlightColor); // light green, semi-transparent
+        m_shape.setFillColor(ownHighlightColor().value_or(highlightColor)); // light green, semi-transparent (or this tile type's own fixed color)
         m_shape.setOutlineColor(sf::Color(200, 255, 200, 220));
     }
     else
@@ -127,8 +127,10 @@ void Tile::updateEntity(float dt)
     if (!m_entity) return;
 
     m_entity->update(dt);
-    if (m_entity->isReadyForRemoval())
+    if (m_entity && m_entity->isReadyForRemoval())
+    {
         clearEntity();
+    }
 }
 
 bool Tile::isEntityAnimating() const

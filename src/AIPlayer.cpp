@@ -20,7 +20,7 @@ AIPlayer::AIPlayer(PlayerSide side)
 {
 }
 
-const Tile* AIPlayer::findBestTarget(const Board& board, Monster* monster) const
+const Tile* AIPlayer::findBestTarget(const Board& board, const Monster* monster) const
 {
     if (!monster || !monster->isAlive()) return nullptr;
 
@@ -84,7 +84,7 @@ const Tile* AIPlayer::findBestTarget(const Board& board, Monster* monster) const
     return bestAttackTarget ? bestAttackTarget : bestMoveTarget;
 }
 
-const Tile* AIPlayer::findBestSpecialTarget(const Board& board, Monster* monster) const
+const Tile* AIPlayer::findBestSpecialTarget(const Board& board, const Monster* monster) const
 {
     if (!monster || !monster->canUseSpecialAbilityNow()) return nullptr;
 

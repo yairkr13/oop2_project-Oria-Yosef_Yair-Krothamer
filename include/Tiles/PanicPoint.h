@@ -24,16 +24,8 @@ public:
         }
     }
 
-    void setHighlighted(bool highlighted, const sf::Color& defaultHighlightColor = sf::Color(150, 220, 150, 180)) override
-    {
-        if (highlighted) {
-            Tile::setHighlighted(true, sf::Color(200, 100, 250, 180));
-        }
-        else {
-            // �� ����� �� �����, ���� ��������� ��� ������ �� ���� �-m_color ����� �� ����
-            Tile::setHighlighted(false, sf::Color::Transparent);
-        }
-    }
+protected:
+    std::optional<sf::Color> ownHighlightColor() const override { return sf::Color(200, 100, 250, 180); }
 private:
     Heart* m_p1Heart; // ���� ����� ���� ��� �� ���� 1
     Heart* m_p2Heart;

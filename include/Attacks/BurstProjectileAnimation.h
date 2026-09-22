@@ -1,6 +1,5 @@
 #pragma once
-#include "Attacks/AttackAnimation.h"
-#include <vector>
+#include "Attacks/StaggeredInstancesAnimation.h"
 
 // Used by Blue (normal attack, WindBlast), Henrietta (normal attack,
 // FlameWeb), and Barzilla (special ability, the grouped FireBlast
@@ -26,7 +25,7 @@
 // like its sibling AttackAnimation subclasses. Generic and reusable by any
 // monster wanting this "rapid burst" look with a different
 // texture/count/timing/size.
-class BurstProjectileAnimation : public AttackAnimation
+class BurstProjectileAnimation : public StaggeredInstancesAnimation
 {
 public:
     // `projectileCount`: how many copies fly. `launchInterval`: seconds
@@ -39,23 +38,12 @@ public:
     BurstProjectileAnimation(const sf::Texture& texture, sf::Vector2f origin, sf::Vector2f target,
         int projectileCount, float launchInterval, float travelDuration, float size);
 
-    void update(float dt) override;
-    void draw(sf::RenderWindow& window) const override;
-
 private:
-    struct Projectile
-    {
-        sf::Sprite sprite;
-        float launchDelay;
-        float elapsed = 0.f;
-        bool launched = false;
-        bool arrived = false;
-    };
+    // The one thing StaggeredInstancesAnimation can't share - every
+    // projectile flies the same straight line from m_origin to m_target,
+    // so this is a plain lerp by progress.
+    void positionInstance(Instance& instance, float progress) override;
 
     sf::Vector2f m_origin;
     sf::Vector2f m_target;
-    float m_travelDuration;
-    float m_totalElapsed = 0.f;
-    int m_arrivedCount = 0;
-    std::vector<Projectile> m_projectiles;
 };

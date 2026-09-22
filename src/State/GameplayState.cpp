@@ -43,7 +43,7 @@ GameplayState::GameplayState(sf::RenderWindow& window, GameMode mode)
     , m_player1(std::make_unique<Player>(PlayerSide::Left))
     , m_player2(makePlayer2(mode))
     , m_turnManager(*m_player1, *m_player2, m_board)
-    , m_endTurnHintText(AssetsManager::getInstance().getFont("Lilita"))
+    , m_bottomPanel(AssetsManager::getInstance().getFont("Lilita"))
     , m_tooltip(AssetsManager::getInstance().getFont("Lilita"))
 {
     scaleBackgroundToWindow();
@@ -51,22 +51,6 @@ GameplayState::GameplayState(sf::RenderWindow& window, GameMode mode)
     buildMiniMenuButton();
 
     m_turnManager.setOnPlayerSwitched([this]() { clearSelectionState(); });
-
-    // Matches the same windowHeight - BOTTOM_PANEL_HEIGHT computation
-    // Player::BOTTOM_PANEL_TOP_Y uses, so the panel Player draws cards onto
-    // and the one drawn here always agree on where it actually is.
-    m_bottomPanel.setSize({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
-    m_bottomPanel.setPosition({ 0.f, static_cast<float>(Config::WINDOW_HEIGHT) - Config::BOTTOM_PANEL_HEIGHT });
-    m_bottomPanel.setFillColor(sf::Color(40, 40, 40));
-
-    m_endTurnHintText.setString("PRESS SPACE TO END TURN");
-    m_endTurnHintText.setCharacterSize(13); // גודל קטן
-    m_endTurnHintText.setFillColor(sf::Color(200, 200, 200, 180)); // צבע אפור-לבן עדין מעט שקוף
-
-    // מיקום במרכז X ובחלק התחתון ביותר של המסך (12 פיקסלים מהקצה)
-    float centerX = static_cast<float>(Config::WINDOW_WIDTH) / 2.0f;
-    float bottomY = static_cast<float>(Config::WINDOW_HEIGHT) - 12.0f;
-    m_endTurnHintText.setPosition({ centerX, bottomY });
 }
 
 void GameplayState::scaleBackgroundToWindow()
@@ -76,15 +60,9 @@ void GameplayState::scaleBackgroundToWindow()
 
 void GameplayState::buildMiniMenuButton()
 {
-    auto& am = AssetsManager::getInstance();
-    const sf::Texture& texture = am.getTexture("GoToMiniMenuButton");
-
-    auto textureSize = texture.getSize();
-    float scale = static_cast<float>(MINI_MENU_BUTTON_WIDTH) / static_cast<float>(textureSize.x);
-    int scaledHeight = static_cast<int>(textureSize.y * scale);
-
-    sf::IntRect rect(MINI_MENU_BUTTON_POSITION, { static_cast<int>(MINI_MENU_BUTTON_WIDTH), scaledHeight });
-    m_miniMenuButton.emplace(rect, texture, [this]() { openMiniMenu(); }, sf::Vector2f{ scale, scale });
+    const sf::Texture& texture = AssetsManager::getInstance().getTexture("GoToMiniMenuButton");
+    m_miniMenuButton = Button::fromTextureWidth(MINI_MENU_BUTTON_POSITION, texture, MINI_MENU_BUTTON_WIDTH,
+        [this]() { openMiniMenu(); });
 }
 
 void GameplayState::openMiniMenu()
@@ -101,7 +79,7 @@ void GameplayState::draw(sf::RenderWindow& window) const
     Player& current = m_turnManager.getCurrentPlayer();
     m_board.draw(window, current.getSide());
 
-    drawButtomPanel(window);
+    m_bottomPanel.draw(window);
     // Card already knows how to render its own "selected" border
     // (see Card::draw's isSelected parameter) - we just need to feed it
     // whichever Card the player currently has chosen. A not-yet-placed hand
@@ -119,25 +97,6 @@ void GameplayState::draw(sf::RenderWindow& window) const
         m_miniMenuButton->draw(window);
 
     m_tooltip.draw(window);
-}
-
-void GameplayState::drawButtomPanel(sf::RenderWindow& window) const
-{
-	//sf::RectangleShape bottomPanel;
-	//bottomPanel.setSize({ static_cast<float>(Config::WINDOW_WIDTH), 100.f });
-	//bottomPanel.setPosition({ 0.f, static_cast<float>(Config::WINDOW_HEIGHT) - 100.f });
-	//bottomPanel.setFillColor(sf::Color(30, 30, 50, 200)); // Darker color with some transparency
-	//m_window.draw(bottomPanel);
-    //sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
-    //bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
-    //bottomPanel.setFillColor(sf::Color(40, 40, 40));
-    //window.draw(bottomPanel);
-    //m_window.draw(m_endTurnHintText); //אם יש דרך יותר טובה...
-
-    
-    window.draw(m_bottomPanel);
-    window.draw(m_endTurnHintText);
-    
 }
 
 void GameplayState::update(sf::Time deltaTime)
@@ -383,7 +342,7 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
     }
 }
 
-void GameplayState::handleBoardClick(const sf::Vector2f& pos, Player& current)
+void GameplayState::handleBoardClick(const sf::Vector2f& pos, const Player& current)
 {
     const Tile* clickedTile = m_board.getTileAtScreenPosition(pos);
     if (!clickedTile) return;

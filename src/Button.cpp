@@ -1,10 +1,21 @@
 #include "button.h"
 #include "SoundPlayer.h"
+#include "SpriteUtils.h"
 
 Button::Button(sf::IntRect rect, const sf::Texture& texture, Func func, sf::Vector2f scale)
     : m_rect(rect), m_func(func), m_sprite(texture), m_scale(scale)
 {
     initSprite(rect);
+}
+
+Button Button::fromTextureWidth(sf::Vector2i position, const sf::Texture& texture, unsigned int width, Func func)
+{
+    auto textureSize = texture.getSize();
+    float scale = SpriteUtils::widthScale(textureSize, width);
+    int scaledHeight = static_cast<int>(textureSize.y * scale);
+
+    sf::IntRect rect(position, { static_cast<int>(width), scaledHeight });
+    return Button(rect, texture, std::move(func), sf::Vector2f{ scale, scale });
 }
 
 Button::Button(sf::IntRect rect, const sf::Texture& texture, Func func,

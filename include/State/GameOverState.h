@@ -19,7 +19,6 @@ private:
     void onMainMenuClicked();
     void onRestartClicked();
     void setupWinnerText(const PlayerSide& winner);
-    void onExitClicked();
 
     sf::RenderWindow& m_window;
     sf::Sprite m_background;

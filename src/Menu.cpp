@@ -1,4 +1,5 @@
 #include "Menu.h"
+#include "SpriteUtils.h"
 
 Menu::Menu(sf::Vector2f center, unsigned int buttonWidth, float gap)
 	: m_center(center), m_buttonWidth(buttonWidth), m_gap(gap), m_nextY(center.y)
@@ -20,7 +21,7 @@ void Menu::addButton(const sf::Texture& texture, Button::Func func, const sf::Fo
 std::pair<sf::IntRect, sf::Vector2f> Menu::nextButtonRect(const sf::Texture& texture)
 {
 	auto textureSize = texture.getSize();
-	float scale = static_cast<float>(m_buttonWidth) / static_cast<float>(textureSize.x);
+	float scale = SpriteUtils::widthScale(textureSize, m_buttonWidth);
 	float scaledHeight = static_cast<float>(textureSize.y) * scale;
 
 	sf::Vector2i size(static_cast<int>(m_buttonWidth), static_cast<int>(scaledHeight));

@@ -39,7 +39,7 @@ void Player::handleClick(sf::Vector2f pos)
 //    //drawKeys(window, alignRight);
 //    drawHand(window, alignRight, selectedFromHand);
 //}
-void Player::draw(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand) const
+void Player::draw(sf::RenderWindow& window, bool alignRight, const Card* selectedFromHand) const
 {
     drawHand(window, alignRight, selectedFromHand);
 	drawKeys(window, alignRight);
@@ -79,7 +79,7 @@ void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
     window.draw(keysText);
 }
 
-void Player::drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand) const
+void Player::drawHand(sf::RenderWindow& window, bool alignRight, const Card* selectedFromHand) const
 {
     //למה זה בשחקן?
     /*sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });

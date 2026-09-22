@@ -33,16 +33,8 @@ namespace
     constexpr float HEAL_EFFECT_HORIZONTAL_SPACING = Config::MONSTER_BOARD_SIZE * 0.4f;
     constexpr float HEAL_EFFECT_STAGGER_DELAY = 0.06f;
 
-    // Walking sprite sheet: 6 columns x 4 rows (24 frames total), read row
-    // by row left-to-right. frameDuration is the one knob for animation
-    // speed - this value shows the full 24-frame cycle in ~1.44s, looping
-    // continuously for as long as Muffintop keeps moving.
-    constexpr int WALK_SHEET_COLUMNS = 6;
-    constexpr int WALK_SHEET_ROWS = 4;
-    constexpr float WALK_FRAME_DURATION = 0.06f;
-
-    // Attack sprite sheet: same 6x4 (24-frame) grid, verified against the
-    // actual file. Frame duration is chosen (unlike the walk sheet's) so
+    // Attack sprite sheet timing: the shared 6x4 grid (see
+    // Monster::setStandardSpriteAnimations). Frame duration is chosen so
     // the full 24-frame cycle completes in ~0.48s - close to
     // MUFFIN_SHOT_DURATION (0.5s) above - so Muffintop's own windup-to-throw
     // motion finishes right around when the projectile actually lands,
@@ -50,45 +42,13 @@ namespace
     // the last frame. isAttacking() (see Monster::update()/draw()) is what
     // drives this - already true for exactly the projectile's flight time,
     // so no extra timing state was needed here.
-    constexpr int ATTACK_SHEET_COLUMNS = 6;
-    constexpr int ATTACK_SHEET_ROWS = 4;
     constexpr float ATTACK_FRAME_DURATION = 0.02f;
-
-    // Idle sprite sheet: same 6x4 (24-frame) grid, verified against the
-    // actual file - Muffintop_Idle.png happens to share Walk/Attack's exact
-    // pixel dimensions (5760x3840), but that's coincidence, not an
-    // assumption; the layout was inspected directly rather than copied.
-    // frameDuration is deliberately the slowest of the three (Attack
-    // 0.02s, Walk 0.06s, Idle here) - full cycle ~1.92s - so idling reads
-    // as a calm, subtle sway rather than the brisker walk cycle, since this
-    // is what plays for as long as Muffintop just sits on the board.
-    constexpr int IDLE_SHEET_COLUMNS = 6;
-    constexpr int IDLE_SHEET_ROWS = 4;
-    constexpr float IDLE_FRAME_DURATION = 0.08f;
-
-    // Die sprite sheet: same 6x4 (24-frame) grid, verified against the
-    // actual file - again coincidentally matching Walk/Attack/Idle's pixel
-    // dimensions (5760x3840), inspected directly rather than assumed. Plays
-    // once (setDieSpriteAnimation always configures a non-looping sheet -
-    // see Monster/SpriteSheet) at a brisker pace than Idle: full
-    // 24-frame cycle in ~1.2s, a clearly readable collapse without
-    // lingering once the monster is already dead and gone from play.
-    constexpr int DIE_SHEET_COLUMNS = 6;
-    constexpr int DIE_SHEET_ROWS = 4;
-    constexpr float DIE_FRAME_DURATION = 0.05f;
 }
 
 Muffintop::Muffintop(PlayerSide side)
-    : Monster(side, "Muffintop", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Magenta, "muffintop")
+    : Monster(side, BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Magenta, "muffintop")
 {
-    // Test case for the sprite-sheet-animation mechanism (see
-    // Monster::setWalkAnimation/setAttackSpriteAnimation/
-    // setIdleSpriteAnimation/setDieSpriteAnimation) - Muffintop only, for
-    // now.
-    setWalkAnimation("muffintop_walk", WALK_SHEET_COLUMNS, WALK_SHEET_ROWS, WALK_FRAME_DURATION);
-    setAttackSpriteAnimation("muffintop_attack", ATTACK_SHEET_COLUMNS, ATTACK_SHEET_ROWS, ATTACK_FRAME_DURATION);
-    setIdleSpriteAnimation("muffintop_idle", IDLE_SHEET_COLUMNS, IDLE_SHEET_ROWS, IDLE_FRAME_DURATION);
-    setDieSpriteAnimation("muffintop_die", DIE_SHEET_COLUMNS, DIE_SHEET_ROWS, DIE_FRAME_DURATION);
+    setStandardSpriteAnimations("muffintop", "muffintop_walk", ATTACK_FRAME_DURATION);
 }
 
 
@@ -126,7 +86,7 @@ Muffintop::Muffintop(PlayerSide side)
 //
 //    targetMonster->playSpecialAbilityAnimation(std::move(healEffect));
 //}
-void Muffintop::onSpecialAbility(Board& board, BoardEntity* target)
+void Muffintop::onSpecialAbility(const Board& board, BoardEntity* target)
 {
     //Monster* targetMonster = target ? target->asMonster() : nullptr;
     //if (!targetMonster) return;

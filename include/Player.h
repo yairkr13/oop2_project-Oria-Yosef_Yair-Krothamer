@@ -21,7 +21,7 @@ public:
 
     // �����: ���� ������ ���� (���� ����) ���� ������ ������ ���
     //void draw(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;
-    void draw(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand = nullptr) const;
+    void draw(sf::RenderWindow& window, bool alignRight, const Card* selectedFromHand = nullptr) const;
 
     Card* handleHandClick(sf::Vector2f mousePos, bool alignRight) const;
 
@@ -33,7 +33,6 @@ public:
     //const sf::Vector2f& getPosition() const;
 	void endTurn();
     PlayerSide getSide() const { return m_side; }
-    void reduceKeys(int cost);
 
     Heart* getHeart();
 
@@ -54,17 +53,20 @@ protected:
     //void drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand = nullptr) const;
     //void drawKeys(sf::RenderWindow& window, bool alignRight) const;
 
-	std::unique_ptr<Heart> m_heart;
-    // 
+    //
 	//std::vector<std::unique_ptr<Card>> m_cards;
     int m_keys;
-    int m_maxKeys;
-    PlayerSide m_side;
 
     //std::vector<std::shared_ptr<Monster>> m_monsters;
     std::vector<std::unique_ptr<Monster>> m_monsters;
     std::vector<std::unique_ptr<Card>> m_hand;
 private:
+    // AIPlayer (the only derived class) never touches these directly - it
+    // goes through getSide()/getHeart() like everyone else.
+	std::unique_ptr<Heart> m_heart;
+    int m_maxKeys;
+    PlayerSide m_side;
+
     // Moved here from Config (Constants.h) - laying out a row of cards is
     // Player's own concern (how far apart it chooses to space them, how far
     // below the bottom panel's own top edge its own hand starts), not
@@ -92,5 +94,9 @@ private:
         return { xPos, BOTTOM_PANEL_TOP_Y + CARD_TOP_MARGIN };
     }
     void drawKeys(sf::RenderWindow& window, bool alignRight) const;
-    void drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand = nullptr) const;
+    void drawHand(sf::RenderWindow& window, bool alignRight, const Card* selectedFromHand = nullptr) const;
+
+    // Only ever called from within playCard() itself - no external caller
+    // (including AIPlayer) reduces keys directly.
+    void reduceKeys(int cost);
 };

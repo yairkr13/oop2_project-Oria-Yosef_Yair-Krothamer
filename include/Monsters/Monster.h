@@ -13,7 +13,7 @@ class Board; // Forward declaration - only ever used by reference in Special Abi
 class Monster :public BoardEntity
 {
 public:
-    Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int baseCooldown/*, int cost,*/, int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
+    Monster(PlayerSide side, int health, int attackPower, int range, int baseCooldown/*, int cost,*/, int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
     // Declared here, defined "= default" out-of-line in Monster.cpp: m_attackAnimation
     // below is a unique_ptr<AttackAnimation>, and AttackAnimation is only
     // forward-declared in this header (via BoardEntity.h) - same reason
@@ -44,7 +44,6 @@ public:
 
     //virtual EntityType getType() const override { return EntityType::Monster; }
     bool isOnBoard() const;
-    bool isClicked(sf::Vector2f mousePos) const; //why we dont use this function in the game??????
     /*bool isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPosition) const;*/
 
     //int getCost() const { return m_cost; }
@@ -68,20 +67,17 @@ public:
 
     int getActionsLeft() const { return m_actionsLeft; }
     void resetActions();
-    //const std::string& getName() const { return m_name; }
     //std::string getTextureKey() const { return m_textureKey ; }
     //std::string getCardTextureKey() const { return m_textureKey + "_card" ; }
     //void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }
     //void setSide(PlayerSide side) { m_side = side; }
     PlayerSide getSide() const override { return m_side; }
-    void moveTo(int q, int row, const sf::Vector2f& screenPos);
 
-    // ���: ��� moveTo, ��� ����� ���� ��� ��� ���� �����, ������ ��� �� �����
-    // ������ (pathScreenPositions) ����. finalQ/finalRow �������� ������ (�����
-    // ��� �-moveTo ������) - �� ����� �� ������ ��� ����.
+    // Animates this monster walking its whole path at once (a queue of
+    // screen positions, one per step) - the only movement entry point now;
+    // the old single-step moveTo()/walkTo() are gone, superseded by this.
     void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) override;
 
-    void walkTo(const sf::Vector2f& targetScreenPos);//chanfe to animation!!!!!!!!!!!!!!!
     void update(float dt) override;
     virtual bool canFly() const override { return m_flying; } // ������ ���� ������ �� �������
     bool isMoving() const override { return m_isMoving; }
@@ -113,22 +109,6 @@ public:
     // dead monster's stale last board position.
     bool canUseSpecialAbilityNow() const { return isAlive() && isSpecialReady() && getActionsLeft() > 0; }
 
-    // True while frozen (see Mozzy). Kept as its own explicit, named state -
-    // deliberately NOT inferred from m_actionsLeft == 0, since "frozen" and
-    // "already spent my actions this turn" are different domain concepts
-    // that happen to look the same in that one field; collapsing them would
-    // make it impossible to ever query "is this monster frozen specifically"
-    // (for a UI indicator, or a future ability that cares) later.
-    bool isFrozen() const { return m_frozen; }
-
-    // True while this monster's next attack is empowered (see
-    // BoardEntity::applyEmpoweredAttack / Monster::attack()) - granted by an
-    // ally's Special (Barzilla's Empowered Attack), not by this monster's
-    // own. Kept explicit and named, same reasoning as isFrozen() above.
-    // Derived from m_attackMultiplier itself (no separate flag needed) -
-    // 1.f is the multiplicative identity, i.e. "no effect", by construction.
-    bool isEmpowered() const { return m_attackMultiplier != 1.f; }
-
     // Applied by an external Freeze-style ability. Fits the existing turn
     // system rather than a new timer: it zeroes this monster's actions
     // immediately (so it cannot act during its own owner's very next turn,
@@ -144,9 +124,13 @@ public:
     void applyEmpoweredAttack(float multiplier) override;
 
     // Whether this monster's Special requires the player to select a
-    // target before it can commit (see GameplayState). False (the default)
-    // covers self-only Specials.
-    virtual bool specialAbilityNeedsTarget() const { return false; }
+    // target before it can commit (see GameplayState) - false covers
+    // self-only Specials. Pure virtual rather than a `false` default: every
+    // concrete monster already states this explicitly (see e.g. Mozzy's own
+    // redeclaration, kept even though it matches the old default, "so a
+    // reader never has to wonder whether that's deliberate") - forcing it
+    // here makes that same explicitness mandatory for any future monster too.
+    virtual bool specialAbilityNeedsTarget() const = 0;
 
     // Whether useSpecialAbility() commits (consumes the action, resets the
     // cooldown) at the moment it's called - true (the default) is correct
@@ -200,10 +184,14 @@ public:
     // exercised for monsters where specialAbilityNeedsTarget() is true - a
     // presentation detail belonging to the ability itself, not to Board or
     // GameplayState, which is why it's exposed here rather than decided
-    // externally by checking which monster this is.
-    virtual sf::Color getSpecialTargetHighlightColor() const { return sf::Color(255, 255, 255, 180); }
+    // externally by checking which monster this is. Pure virtual: every
+    // concrete monster already overrides this (Mozzy explicitly redeclares
+    // the same color rather than relying on a default), so the base body
+    // was never actually reached - forcing every monster to state its own
+    // color here instead.
+    virtual sf::Color getSpecialTargetHighlightColor() const = 0;
 
-    virtual bool useSpecialAbility(Board& board, BoardEntity* target = nullptr);
+    virtual bool useSpecialAbility(const Board& board, BoardEntity* target = nullptr);
 
     // True while dead but still playing a one-shot Die sheet (see
     // setDieSpriteAnimation below) - false once that animation finishes, or
@@ -225,7 +213,7 @@ public:
     //void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) override;
 protected:
     //virtual void onAttackHook(BoardEntity* target) {}
-    virtual void onSpecialAbility(Board& board, BoardEntity* target) = 0;
+    virtual void onSpecialAbility(const Board& board, BoardEntity* target) = 0;
 
     // Opt-in: gives this monster a looping sprite-sheet animation, shown
     // only while isMoving() is true (see update()/draw()) - swapped back to
@@ -270,7 +258,31 @@ protected:
     // existed (see isReadyForRemoval()).
     void setDieSpriteAnimation(const std::string& dieTextureKey, int columns, int rows, float frameDuration);
 
-    std::string m_name;
+    // Registers all four states above at once, for the common case every
+    // concrete monster actually uses: the same 6x4 sheet grid, and the same
+    // walk/idle/die frame durations every monster shares (0.06s/0.08s/0.05s)
+    // - verified identical across all 5 monsters' sprite sheets, not a
+    // coincidence worth re-declaring 5 times. `walkTextureKey` is taken in
+    // full (not derived from `texturePrefix`) since a flying monster's own
+    // sheet is named "..._fly", not "..._walk" (see Blue/Mozzy).
+    // `attackFrameDuration` is the one number that's genuinely per-monster
+    // (timed against that monster's own attack-animation travel duration) -
+    // everything else here is identical between them.
+    void setStandardSpriteAnimations(const std::string& texturePrefix, const std::string& walkTextureKey,
+        float attackFrameDuration);
+
+    // Genuinely reached directly by a subclass - e.g. Henrietta's
+    // isValidSpecialTarget() checks candidate.isAllyOf(m_side) - unlike the
+    // rest of Monster's own state below, which no concrete monster's .cpp
+    // touches directly.
+    const PlayerSide m_side;  // �� ���� ������ ���� ������ - ��������� ���� "����" �� ��
+
+private:
+    // None of the 5 concrete monster .cpp files touch any of these
+    // directly - each only ever goes through Monster's own public
+    // accessors/methods. Only BoardEntity's own m_q/m_row/m_screenPos
+    // (inherited, still protected there) and Monster's own m_side above are
+    // genuinely reached directly by a subclass.
     //int m_health;
     //int m_maxHealth;
     int m_attackDamage;
@@ -280,7 +292,6 @@ protected:
     //int m_row;
     //bool m_selected = false;
     sf::Color m_color;
-    const PlayerSide m_side;  // �� ���� ������ ���� ������ - ��������� ���� "����" �� ��
     bool m_flying;
     bool m_frozen = false;
 
@@ -331,14 +342,12 @@ protected:
     int m_specialCooldown;
     int m_actionsLeft = 2;
 
-    // useAction() is protected (not private): a concrete monster that ever
-    // needs to override attack() still needs to consume an action exactly
-    // like the base Monster::attack() does. (The empowered-attack multiplier
-    // no longer needs such an override at all - see Monster::attack(), which
-    // now applies it directly for every monster.)
-protected:
+    // useAction() was protected on the theory that a concrete monster
+    // overriding attack() would still need to consume an action itself -
+    // but no monster overrides attack() (Monster::attack() already applies
+    // the empowered-attack multiplier for every monster - see there), and
+    // none of the 5 concrete .cpp files call this, so it's private too.
     void useAction() { if (m_actionsLeft > 0) m_actionsLeft--; }
-private:
     void drawActionsLeft(sf::RenderWindow& window) const;
     //void drawHealthBar(sf::RenderWindow& window) const;
     //std::string getCardTextureKey() const { return m_textureKey + "_card"; }

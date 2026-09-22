@@ -20,8 +20,3 @@ void State::pushState(std::unique_ptr<State> next)
 {
     m_stateToPush = std::move(next);
 }
-
-bool State::isTransitioning() const
-{
-    return m_isFinished || m_stateToPush != nullptr;
-}

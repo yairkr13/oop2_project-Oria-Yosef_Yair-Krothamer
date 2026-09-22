@@ -209,9 +209,14 @@ protected:
     int m_q;
     int m_row;
     sf::Vector2f m_screenPos;
+    // Tile* m_currentTile; - removed, see setCurrentTile/getCurrentTile above
+
+private:
+    // Only ever touched here in BoardEntity.cpp - neither Monster nor Heart
+    // reaches these directly, both go through the public accessors
+    // (getHealth/getMaxHealth/isProtected/heal/takeDamage/applyProtection).
     int m_health;
     int m_maxHealth;
-    // Tile* m_currentTile; - removed, see setCurrentTile/getCurrentTile above
     bool m_protected = false;
     int m_protectionTurnsRemaining = 0;
 };

@@ -195,7 +195,7 @@ std::pair<int, int> Board::spawnColumnRange(PlayerSide side) const
         : std::pair{ m_layout.cols - m_layout.spawnColumnWidth, m_layout.cols - 1 };
 }
 
-void Board::highlightSpawnTiles(PlayerSide side)
+void Board::highlightSpawnTiles(PlayerSide side) const
 {
     clearHighlights();
 
@@ -269,7 +269,7 @@ std::vector<const Tile*> Board::getReachableOccupiedTiles(const BoardEntity* ent
 //    return m_pathfinder.getExtendedAttackOnlyTiles(entity);
 //}
 
-std::vector<const Tile*> Board::getPathTo(BoardEntity* entity, Tile* target) const
+std::vector<const Tile*> Board::getPathTo(const BoardEntity* entity, const Tile* target) const
 {
     return m_pathfinder.getPathTo(entity, target);
 }
@@ -297,7 +297,7 @@ std::vector<const Tile*> Board::getPathTo(BoardEntity* entity, Tile* target) con
 //    for (Tile* tile : getExtendedAttackOnlyTiles(monster))
 //        tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
 //}
-void Board::highlightNeighbors(const BoardEntity* entity) //למה זה יכול להיות קבוע????
+void Board::highlightNeighbors(const BoardEntity* entity) const //כן - ראו ההסבר ב-Board.h ליד getMutableTileAt
 {
     if (!entity) return;
 
@@ -337,7 +337,7 @@ void Board::highlightNeighbors(const BoardEntity* entity) //למה זה יכול
 //    highlightNeighbors(entity->asMonster());
 //    return true;
 //}
-bool Board::selectEntity(const BoardEntity* entity, PlayerSide side)
+bool Board::selectEntity(const BoardEntity* entity, PlayerSide side) const
 {
     if (!entity || !entity->canBeSelectedBy(side)) return false;
 
@@ -346,7 +346,7 @@ bool Board::selectEntity(const BoardEntity* entity, PlayerSide side)
     return true;
 }
 
-void Board::highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color)
+void Board::highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color) const
 {
     for (const Tile* constTile : tiles)
     {
@@ -360,7 +360,7 @@ void Board::highlightTiles(const std::vector<const Tile*>& tiles, const sf::Colo
     }
 }
 
-void Board::clearHighlights()
+void Board::clearHighlights() const
 {
     for (auto& pair : m_grid)
     {
@@ -380,7 +380,7 @@ sf::Vector2f Board::tileToScreen(int q, int row) const
     return { anchor.x + Config::TILE_RADIUS, anchor.y + Config::TILE_RADIUS };
 }
 
-void Board::updateTileEffects()
+void Board::updateTileEffects() const
 {
     for (auto& [coords, tile] : m_grid)
     {
@@ -482,7 +482,7 @@ std::vector<const Tile*> Board::getSpawnableTiles(const Monster* monster, Player
 //    monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(), targetTile->getScreenPosition());
 //    return true;
 //}
-bool Board::spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile)
+bool Board::spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile) const
 {
     /*if (!entity || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(entity)) return false;*/
     if (!entity || !targetTile) return false;
@@ -514,7 +514,7 @@ bool Board::spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile)
 //    if (Monster* monster = entity->asMonster())//לא אוהבת את זה
 //        performMove(monster, targetTile);
 //}
-void Board::performAction(BoardEntity* entity,const Tile* constTargetTile)
+void Board::performAction(BoardEntity* entity,const Tile* constTargetTile) const
 {
     if (!entity || !constTargetTile) return;
     Tile* targetTile = getMutableTileAt(constTargetTile->getQ(), constTargetTile->getRow());
@@ -548,7 +548,7 @@ void Board::performAction(BoardEntity* entity,const Tile* constTargetTile)
 //}
 //למה צריך את שני הפונקציות האלה???הלוח לא קשור
 
-void Board::performAttack(BoardEntity* entity, Tile* targetTile)
+void Board::performAttack(BoardEntity* entity, Tile* targetTile) const
 {
     // Give the attacker a chance to supply an animated attack (see
     // BoardEntity::createAttackAnimation). Most entities don't override
@@ -644,7 +644,7 @@ void Board::performAttack(BoardEntity* entity, Tile* targetTile)
 //
 //    monster->moveAlongPath(targetTile->getQ(), targetTile->getRow(), pathScreenPositions);
 //}
-void Board::performMove(BoardEntity* entity, Tile* targetTile)
+void Board::performMove(BoardEntity* entity, Tile* targetTile) const
 {
     // Movement is only ever legal onto a tile within this monster's NORMAL
     // range - an extended attack-only range (see Monster::getAttackRange;
@@ -684,7 +684,7 @@ void Board::performMove(BoardEntity* entity, Tile* targetTile)
     entity->moveAlongPath(targetTile->getQ(), targetTile->getRow(), pathScreenPositions);
 }
 
-void Board::update(float dt)
+void Board::update(float dt) const
 {
     for (auto& [coords, tile] : m_grid)
     {
@@ -766,12 +766,6 @@ const Tile* Board::pickRandomTile(const std::vector<const Tile*>& tiles) const
     return tiles[dist(rng())];
 }
 
-bool Board::isSpawnPositionValid(const sf::Vector2f& pos) const
-{
-    const Tile* tile = getTileAtScreenPosition(pos);
-    return tile && tile->isHighlighted() && !tile->hasEntity();
-}
-
 const Tile* Board::getTileAt(int q, int row) const
 {
     return getMutableTileAt(q, row);
@@ -805,7 +799,7 @@ Tile* Board::getMutableTileAt(int q, int row) const
 //    return occupied;
 //}
 
-void Board::highlightValidSpecialTargets(const Monster* caster)
+void Board::highlightValidSpecialTargets(const Monster* caster) const
 {
     if (!caster) return;
 
@@ -852,7 +846,7 @@ void Board::highlightValidSpecialTargets(const Monster* caster)
 // stopping at the first tile that's off-board/occupied/impassable; lands on
 // the last valid tile reached (nullptr if even the first step is blocked,
 // in which case there's no movement at all).
-void Board::applyKnockback(BoardEntity* entity, int dq, int dr, int maxTiles)
+void Board::applyKnockback(BoardEntity* entity, int dq, int dr, int maxTiles) const
 {
     if (!entity) return;
 

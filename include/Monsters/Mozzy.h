@@ -37,5 +37,5 @@ public:
     // reader never has to wonder whether that's deliberate or coincidental.
     sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(255, 255, 255, 180); }
 private:
-    void onSpecialAbility(Board& board, BoardEntity* target) override;
+    void onSpecialAbility(const Board& board, BoardEntity* target) override;
 };

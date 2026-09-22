@@ -48,11 +48,6 @@ protected:
     // calls transitionTo() with no argument, popping back down to it.
     void pushState(std::unique_ptr<State> next);
 
-    // True once this state has requested any transition, finish or push.
-    // Handy as an early-return guard in handleEvent() so a state stops
-    // reacting to further input once it's on its way out.
-    bool isTransitioning() const;
-
 private:
     bool m_isFinished = false;
     std::unique_ptr<State> m_nextState;

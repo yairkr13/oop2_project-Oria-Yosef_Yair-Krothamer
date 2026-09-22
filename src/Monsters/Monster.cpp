@@ -3,15 +3,16 @@
 #include "AssetsManager.h"
 #include "Attacks/AttackAnimation.h" // complete type needed for the destructor and m_attackAnimation below
 #include "SoundPlayer.h"
+#include "SpriteUtils.h"
 
 // Defined here (not "= default" inline in the header): destroying
 // m_attackAnimation (a unique_ptr<AttackAnimation>) requires the complete
 // AttackAnimation type, which is only forward-declared in Monster.h.
 Monster::~Monster() = default;
 
-Monster::Monster(PlayerSide side, const std::string& name, int health, int attackPower, int range, int baseCooldown/*, int cost*/, int q, int row, sf::Color color, const std::string& textureKey, bool flying)
+Monster::Monster(PlayerSide side, int health, int attackPower, int range, int baseCooldown/*, int cost*/, int q, int row, sf::Color color, const std::string& textureKey, bool flying)
     : BoardEntity(q, row, {}, health),
-    m_side(side), m_name(name), m_attackDamage(attackPower),
+    m_side(side), m_attackDamage(attackPower),
     m_range(range)/*, m_cost(cost)*/, m_color(color), m_textureKey(textureKey), m_flying(flying),
     m_baseCooldown(baseCooldown), m_specialCooldown(baseCooldown),
     m_sprite(AssetsManager::getInstance().getTexture(m_textureKey))
@@ -25,8 +26,7 @@ Monster::Monster(PlayerSide side, const std::string& name, int health, int attac
         m_sprite.setOrigin({ texture.getSize().x / 2.f, texture.getSize().y / 2.f });
 
         // scale relative to on-board size
-        float maxTextureDim = std::max(static_cast<float>(texture.getSize().x), static_cast<float>(texture.getSize().y));
-        m_baseScale = Config::MONSTER_BOARD_SIZE / maxTextureDim;
+        m_baseScale = SpriteUtils::maxDimensionScale(texture.getSize(), Config::MONSTER_BOARD_SIZE);
 
         //m_sprite.setScale({ m_baseScale, m_baseScale });
         m_hasTexture = true;
@@ -88,6 +88,21 @@ void Monster::setDieSpriteAnimation(const std::string& dieTextureKey, int column
 {
     addAnimationState(AnimState::Die, configureSpriteSheet(dieTextureKey, columns, rows, frameDuration, /*looping=*/false),
         [this]() { return !isAlive(); }, DIE_PRIORITY);
+}
+
+void Monster::setStandardSpriteAnimations(const std::string& texturePrefix, const std::string& walkTextureKey,
+    float attackFrameDuration)
+{
+    constexpr int SHEET_COLUMNS = 6;
+    constexpr int SHEET_ROWS = 4;
+    constexpr float WALK_FRAME_DURATION = 0.06f;
+    constexpr float IDLE_FRAME_DURATION = 0.08f;
+    constexpr float DIE_FRAME_DURATION = 0.05f;
+
+    setWalkAnimation(walkTextureKey, SHEET_COLUMNS, SHEET_ROWS, WALK_FRAME_DURATION);
+    setIdleSpriteAnimation(texturePrefix + "_idle", SHEET_COLUMNS, SHEET_ROWS, IDLE_FRAME_DURATION);
+    setAttackSpriteAnimation(texturePrefix + "_attack", SHEET_COLUMNS, SHEET_ROWS, attackFrameDuration);
+    setDieSpriteAnimation(texturePrefix + "_die", SHEET_COLUMNS, SHEET_ROWS, DIE_FRAME_DURATION);
 }
 
 bool Monster::isDying() const
@@ -221,27 +236,6 @@ void Monster::applyEmpoweredAttack(float multiplier)
     m_attackMultiplier = multiplier;
 }
 
-void Monster::walkTo(const sf::Vector2f& targetScreenPos)
-{
-    // צעד יחיד = תור עם פריט אחד. אין יותר m_targetPos נפרד - front() של התור
-    // *הוא* היעד הנוכחי, מקור אמת יחיד.
-    m_pathQueue.clear();
-    m_pathQueue.push_back(targetScreenPos);
-    m_isMoving = true;
-}
-
-void Monster::moveTo(int q, int row, const sf::Vector2f& screenPos)
-{
-    if (m_actionsLeft <= 0) return;
-
-    // עדכון המיקום הלוגי מיידי, רק הציור זז בהדרגה דרך update()
-    m_q = q;
-    m_row = row;
-    walkTo(screenPos);  // animate visually instead of teleporting
-
-    useAction();
-}
-
 void Monster::moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions)
 {
     if (m_actionsLeft <= 0 || pathScreenPositions.empty()) return;
@@ -339,7 +333,7 @@ bool Monster::isOnBoard() const {
     return m_q != -1 && m_row != -1;
 }
 
-bool Monster::useSpecialAbility(Board& board, BoardEntity* target)
+bool Monster::useSpecialAbility(const Board& board, BoardEntity* target)
 {
     if (!canUseSpecialAbilityNow())
         return false;

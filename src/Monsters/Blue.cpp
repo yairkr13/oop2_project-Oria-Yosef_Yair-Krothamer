@@ -33,24 +33,8 @@ namespace //ï¿½ï¿½ ï¿½ï¿½?????ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿
     // ability's own balance number belongs here, not buried inside Board).
     constexpr int KNOCKBACK_DISTANCE_TILES = 2;
 
-    // Walking/movement sprite sheet: Blue is a flying monster, so its
-    // BlueFly.png sheet is used for its board-travel animation instead of a
-    // ground walk cycle - same mechanism either way (Monster::setWalkAnimation
-    // doesn't care what the motion depicts, only that it loops while moving).
-    // 6 columns x 4 rows (24 frames), verified against the actual file, same
-    // layout as Muffintop's working sheet.
-    constexpr int WALK_SHEET_COLUMNS = 6;
-    constexpr int WALK_SHEET_ROWS = 4;
-    constexpr float WALK_FRAME_DURATION = 0.06f;
-
-    // Idle sprite sheet: 6x4 (24 frames), verified against the actual file -
-    // same grid as every other sheet in the project, inspected directly
-    // rather than assumed. Same calm pace as Muffintop's Idle.
-    constexpr int IDLE_SHEET_COLUMNS = 6;
-    constexpr int IDLE_SHEET_ROWS = 4;
-    constexpr float IDLE_FRAME_DURATION = 0.08f;
-
-    // Attack sprite sheet: same 6x4 grid. Unlike Muffintop's single-shot
+    // Attack sprite sheet timing: the shared 6x4 grid (see
+    // Monster::setStandardSpriteAnimations). Unlike Muffintop's single-shot
     // MUFFIN_SHOT_DURATION, Blue's own attack (see createAttackAnimation
     // below) is a 5-shot burst: the last of WIND_BLAST_COUNT shots launches
     // at (WIND_BLAST_COUNT-1)*WIND_BLAST_LAUNCH_INTERVAL = 0.32s, then takes
@@ -58,25 +42,18 @@ namespace //ï¿½ï¿½ ï¿½ï¿½?????ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿
     // drives this sheet) stays true for that whole ~0.67s window. 24 frames
     // at 0.028s each finishes in ~0.672s, matching it closely instead of
     // Muffintop's frame duration, which would finish far too early here.
-    constexpr int ATTACK_SHEET_COLUMNS = 6;
-    constexpr int ATTACK_SHEET_ROWS = 4;
     constexpr float ATTACK_FRAME_DURATION = 0.028f;
-
-    // Die sprite sheet: same 6x4 grid, non-looping (setDieSpriteAnimation
-    // always configures looping=false - see Monster). Same pace as
-    // Muffintop's Die: ~1.2s, a clearly readable one-shot collapse.
-    constexpr int DIE_SHEET_COLUMNS = 6;
-    constexpr int DIE_SHEET_ROWS = 4;
-    constexpr float DIE_FRAME_DURATION = 0.05f;
 }
 
 Blue::Blue(PlayerSide side)
-    : Monster(side, "Blue", BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Magenta, "blue")
+    : Monster(side, BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Magenta, "blue")
 {
-    setWalkAnimation("blue_fly", WALK_SHEET_COLUMNS, WALK_SHEET_ROWS, WALK_FRAME_DURATION);
-    setIdleSpriteAnimation("blue_idle", IDLE_SHEET_COLUMNS, IDLE_SHEET_ROWS, IDLE_FRAME_DURATION);
-    setAttackSpriteAnimation("blue_attack", ATTACK_SHEET_COLUMNS, ATTACK_SHEET_ROWS, ATTACK_FRAME_DURATION);
-    setDieSpriteAnimation("blue_die", DIE_SHEET_COLUMNS, DIE_SHEET_ROWS, DIE_FRAME_DURATION);
+    // Blue is a flying monster, so its BlueFly.png sheet is used for its
+    // board-travel animation instead of a ground walk cycle - same
+    // mechanism either way (setWalkAnimation doesn't care what the motion
+    // depicts, only that it loops while moving), hence "blue_fly" here
+    // rather than the "<prefix>_walk" every ground monster uses.
+    setStandardSpriteAnimations("blue", "blue_fly", ATTACK_FRAME_DURATION);
 }
 
 std::unique_ptr<AttackAnimation> Blue::createAttackAnimation(sf::Vector2f targetPosition) const
@@ -99,7 +76,7 @@ std::unique_ptr<AttackAnimation> Blue::createAttackAnimation(sf::Vector2f target
 // (including the existing Hole/flying rule) and occupancy are both reused
 // as-is from Tile - Blue adds no new board rule, only the meaning of
 // "knockback" itself.
-void Blue::onSpecialAbility(Board& board, BoardEntity* target)
+void Blue::onSpecialAbility(const Board& board, BoardEntity* target)
 {
     //Monster* targetMonster = target ? target->asMonster() : nullptr;
     //if (!targetMonster) return;

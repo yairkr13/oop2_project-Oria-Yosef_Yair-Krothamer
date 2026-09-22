@@ -16,7 +16,7 @@
 //try
 class Board
 {
-public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!!
+public:  // הפונקציות הציבוריות שיכלו להיות const - כן, נוספו (ראו למטה)
 	// `layout` defaults to BoardGenerator::standardLayout() - today's one
 	// and only map. A future second map/stage is a second BoardLayout
 	// (see BoardGenerator.h) passed in here instead - Board's own code
@@ -25,16 +25,16 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	void draw(sf::RenderWindow& window, PlayerSide currentSide) const;
 	//bool isTilePassable(Tile* start, Tile* end) const;
 
-	void update(float dt);
+	void update(float dt) const;
 	bool isAnimating() const;
 
 
 	//bool trySpawnMonster(const sf::Vector2f& pos, std::shared_ptr<Monster> monster);
 	//bool trySpawnMonster(const sf::Vector2f& pos, Monster* monster);
-	void highlightSpawnTiles( PlayerSide side);
-	void clearHighlights();
+	void highlightSpawnTiles( PlayerSide side) const;
+	void clearHighlights() const;
 
-	void updateTileEffects(); //למה יש לזה את השם הזה ולא את השם end turn?????
+	void updateTileEffects() const; //למה יש לזה את השם הזה ולא את השם end turn?????
 	void initPlayerHearts(Heart* p1Heart, Heart* p2Heart); //change this funciton!!!!! 
 
 	// AI_FindBestTargetForMonster עברה ל-AIPlayer - Board נשאר "טיפש" ומספק
@@ -48,7 +48,7 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	std::vector<const Tile*> getSpawnableTiles(const Monster* monster, PlayerSide side) const;
 
 	//bool AI_SpawnMonster(Monster* monster, PlayerSide side);
-	void performAction(BoardEntity* entity,const Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
+	void performAction(BoardEntity* entity,const Tile* targetTile) const;// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 	//void performAction(Monster* monster, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
 	// Validates that `entity` may currently be selected by `side` and, if
@@ -61,7 +61,7 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	// GameplayState::m_selectedEntity) knows whether to remember `entity`.
 	// Board itself no longer tracks "who is selected" - that's interaction
 	// state, not board state.
-	bool selectEntity(const BoardEntity* entity, PlayerSide side); //למה יש את הפונקציה הזאת בלוח???? מה היא עושה?????
+	bool selectEntity(const BoardEntity* entity, PlayerSide side) const; //למה יש את הפונקציה הזאת בלוח???? מה היא עושה?????
 	//bool selectMonster(Monster* monster, PlayerSide side);
 
 
@@ -118,17 +118,8 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	/*std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;*/
 	//std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
 
-	// שלב ב': אותה שאילתה, אבל מחזירה את המסלול המדורג (לפי סדר) מהמפלצת ל-target
-	// הספציפי, לא רק "מה אפשר". target חייב להיות tile שכבר יצא מ-getReachableTiles
-	// (כלומר תנועה, לא תקיפה) - אחרת מוחזרת רשימה ריקה.
-	//std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
-	std::vector<const Tile*> getPathTo(BoardEntity* entity, Tile* target) const;
-
 	//bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
-	bool spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile);
-
-	// Board.h - להוסיף תחת public:
-	bool isSpawnPositionValid(const sf::Vector2f& pos) const;
+	bool spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile) const;
 
 	// Picks one tile uniformly at random out of `tiles` (using Board's own
 	// shared rng() below), returning nullptr for an empty list. Lets a
@@ -153,13 +144,10 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	// geometry, without needing to know a Heart lives there.
 	const Tile* getExtremeTileInRow(int row, bool findLeftmost) const;
 
-	// Board-fact lookups reused by anything that needs "what tile is at
-	// this coordinate/screen position" - e.g. Blue's knockback (coordinate
-	// arithmetic -> Tile) and special-ability target selection (a screen
-	// click -> Tile). Board is the Information Expert for tile occupancy;
-	// these are the two genuinely-missing general primitives, not
-	// duplicates of the range/reachability/occupancy queries above.
-	const Tile* getTileAt(int q, int row) const;
+	// Screen-position -> Tile lookup, reused by anything that needs "what
+	// tile is under this screen point" - e.g. special-ability target
+	// selection (a screen click -> Tile). Board is the Information Expert
+	// for tile occupancy.
 	const Tile* getTileAtScreenPosition(const sf::Vector2f& pos) const;
 
 
@@ -170,7 +158,7 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	// "every occupied tile, unbounded by range" comes up again.
 	/*std::vector<const Tile*> getOccupiedTiles() const;*/
 	//void highlightNeighbors(const BoardEntity* entity); //למה זה ציבורי??????
-	void highlightValidSpecialTargets(const Monster* caster);
+	void highlightValidSpecialTargets(const Monster* caster) const;
 	// Pushes `entity` up to `maxTiles` steps in direction (dq, dr), stopping
 	// at the first blocked/occupied/off-board tile - purely mechanical
 	// (finding tiles, checking passability/occupancy, relocating the
@@ -178,10 +166,20 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	// it's the caller's own Special's balance value (see Blue::onSpecialAbility,
 	// which passes its own Knockback distance) so Board never hardcodes a
 	// specific ability's numbers.
-	void applyKnockback(BoardEntity* entity, int dq, int dr, int maxTiles);
+	void applyKnockback(BoardEntity* entity, int dq, int dr, int maxTiles) const;
 private:
 	Tile* getMutableTileAt(int q, int row) const;
-	void highlightNeighbors(const BoardEntity* entity); //למה זה ציבורי??????
+	void highlightNeighbors(const BoardEntity* entity) const; //למה זה ציבורי??????
+
+	// Only performMove (below, also private) calls this - no external
+	// caller (GameplayState, AIPlayer) asks Board for a path directly, they
+	// only ever ask it to actually perform a move/attack.
+	std::vector<const Tile*> getPathTo(const BoardEntity* entity, const Tile* target) const;
+
+	// Only getTileAtScreenPosition (above) calls this - Blue's knockback
+	// (the header comment this used to justify) now goes through
+	// applyKnockback instead.
+	const Tile* getTileAt(int q, int row) const;
 
 	// מקור רנדומליות אחד ומשותף לכל הלוח (במקום std::mt19937 מקומי במקום אחד ו-rand() במקום אחר).
 	// Private - Board.cpp's own methods (generateSpecialTiles, pickRandomTile)
@@ -203,7 +201,7 @@ private:
 	// getMutableTileAt, so no caller needs to do that conversion itself.
 	// Default color matches Tile::setHighlighted's own default (plain green -
 	// "movable"), so a caller that just wants that doesn't need to repeat it.
-	void highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color = sf::Color(150, 220, 150, 180));
+	void highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color = sf::Color(150, 220, 150, 180)) const;
 	//std::vector<Tile*> getOccupiedTiles() const;
 
 	// The [minQ, maxQ] column band reserved for `side`'s spawns - derived
@@ -222,11 +220,11 @@ private:
 	// Tile::receiveAttackFrom, inside Monster::attack(). performMove keeps
 	// the existing movement coordination (reachability/path/target-tile
 	// handling) unchanged.
-	void performAttack(BoardEntity* entity, Tile* targetTile);
+	void performAttack(BoardEntity* entity, Tile* targetTile) const;
 	//void performMove(Monster* monster, Tile* targetTile);
 	/*void performAttack(BoardEntity* entity, Tile* targetTile);
 	void performMove(Monster* monster, Tile* targetTile);*/
-	void performMove(BoardEntity* entity, Tile* targetTile);
+	void performMove(BoardEntity* entity, Tile* targetTile) const;
 
 	//void setHighlight(const sf::Vector2f& pos, int range);
 	//sf::Vector2f tileToScreen(int q, int row) const;

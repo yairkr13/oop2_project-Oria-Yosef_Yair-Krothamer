@@ -23,5 +23,5 @@ public:
     }
     sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(60, 120, 255, 180); } // blue
 private:
-    void onSpecialAbility(Board& board, BoardEntity* target) override;
+    void onSpecialAbility(const Board& board, BoardEntity* target) override;
 };

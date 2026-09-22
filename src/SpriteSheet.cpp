@@ -1,4 +1,5 @@
 #include "SpriteSheet.h"
+#include "SpriteUtils.h"
 #include <algorithm>
 
 namespace
@@ -23,8 +24,7 @@ SpriteSheet::SpriteSheet(const sf::Texture& texture, int columns, int rows, floa
     sf::Vector2f frameSize = computeFrameSize(texture, columns, rows);
     m_frameOrigin = { frameSize.x / 2.f, frameSize.y / 2.f };
 
-    float maxFrameDim = std::max(frameSize.x, frameSize.y);
-    m_baseScale = (maxFrameDim > 0.f) ? (displaySize / maxFrameDim) : 1.f;
+    m_baseScale = SpriteUtils::maxDimensionScale(frameSize, displaySize);
 }
 
 void SpriteSheet::update(float dt)

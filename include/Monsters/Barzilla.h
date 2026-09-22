@@ -48,7 +48,7 @@ public:
     // project's old extended-attack-range highlight used to use.
     sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(190, 90, 230, 180); } // purple
 private:
-    void onSpecialAbility(Board& board, BoardEntity* target) override;
+    void onSpecialAbility(const Board& board, BoardEntity* target) override;
 
     // No longer needed: the armed bonus used to live on Barzilla himself and
     // had to expire if never spent (see BoardEntity::onTurnBoundary's own

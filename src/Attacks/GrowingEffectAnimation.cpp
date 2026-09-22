@@ -1,4 +1,5 @@
 #include "Attacks/GrowingEffectAnimation.h"
+#include "SpriteUtils.h"
 #include <algorithm>
 #include <cstdint>
 
@@ -7,8 +8,7 @@ GrowingEffectAnimation::GrowingEffectAnimation(const sf::Texture& texture, sf::V
     : m_sprite(texture), m_growDuration(growDuration), m_holdDuration(holdDuration), m_fadeDuration(fadeDuration)
 {
     sf::Vector2u textureSize = texture.getSize();
-    float maxTextureDim = std::max(static_cast<float>(textureSize.x), static_cast<float>(textureSize.y));
-    m_fullScale = (maxTextureDim > 0.f) ? (size / maxTextureDim) : 1.f;
+    m_fullScale = SpriteUtils::maxDimensionScale(textureSize, size);
 
     // Centered origin so growth expands symmetrically around `position` -
     // never from a corner/edge.

@@ -1,4 +1,5 @@
 #include "Attacks/SpinningProjectileAnimation.h"
+#include "SpriteUtils.h"
 #include <algorithm>
 
 SpinningProjectileAnimation::SpinningProjectileAnimation(const sf::Texture& texture, sf::Vector2f origin, sf::Vector2f target,
@@ -16,8 +17,7 @@ SpinningProjectileAnimation::SpinningProjectileAnimation(const sf::Texture& text
     // idea Monster::Monster already uses for its own sprite (scale relative
     // to Config::MONSTER_BOARD_SIZE) - independent of travel distance,
     // which is handled entirely by position interpolation in update().
-    float maxTextureDim = std::max(static_cast<float>(textureSize.x), static_cast<float>(textureSize.y));
-    float scale = (maxTextureDim > 0.f) ? (size / maxTextureDim) : 1.f;
+    float scale = SpriteUtils::maxDimensionScale(textureSize, size);
     m_sprite.setScale({ scale, scale });
 
     m_sprite.setPosition(origin);

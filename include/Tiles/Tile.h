@@ -4,6 +4,7 @@
 #include "BoardEntity.h"
 #include "Constants.h"
 #include <memory>
+#include <optional>
 //#include "StaticObject.h"
 
 class Tile //: public StaticObject
@@ -47,7 +48,15 @@ public:
 	}
 
 	bool isHighlighted() const { return m_isHighlighted; }
-	virtual void setHighlighted(bool highlighted, const sf::Color& highlightColor= sf::Color(150, 220, 150, 180));
+
+	// No longer virtual: Hole/LavaTile/PanicPoint each used to override
+	// this with an identical body (call Tile::setHighlighted with their
+	// own hardcoded color when highlighted, sf::Color::Transparent -
+	// itself ignored by the false branch below - otherwise), differing
+	// only in that one color literal. ownHighlightColor() below is the one
+	// thing that actually varies; this stays the single shared
+	// implementation for every Tile subtype.
+	void setHighlighted(bool highlighted, const sf::Color& highlightColor= sf::Color(150, 220, 150, 180));
 
 	//void setMonster(std::shared_ptr<Monster> monster) { m_monsterRef = monster; };
 	//std::shared_ptr<Monster> getMonster() const { return m_monsterRef.lock(); }
@@ -145,10 +154,20 @@ public:
 
     virtual void applyTileEffect() {}
 protected:
-    sf::CircleShape m_shape;
-    bool m_isPassable;
-    sf::Color m_color;
+    bool m_isPassable; // set directly by Hole's constructor
+
+    // A fixed highlight color this tile type always shows instead of
+    // whatever setHighlighted() was actually called with - e.g. LavaTile
+    // always highlights orange, PanicPoint always purple, regardless of
+    // which color an ability/spawn/movement highlight elsewhere asked for.
+    // std::nullopt (the default, plain Tile's own behavior) means "use
+    // whatever color the caller passed in".
+    virtual std::optional<sf::Color> ownHighlightColor() const { return std::nullopt; }
 private:
+    // Neither m_shape nor m_color is touched by Hole/LavaTile/PanicPoint -
+    // only Tile.cpp itself draws/colors this tile.
+    sf::CircleShape m_shape;
+    sf::Color m_color;
 	// Only used internally, by isOccupiedByEnemy/isOccupiedByAlly above -
 	// no external caller needs "is my occupant alive" on its own.
 	bool isEntityAlive() const { return m_entity != nullptr && m_entity->isAlive(); }

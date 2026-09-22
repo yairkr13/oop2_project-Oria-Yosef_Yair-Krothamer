@@ -194,7 +194,7 @@ std::vector<const Tile*> BoardPathfinder::getReachableTiles(const BoardEntity* e
 //
 //    return path;
 //}
-std::vector<const Tile*> BoardPathfinder::getPathTo(BoardEntity* entity, Tile* target) const
+std::vector<const Tile*> BoardPathfinder::getPathTo(const BoardEntity* entity, const Tile* target) const
 {
     std::vector<Tile*> path;
     if (!entity || !target) return { path.begin(), path.end() };

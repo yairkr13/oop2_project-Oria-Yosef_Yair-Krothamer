@@ -52,11 +52,6 @@ float SpriteAnimator::getActiveBaseScale() const
     return hasActiveState() ? m_states[m_activeIndex].sheet->getBaseScale() : 1.f;
 }
 
-int SpriteAnimator::getActiveStateId() const
-{
-    return hasActiveState() ? m_states[m_activeIndex].id : -1;
-}
-
 bool SpriteAnimator::isStateFinished(int id) const
 {
     for (auto const& entry : m_states)

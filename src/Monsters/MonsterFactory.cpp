@@ -7,46 +7,34 @@
 #include "Monsters/Henrietta.h"
 #include "Monsters/Mozzy.h"
 
-std::map<std::string, MonsterFactory::Creator>& MonsterFactory::getRegistry()
+const std::vector<MonsterFactory::MonsterDefinition>& MonsterFactory::getCatalog()
 {
-    static std::map<std::string, Creator> registry = []() {
-        std::map<std::string, Creator> reg;
-        reg["Muffintop"] = [](PlayerSide side) { return std::make_unique<Muffintop>(side); };
-        reg["Blue"] = [](PlayerSide side) { return std::make_unique<Blue>(side); };
-        reg["Barzilla"] = [](PlayerSide side) { return std::make_unique<Barzilla>(side); };
-        reg["Henrietta"] = [](PlayerSide side) { return std::make_unique<Henrietta>(side); };
-        reg["Mozzy"] = [](PlayerSide side) { return std::make_unique<Mozzy>(side); };
-        return reg;
-        }();
-
-    return registry;
+    static const std::vector<MonsterDefinition> catalog = {
+        { "Muffintop", [](PlayerSide side) { return std::make_unique<Muffintop>(side); }, 2, "muffintop" },
+        { "Blue",      [](PlayerSide side) { return std::make_unique<Blue>(side); },      3, "blue" },
+        { "Barzilla",  [](PlayerSide side) { return std::make_unique<Barzilla>(side); },  4, "barzilla" },
+        { "Henrietta", [](PlayerSide side) { return std::make_unique<Henrietta>(side); }, 3, "henrietta" },
+        { "Mozzy",     [](PlayerSide side) { return std::make_unique<Mozzy>(side); },     2, "mozzy" },
+    };
+    return catalog;
 }
-
-void MonsterFactory::registerMonster(const std::string& name, Creator creator)
-{
-    getRegistry()[name] = std::move(creator);
-}
-
 
 std::unique_ptr<Monster> MonsterFactory::create(const std::string& monsterName, PlayerSide side)
 {
-    auto& registry = getRegistry();
-    auto it = registry.find(monsterName);
-    if (it == registry.end())
+    for (const auto& def : getCatalog())
     {
-        std::cout << "[ERROR] MonsterFactory: Monster name '" << monsterName << "' not found in registry!\n";
-        return nullptr;
+        if (def.name == monsterName)
+            return def.creator(side);
     }
-    return it->second(side);
+
+    std::cout << "[ERROR] MonsterFactory: Monster name '" << monsterName << "' not found in registry!\n";
+    return nullptr;
 }
 
 std::vector<std::unique_ptr<Card>> MonsterFactory::createStandardHand(PlayerSide side)
 {
     std::vector<std::unique_ptr<Card>> hand;
-    hand.push_back(std::make_unique<Card>("Muffintop", 2, "muffintop", side));
-    hand.push_back(std::make_unique<Card>("Blue", 3, "blue", side));
-    hand.push_back(std::make_unique<Card>("Barzilla", 4, "barzilla", side));
-    hand.push_back(std::make_unique<Card>("Henrietta", 3, "henrietta", side));
-    hand.push_back(std::make_unique<Card>("Mozzy", 2, "mozzy", side));
+    for (const auto& def : getCatalog())
+        hand.push_back(std::make_unique<Card>(def.name, def.cost, def.cardTextureKey, side));
     return hand;
 }

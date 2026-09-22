@@ -1,6 +1,7 @@
 #pragma once
 #include "BoardEntity.h"
 #include "AssetsManager.h"
+#include "SpriteUtils.h"
 #include <limits>
 
 class Heart : public BoardEntity {
@@ -16,8 +17,7 @@ public:
 
         // ����� ������ ��� ����� (Scale)
         float desiredSize = 60.f; // ��� ���� ������ ��� �-Config::MONSTER_BOARD_SIZE �� ��� ���� ���� ���� ����� �� �����
-        float maxTextureDim = std::max(static_cast<float>(texture.getSize().x), static_cast<float>(texture.getSize().y));
-        float scale = desiredSize / maxTextureDim;
+        float scale = SpriteUtils::maxDimensionScale(texture.getSize(), desiredSize);
 
         m_sprite.setScale({ scale, scale });
 
