@@ -98,7 +98,13 @@ public:
     // any caller deciding whether to even offer the option (see
     // GameplayState::handleSpecialAbilityClick) ask this, instead of each
     // independently reconstructing isSpecialReady() && getActionsLeft() > 0.
-    bool canUseSpecialAbilityNow() const { return isSpecialReady() && getActionsLeft() > 0; }
+    // isAlive() is required too: Card::m_linkedMonster is only ever unlinked
+    // by Player::removeDeadMonsters(), which nothing currently calls, so a
+    // dead monster's Card can otherwise still be clicked (see
+    // GameplayState::handleSpecialAbilityClick) - without this check that
+    // would pass straight through to highlighting Special targets from a
+    // dead monster's stale last board position.
+    bool canUseSpecialAbilityNow() const { return isAlive() && isSpecialReady() && getActionsLeft() > 0; }
 
     // True while frozen (see Mozzy). Kept as its own explicit, named state -
     // deliberately NOT inferred from m_actionsLeft == 0, since "frozen" and

@@ -127,6 +127,29 @@ void GameplayState::drawButtomPanel(sf::RenderWindow& window) const
 void GameplayState::update(sf::Time deltaTime)
 {
     m_board.update(deltaTime.asSeconds());
+
+    // GameplayState is the only thing that ever holds a raw Card* into
+    // either player's hand (m_selectedFromHand/m_pendingSpecialCard) - drop
+    // both here, first, whenever they point at a Card whose monster just
+    // died (Card::isGone()), so removeDeadMonsters() below can safely erase
+    // that Card outright without leaving either pointer dangling.
+    if (m_selectedFromHand && m_selectedFromHand->isGone())
+        m_selectedFromHand = nullptr;
+    if (m_pendingSpecialCard && m_pendingSpecialCard->isGone())
+    {
+        clearPendingSpecial();
+        m_board.clearHighlights();
+    }
+
+    // Erases each player's Cards whose monster just became isGone() - same
+    // per-frame granularity Board::update() itself already cleans up
+    // entities at, so a Card never lingers (visible or clickable) past the
+    // very frame its monster actually died (see
+    // Monster::canUseSpecialAbilityNow()/Player::getCardTooltipAt, both of
+    // which depend on a dead monster's Card being gone promptly).
+    m_player1->removeDeadMonsters();
+    m_player2->removeDeadMonsters();
+
     m_turnManager.update();
 
     // Old safety net, kept as a comment - it existed for a Special that
@@ -252,7 +275,8 @@ void GameplayState::handleSpecialAbilityClick(Card* card)
         return;
     }
 
-    Monster* monster = card->getLinkedMonster();
+    // getMutableLinkedMonster() (not getLinkedMonster()) - useSpecialAbility below actually mutates monster.
+    Monster* monster = card->getMutableLinkedMonster();
 
     // Purely a readiness check - does not commit/reset anything. Asks the
     // same single predicate useSpecialAbility() re-checks internally at
@@ -321,7 +345,8 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
 {
     if (!m_pendingSpecialCard) return;
 
-    Monster* monster = m_pendingSpecialCard->getLinkedMonster();
+    // getMutableLinkedMonster() (not getLinkedMonster()) - useSpecialAbility below actually mutates monster.
+    Monster* monster = m_pendingSpecialCard->getMutableLinkedMonster();
     if (!monster) { clearPendingSpecial(); m_board.clearHighlights(); return; }
 
     // Reuses the same tile lookup Board already uses for board clicks -
@@ -379,7 +404,7 @@ void GameplayState::handleBoardClick(const sf::Vector2f& pos, Player& current)
 void GameplayState::clearPendingSpecial()
 {
     if (m_pendingSpecialCard)
-        m_pendingSpecialCard->getLinkedMonster()->cancelSpecialAbility();
+        m_pendingSpecialCard->getMutableLinkedMonster()->cancelSpecialAbility();
     m_pendingSpecialCard = nullptr;
 }
 

@@ -110,8 +110,11 @@ std::string Player::getCardTooltipAt(const sf::Vector2f& pos) const
         return "";
 
     // 3. הגנה: בדיקה אם לקלף יש מפלצת מקושרת (m_linkedMonster != nullptr)
-    Monster* monster = card->getLinkedMonster();
-    if (!monster)
+    const Monster* monster = card->getLinkedMonster(); // רק קריאה - getSpecialAbilityDescription() למטה הוא const
+    // אותו שורש כמו canUseSpecialAbilityNow: הקלף נשאר מקושר גם אחרי מוות
+    // (removeDeadMonsters אף פעם לא נקראת) - בלי isAlive() כאן, הטולטיפ
+    // ממשיך להופיע על קלף של מפלצת מתה.
+    if (!monster || !monster->isAlive())
         return "";
 
     // 4. החזרת התיאור בבטחה
@@ -226,12 +229,22 @@ Monster* Player::playCard(Card* card)
 //האם צריך את הפונקציה הזאת בשביל להקטין את הקלפים שמישהו מת? שלא ישאר מקום ריק?????
 void Player::removeDeadMonsters()
 {
-	//unlink the cards from the dead monsters first, to avoid dangling pointers
-    for (auto& card : m_hand)
-    {
-        if (card && card->getLinkedMonster() && card->getLinkedMonster()->isReadyForRemoval())
-            card->clearLink();
-    }
+    // Old two-step version (unlink now, erase later), kept as a comment -
+    // Card::isGone() is already true the instant its monster dies, so
+    // erasing the whole Card directly (no separate unlink step first) is
+    // safe here: GameplayState::update() clears its own m_selectedFromHand/
+    // m_pendingSpecialCard first (the only other things that could ever
+    // reference one of these Cards), specifically so this erase never runs
+    // while something else still points at the Card being destroyed.
+    //
+    // for (auto& card : m_hand)
+    // {
+    //     if (card && card->getLinkedMonster() && card->getLinkedMonster()->isReadyForRemoval())
+    //         card->clearLink();
+    // }
+    std::erase_if(m_hand, [](const std::unique_ptr<Card>& card) {
+        return !card || card->isGone();
+    });
 
 	//unlink dead monsters from their tiles
     /*for (auto& monster : m_monsters)
@@ -247,7 +260,7 @@ void Player::removeDeadMonsters()
                 return !m || !m->isAlive();
             }),
         m_monsters.end());*/
-    std::erase_if(m_monsters, [](const auto& m) { return !m || !m->isAlive(); });
+    //std::erase_if(m_monsters, [](const auto& m) { return !m || !m->isAlive(); });
 }
 
 Card* Player::getCardAtPosition(const sf::Vector2f& mousePos, bool alignRight) const

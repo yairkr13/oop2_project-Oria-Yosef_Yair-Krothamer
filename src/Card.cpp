@@ -8,6 +8,11 @@ Card::Card(std::string monsterId, int cost, std::string textureKey, PlayerSide s
 {
 }
 
+bool Card::isGone() const
+{
+    return m_linkedMonster && !m_linkedMonster->isAlive();
+}
+
 //למה פה ולא בmonster factory?
 std::unique_ptr<Monster> Card::spawnMonster()
 {
@@ -19,8 +24,12 @@ std::unique_ptr<Monster> Card::spawnMonster()
 void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const //chege enough keys
 {
     //if (!m_linkedMonster) //אמור לעבוד לא? כי המפלצת שהיא מתה אז מוחקים אותה מהשחקן???????
-		//return; 
-	if (m_linkedMonster && !m_linkedMonster->isAlive())//בנתיים שמתי את זה
+		//return;
+    // Belt-and-suspenders: Player::removeDeadMonsters() already erases a
+    // Card the same frame isGone() becomes true (see there), so draw()
+    // should never actually see one - this stays only as a cheap safety net
+    // for the narrow one-frame window before that runs.
+	if (isGone())
 		return;
 
     const sf::Font& font = AssetsManager::getInstance().getFont("Lilita");
