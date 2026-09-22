@@ -79,13 +79,11 @@ Blue::Blue(PlayerSide side)
     setDieSpriteAnimation("blue_die", DIE_SHEET_COLUMNS, DIE_SHEET_ROWS, DIE_FRAME_DURATION);
 }
 
-std::unique_ptr<AttackAnimation> Blue::createAttackAnimation(BoardEntity* target) const
+std::unique_ptr<AttackAnimation> Blue::createAttackAnimation(sf::Vector2f targetPosition) const
 {
-    if (!target) return nullptr;
-
     const sf::Texture& windBlastTexture = AssetsManager::getInstance().getTexture("wind_blast");
     return std::make_unique<BurstProjectileAnimation>(
-        windBlastTexture, m_screenPos, target->getScreenPosition(),
+        windBlastTexture, m_screenPos, targetPosition,
         WIND_BLAST_COUNT, WIND_BLAST_LAUNCH_INTERVAL, WIND_BLAST_TRAVEL_DURATION, WIND_BLAST_SIZE);
 }
 
@@ -107,8 +105,12 @@ void Blue::onSpecialAbility(Board& board, BoardEntity* target)
     //if (!targetMonster) return;
 	if (!target || !target->canBeTargetedBySpecial()) return;
 
-    Tile* currentTile = target->getCurrentTile();
-    if (!currentTile) return;
+    // Old guard, kept as a comment - currentTile was never actually used
+    // for anything beyond this null-check (see the removed BoardEntity::m_currentTile
+    // in BoardEntity.h) - target having reached onSpecialAbility at all
+    // already means it's a legitimate on-board candidate.
+    // Tile* currentTile = target->getCurrentTile();
+    // if (!currentTile) return;
 
     auto [dq, dr] = HexGrid::stepToward(m_q, m_row, target->getQ(), target->getRow());
 

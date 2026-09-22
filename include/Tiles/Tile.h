@@ -55,7 +55,21 @@ public:
     // --- ����� ����� ---
     void clearEntity();
 
-    BoardEntity* getEntity() const { return m_entity; }
+    // Safe default: read-only access to whatever occupies this tile. Most
+    // callers only ever need to ask the entity something (isValidSpecialTarget,
+    // scoreAsAttackTarget, selectEntity's own validity check...) - none of
+    // that needs a mutable pointer.
+    const BoardEntity* getEntity() const { return m_entity; }
+
+    // Mutable access - only for the few callers that actually need to
+    // change the entity itself (e.g. Monster::useSpecialAbility's target).
+    // Kept public (unlike Board's own private getMutableTileAt) because the
+    // callers that need this - AIPlayer, GameplayState - are genuinely
+    // outside Tile, not an internal implementation detail the way Board's
+    // own tile mutation is. Naming it separately from getEntity() at least
+    // makes every such call site say, at the call site itself, "I intend to
+    // mutate this" instead of leaving that ambiguous.
+    BoardEntity* getMutableEntity() const { return m_entity; }
 
     // ������� ������� - ������ ������ ���� (������ ���� �����)
     //Monster* getMonster() const {
@@ -83,6 +97,37 @@ public:
     bool isOccupiedByAlly(PlayerSide mySide) const { return isEntityAlive() && m_entity->isAllyOf(mySide); }
 
     void receiveAttackFrom(BoardEntity* attacker);
+
+    // Three more Tile-performs-an-operation-on-its-own-entity methods, same
+    // shape as receiveAttackFrom above - each replaces a Board.cpp call site
+    // that used to do "if (auto entity = tile->getEntity()) { entity->X();
+    // if (entity->isReadyForRemoval()) tile->clearEntity(); }" itself. Board
+    // no longer needs getEntity() for these three (see Board::update/
+    // updateTileEffects/isAnimating) - it just asks the Tile to do it.
+
+    // Per-turn-boundary tick (see BoardEntity::onTurnBoundary) - a no-op if
+    // this tile is empty.
+    void tickTurnBoundary();
+
+    // Per-frame update (movement/attack/special animations - see
+    // BoardEntity::update) - a no-op if this tile is empty.
+    void updateEntity(float dt);
+
+    // Whether this tile's own entity is currently animating (see
+    // BoardEntity::isAnimating) - false if this tile is empty.
+    bool isEntityAnimating() const;
+
+    // Deals `amount` damage to this tile's own entity and cleans up if that
+    // kills it (see receiveAttackFrom above - same shape, just an
+    // environmental source of damage instead of an attacker). A LavaTile
+    // uses this instead of getMutableEntity() + takeDamage() itself.
+    void damageEntity(int amount);
+
+    // Forwards to this tile's own entity's own scoreAsAttackTarget() (see
+    // Monster/Heart's own overrides) - -infinity (never worth attacking) if
+    // this tile is empty. Lets AIPlayer rank reachable enemies without ever
+    // calling getEntity() itself for this one purely informational query.
+    float scoreAsAttackTarget() const;
 
     // ��� ����� ���� - "�� ��� ���� ��� ����� �����?" (���� �-updateTileEffects)
     //bool hasDeadEntity() const { return m_entity != nullptr && !m_entity->isAlive(); }

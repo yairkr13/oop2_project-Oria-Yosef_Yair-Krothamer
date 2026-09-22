@@ -85,7 +85,14 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	// just forwards. No caller (GameplayState, AIPlayer, Board's own
 	// performMove/highlightNeighbors) needs to know that or change anything.
 	//std::vector<Tile*> getReachableTiles(Monster* monster) const;
-	std::vector<const Tile*> getReachableTiles(const BoardEntity* entity) const;
+	// `includeAllies` (default false, unchanged for performMove/highlightNeighbors)
+	// - see BoardPathfinder::getReachableTiles for why: an ally-occupied
+	// tile is normally excluded the same way any occupied tile is (it's
+	// "impassable" - see Tile::setEntity), same as it should be for
+	// movement/normal-attack purposes. Special-ability target search needs
+	// allies too, so it passes true - see highlightValidSpecialTargets/
+	// getReachableOccupiedTiles below.
+	std::vector<const Tile*> getReachableTiles(const BoardEntity* entity, bool includeAllies = false) const;
 
 	// Same reachability query, narrowed to tiles that actually hold
 	// something - a pure occupancy fact on top of getReachableTiles, same
@@ -95,7 +102,7 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	// Shared by highlightValidSpecialTargets (painting) and AIPlayer
 	// (deciding which Special target to use), so neither re-derives
 	// "which reachable tiles are occupied" on its own.
-	std::vector<const Tile*> getReachableOccupiedTiles(const BoardEntity* entity) const;
+	std::vector<const Tile*> getReachableOccupiedTiles(const BoardEntity* entity, bool includeAllies = false) const;
 
 	// Enemy tiles reachable ONLY because of a monster's extended attack
 	// range (Monster::getAttackRange() > getRange()) - i.e. beyond normal

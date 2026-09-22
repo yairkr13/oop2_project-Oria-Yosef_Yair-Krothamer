@@ -196,7 +196,7 @@ void Monster::drawActionsLeft(sf::RenderWindow& window) const
     window.draw(actionText);
 }
 
-void Monster::resetActions()
+void Monster::resetActions() //הפונקציה הזאת יכולה להיות שימושית להרבה דברים. לא רק הקפאה
 {
     // Whether or not this monster was frozen, its blocked turn (if any) has
     // now concluded - clear the flag and restore normal actions. See

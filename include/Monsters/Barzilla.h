@@ -23,7 +23,7 @@ public:
     // bool specialAbilityCommitsOnSelect() const override { return false; }
     // void cancelSpecialAbility() override { m_empoweredAttack = false; }
 
-    std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
+    std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
 
     // Empowered Attack now targets an ally (mirrors Henrietta's Protection -
     // the buff lives on the recipient, granted immediately on selection, not

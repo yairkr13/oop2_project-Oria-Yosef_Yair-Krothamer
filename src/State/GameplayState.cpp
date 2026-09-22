@@ -329,7 +329,8 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
     // target simply does nothing and stays in targeting mode, exactly like
     // an invalid spawn-position click already behaves in handleSpawnAttempt.
     const Tile* targetTile = m_board.getTileAtScreenPosition(pos);
-    BoardEntity* candidate = targetTile ? targetTile->getEntity() : nullptr;
+    // getMutableEntity() (not getEntity()) - useSpecialAbility below actually mutates candidate.
+    BoardEntity* candidate = targetTile ? targetTile->getMutableEntity() : nullptr;
 
     if (candidate && monster->isValidSpecialTarget(*candidate))
     {
@@ -356,7 +357,7 @@ void GameplayState::handleBoardClick(const sf::Vector2f& pos, Player& current)
         m_selectedEntity = nullptr;
         m_board.clearHighlights();
     }
-    else if (BoardEntity* entity = clickedTile->getEntity())
+    else if (BoardEntity* entity = clickedTile->getMutableEntity()) // m_selectedEntity below is later handed to Board::performAction, which mutates it
     {
         // השורה שלך! בדיקה פולימורפית נקייה - ללא asMonster() וללא Casting
         /*if (entity->canBeSelectedBy(current.getSide()))

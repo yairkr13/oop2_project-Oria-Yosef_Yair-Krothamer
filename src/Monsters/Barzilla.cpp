@@ -140,10 +140,8 @@ void Barzilla::onSpecialAbility(Board& board, BoardEntity* target)
 //     m_empoweredAttack = false;
 // }
 
-std::unique_ptr<AttackAnimation> Barzilla::createAttackAnimation(BoardEntity* target) const
+std::unique_ptr<AttackAnimation> Barzilla::createAttackAnimation(sf::Vector2f targetPosition) const
 {
-    if (!target) return nullptr;
-
     const sf::Texture& fireBlastTexture = AssetsManager::getInstance().getTexture("fire_blast");
 
     // Old empowered-burst branch, kept as a comment - Barzilla's own attack
@@ -162,5 +160,5 @@ std::unique_ptr<AttackAnimation> Barzilla::createAttackAnimation(BoardEntity* ta
     // target" mechanism, same as Mozzy's acid splash, reusing
     // SplashAttackAnimation as-is rather than duplicating it.
     return std::make_unique<SplashAttackAnimation>(
-        fireBlastTexture, m_screenPos, target->getScreenPosition(), FIRE_BLAST_DURATION, FIRE_BLAST_THICKNESS);
+        fireBlastTexture, m_screenPos, targetPosition, FIRE_BLAST_DURATION, FIRE_BLAST_THICKNESS);
 }

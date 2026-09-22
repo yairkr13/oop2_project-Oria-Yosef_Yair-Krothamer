@@ -15,7 +15,7 @@ public:
     Mozzy(PlayerSide side);
     //void attack(Monster& target) override;
 
-    std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
+    std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
     // בתוך class Mozzy (תחת public):
     virtual std::string getSpecialAbilityDescription() const override {
         return "Freeze: Freezes an enemy monster, preventing it from taking actions during its next turn.";

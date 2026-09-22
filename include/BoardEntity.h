@@ -14,8 +14,8 @@ class AttackAnimation; // Forward declaration
 
 class BoardEntity {
 public:
-    BoardEntity(int q, int row, const sf::Vector2f& position, int health)//למהה?????? לחשוב על למחוק את המשבצת מפה!!!!!
-        : m_q(q), m_row(row), m_screenPos(position), m_health(health), m_maxHealth(health), m_currentTile(nullptr) {
+    BoardEntity(int q, int row, const sf::Vector2f& position, int health)//למהה?????? לחשוב על למחוק את המשבצת מפה!!!!! - הוסר, ראו m_currentTile למטה
+        : m_q(q), m_row(row), m_screenPos(position), m_health(health), m_maxHealth(health) {
     }
 
     // ����� �����: ���������� ����� �������� ��� �� default, ���� ���� �-cpp
@@ -119,8 +119,16 @@ public:
     //// --- �������� �����: ��� ��-������ �� ������ ---
     //void setCurrentTile(Tile* tile) { m_currentTile = tile; }
     //Tile* getCurrentTile() const { return m_currentTile; }
-    void setCurrentTile(Tile* tile) { m_currentTile = tile; }
-    Tile* getCurrentTile() const { return m_currentTile; }
+    // Removed (kept as comments, not deleted): m_currentTile duplicated
+    // m_q/m_row (already the authoritative position, always kept in sync by
+    // spawnOnBoard/moveTo/moveAlongPath) with a second, separately-maintained
+    // reference to the same fact - the two could only ever drift apart, never
+    // add real information. Every caller that needs "which Tile is this
+    // entity on" already has (or can easily get) a Board& and this entity's
+    // own getQ()/getRow(), and can ask Board::getTileAt/getMutableTileAt
+    // directly - the single source of truth Board already owns.
+    // void setCurrentTile(Tile* tile) { m_currentTile = tile; }
+    // Tile* getCurrentTile() const { return m_currentTile; }
 
 
     // --- �������� ��� ������ (����� ���� ���� ������� ����) ---
@@ -141,11 +149,16 @@ public:
     // does today. An entity that wants an animated attack (see Mozzy)
     // overrides this to return one instead; Board never needs to know which
     // concrete entity - or which concrete animation - it got back.
+    // Takes the target's screen position, not the target entity itself -
+    // every concrete override only ever needs target->getScreenPosition()
+    // to build its animation, so Board doesn't need to hand out the actual
+    // BoardEntity* (see Board::performAttack, which passes
+    // targetTile->getScreenPosition() directly).
     // (Defined out-of-line in BoardEntity.cpp: AttackAnimation is only
     // forward-declared here, and MSVC instantiates unique_ptr<T>'s
     // destructor at the point an inline body is defined, which needs T
     // complete even for a body as simple as `return nullptr;`.)
-    virtual std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const;
+    virtual std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const;
 
     // Hands ownership of an in-flight attack animation to this entity - it
     // owns/updates/draws it from here on, exactly like a Monster already
@@ -198,7 +211,7 @@ protected:
     sf::Vector2f m_screenPos;
     int m_health;
     int m_maxHealth;
-    Tile* m_currentTile;
+    // Tile* m_currentTile; - removed, see setCurrentTile/getCurrentTile above
     bool m_protected = false;
     int m_protectionTurnsRemaining = 0;
 };

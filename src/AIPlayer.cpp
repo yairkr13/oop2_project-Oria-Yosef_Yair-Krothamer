@@ -34,7 +34,7 @@ const Tile* AIPlayer::findBestTarget(const Board& board, Monster* monster) const
 		//first priority: if there's an enemy in range, attack the best-scoring one
         if (tile->hasEntity() && tile->isOccupiedByEnemy(getSide()))
         {
-            float score = tile->getEntity()->scoreAsAttackTarget();
+            float score = tile->scoreAsAttackTarget();
             if (score > bestAttackScore)
             {
                 bestAttackScore = score;
@@ -69,10 +69,12 @@ const Tile* AIPlayer::findBestSpecialTarget(const Board& board, Monster* monster
     // Only ever occupied tiles - a Special never targets an empty tile, so
     // there's no reason to look at getReachableTiles' full range here (that
     // one matters for findBestTarget above, where an empty tile IS a valid
-    // move destination).
+    // move destination). includeAllies=true - Muffintop/Henrietta/Barzilla's
+    // Specials target allies, who'd otherwise never appear at all (see
+    // Board::getReachableTiles).
     const Tile* best = nullptr;
     float bestScore = -std::numeric_limits<float>::infinity();
-    for (const Tile* tile : board.getReachableOccupiedTiles(monster))
+    for (const Tile* tile : board.getReachableOccupiedTiles(monster, /*includeAllies=*/true))
     {
         const BoardEntity* candidate = tile->getEntity();
         if (!monster->isValidSpecialTarget(*candidate))
@@ -170,7 +172,7 @@ void AIPlayer::updateTurn(Board& board)
             if (specialTarget)
             {
                 m_safetyCounter++;
-                monster->useSpecialAbility(board, specialTarget->getEntity());
+                monster->useSpecialAbility(board, specialTarget->getMutableEntity());
                 return;
             }
             // No valid target in range right now - fall through to a normal

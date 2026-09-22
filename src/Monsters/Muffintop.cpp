@@ -106,7 +106,7 @@ Muffintop::Muffintop(PlayerSide side)
 //    Monster* targetMonster = target ? target->asMonster() : nullptr;
 //    if (!targetMonster) return;
 //
-//    //ìîä ùìà éèòï àú äéëåìåú äîéåçãåú áøâò ùöøéê àåúí åìà îäúçéìä?????
+//    //ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?????
 //    const sf::Texture& healEffectTexture = AssetsManager::getInstance().getTexture("heal_effect");
 //
 //    // Starts at the bottom of the target's own tile and rises to the top -
@@ -131,7 +131,7 @@ void Muffintop::onSpecialAbility(Board& board, BoardEntity* target)
     //Monster* targetMonster = target ? target->asMonster() : nullptr;
     //if (!targetMonster) return;
 
-    //ìîä ùìà éèòï àú äéëåìåú äîéåçãåú áøâò ùöøéê àåúí åìà îäúçéìä?????
+    //ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?????
     const sf::Texture& healEffectTexture = AssetsManager::getInstance().getTexture("heal_effect");
 
     // Starts at the bottom of the target's own tile and rises to the top -
@@ -152,14 +152,12 @@ void Muffintop::onSpecialAbility(Board& board, BoardEntity* target)
     target->playSpecialAbilityAnimation(std::move(healEffect));
 }
 
-std::unique_ptr<AttackAnimation> Muffintop::createAttackAnimation(BoardEntity* target) const
+std::unique_ptr<AttackAnimation> Muffintop::createAttackAnimation(sf::Vector2f targetPosition) const
 {
-    if (!target) return nullptr;
-
     // Genuinely different mechanism from Mozzy/Barzilla's splash-reveal:
     // the muffin itself flies from Muffintop to the target while spinning,
     // so this uses SpinningProjectileAnimation instead of SplashAttackAnimation.
     const sf::Texture& muffinShotTexture = AssetsManager::getInstance().getTexture("muffin_shot");
     return std::make_unique<SpinningProjectileAnimation>(
-        muffinShotTexture, m_screenPos, target->getScreenPosition(), MUFFIN_SHOT_DURATION, MUFFIN_SHOT_SIZE);
+        muffinShotTexture, m_screenPos, targetPosition, MUFFIN_SHOT_DURATION, MUFFIN_SHOT_SIZE);
 }

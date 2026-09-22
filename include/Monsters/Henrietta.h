@@ -12,7 +12,7 @@ public:
 
     Henrietta(PlayerSide side);
 
-    std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
+    std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
 
     bool specialAbilityNeedsTarget() const override { return true; }
 

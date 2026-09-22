@@ -13,7 +13,7 @@ public:
     Muffintop(PlayerSide side);
 	//bool useSpecialAbility(BoardEntity* target) override;
 
-    std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
+    std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
 
     bool specialAbilityNeedsTarget() const override { return true; }
     // בתוך class Muffintop (תחת public):

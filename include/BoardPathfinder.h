@@ -33,8 +33,15 @@ public:
     explicit BoardPathfinder(const std::map<std::pair<int, int>, std::unique_ptr<Tile>>& grid);
 
     // שכבה 1: לוגיקה טהורה - "אילו tiles המפלצת יכולה להגיע/לתקוף אליהם", בלי לצייר כלום.
+    // `includeAllies` (default false - unchanged behavior for every existing
+    // caller, e.g. Board::performMove/highlightNeighbors) also records
+    // ally-occupied tiles that are otherwise impassable purely because
+    // they're occupied (see Tile::setEntity) - exactly the same exception
+    // already made for an enemy standing there, just for the other side.
+    // Needed for Special-ability target search (see Board::highlightValidSpecialTargets/
+    // getReachableOccupiedTiles), which must see allies too, not just enemies.
     //std::vector<Tile*> getReachableTiles(Monster* monster) const;
-    std::vector<const Tile*> getReachableTiles(const BoardEntity* entity) const;
+    std::vector<const Tile*> getReachableTiles(const BoardEntity* entity, bool includeAllies = false) const;
 
     // Enemy tiles reachable ONLY because of a monster's extended attack
     // range (Monster::getAttackRange() > getRange()) - i.e. beyond normal
@@ -63,6 +70,7 @@ private:
     void computeReachability(const BoardEntity* entity,
         std::vector<Tile*>& outReachable,
         std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
+        bool includeAllies = false,
         std::vector<Tile*>* outExtendedAttackOnly = nullptr) const;
 
     // The one place that answers "can this entity enter/traverse this
@@ -75,7 +83,7 @@ private:
         std::vector<Tile*>* outExtendedAttackOnly) const;*/
     bool visitNeighbor(const BoardEntity* entity, Tile* tile, //למה לא עשינו CONST גם למשבצת??????
         const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
-        int neighborDist, int range, int attackRange,
+        int neighborDist, int range, int attackRange, bool includeAllies,
         std::vector<Tile*>& outReachable,
         std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
         std::vector<Tile*>* outExtendedAttackOnly) const;

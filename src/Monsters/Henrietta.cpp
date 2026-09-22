@@ -64,13 +64,11 @@ Henrietta::Henrietta(PlayerSide side)
     setDieSpriteAnimation("henrietta_die", DIE_SHEET_COLUMNS, DIE_SHEET_ROWS, DIE_FRAME_DURATION);
 }
 
-std::unique_ptr<AttackAnimation> Henrietta::createAttackAnimation(BoardEntity* target) const
+std::unique_ptr<AttackAnimation> Henrietta::createAttackAnimation(sf::Vector2f targetPosition) const
 {
-    if (!target) return nullptr;
-
     const sf::Texture& flameWebTexture = AssetsManager::getInstance().getTexture("flame_web");
     return std::make_unique<BurstProjectileAnimation>(
-        flameWebTexture, m_screenPos, target->getScreenPosition(),
+        flameWebTexture, m_screenPos, targetPosition,
         FLAME_WEB_COUNT, FLAME_WEB_LAUNCH_INTERVAL, FLAME_WEB_TRAVEL_DURATION, FLAME_WEB_SIZE);
 }
 

@@ -83,13 +83,11 @@ Mozzy::Mozzy(PlayerSide side)
 //    target.takeDamage(m_attackDamage);
 //}
 
-std::unique_ptr<AttackAnimation> Mozzy::createAttackAnimation(BoardEntity* target) const
+std::unique_ptr<AttackAnimation> Mozzy::createAttackAnimation(sf::Vector2f targetPosition) const
 {
-    if (!target) return nullptr;
-
     const sf::Texture& acidSplashTexture = AssetsManager::getInstance().getTexture("acid_splash");
     return std::make_unique<SplashAttackAnimation>(
-        acidSplashTexture, m_screenPos, target->getScreenPosition(), ACID_SPLASH_DURATION, ACID_SPLASH_THICKNESS);
+        acidSplashTexture, m_screenPos, targetPosition, ACID_SPLASH_DURATION, ACID_SPLASH_THICKNESS);
 }
 
 // Freeze: gameplay is untouched and still commits synchronously, right

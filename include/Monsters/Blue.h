@@ -12,7 +12,7 @@ public:
 
     Blue(PlayerSide side);
 
-    std::unique_ptr<AttackAnimation> createAttackAnimation(BoardEntity* target) const override;
+    std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
 
     // Knockback targets an enemy Monster - the base Monster::isValidSpecialTarget
     // default (enemy + Monster) already expresses exactly that.

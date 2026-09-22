@@ -33,7 +33,7 @@ void BoardPathfinder::recordReachability(Tile* tile,
 
 bool BoardPathfinder::visitNeighbor(const BoardEntity* entity, Tile* tile,
     const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
-    int neighborDist, int range, int attackRange,
+    int neighborDist, int range, int attackRange, bool includeAllies,
     std::vector<Tile*>& outReachable,
     std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
     std::vector<Tile*>* outExtendedAttackOnly) const
@@ -41,8 +41,11 @@ bool BoardPathfinder::visitNeighbor(const BoardEntity* entity, Tile* tile,
     // בדיקת עבירות פולימורפית: המשבצת מחליטה בעצמה אם הישות יכולה לעבור
     if (!tile->isPassableFor(entity))
     {
-        // אם המשבצת לא עבירה לתנועה, עדיין נבדוק אם יש עליה אויב שניתן לתקוף מרחוק/באוויר
-        if (tile->isOccupiedByEnemy(entity->getSide()))
+        // אם המשבצת לא עבירה לתנועה (כולל בגלל שהיא תפוסה - ראו Tile::setEntity),
+        // עדיין נבדוק אם יש עליה אויב שניתן לתקוף מרחוק/באוויר - ואם includeAllies
+        // ביקש זאת, גם אם יש עליה בן-ברית (למטרות Special, לא תנועה/תקיפה).
+        if (tile->isOccupiedByEnemy(entity->getSide()) ||
+            (includeAllies && tile->isOccupiedByAlly(entity->getSide())))
             recordReachability(tile, neighbor, parent, neighborDist, range, attackRange,
                 outReachable, outParent, outExtendedAttackOnly);
 
@@ -57,6 +60,7 @@ bool BoardPathfinder::visitNeighbor(const BoardEntity* entity, Tile* tile,
 void BoardPathfinder::computeReachability(const BoardEntity* entity,
     std::vector<Tile*>& outReachable,
     std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
+    bool includeAllies,
     std::vector<Tile*>* outExtendedAttackOnly) const
 {
     outReachable.clear();
@@ -99,7 +103,7 @@ void BoardPathfinder::computeReachability(const BoardEntity* entity,
                 // The one place "can this entity enter/traverse this
                 // neighboring tile" is decided - see visitNeighbor above.
                 bool canContinueThrough = visitNeighbor(entity, tile, neighbor, { cq, cr },
-                    neighborDist, range, attackRange,
+                    neighborDist, range, attackRange, includeAllies,
                     outReachable, outParent, outExtendedAttackOnly);
 
                 if (!canContinueThrough)
@@ -124,11 +128,11 @@ void BoardPathfinder::computeReachability(const BoardEntity* entity,
 //    computeReachability(monster, reachable, parent);
 //    return reachable;
 //}
-std::vector<const Tile*> BoardPathfinder::getReachableTiles(const BoardEntity* entity) const
+std::vector<const Tile*> BoardPathfinder::getReachableTiles(const BoardEntity* entity, bool includeAllies) const
 {
     std::vector<Tile*> reachable;
     std::map<std::pair<int, int>, std::pair<int, int>> parent; // לא בשימוש כאן, רק כי computeReachability דורש אותו
-    computeReachability(entity, reachable, parent);
+    computeReachability(entity, reachable, parent, includeAllies);
     //return reachable;
     return { reachable.begin(), reachable.end() };//to be a const
 }

@@ -165,15 +165,15 @@ void Board::highlightSpawnTiles(PlayerSide side)
 //{
 //    return m_pathfinder.getReachableTiles(monster);
 //}
-std::vector<const Tile*> Board::getReachableTiles(const BoardEntity* entity) const
+std::vector<const Tile*> Board::getReachableTiles(const BoardEntity* entity, bool includeAllies) const
 {
-    return m_pathfinder.getReachableTiles(entity);
+    return m_pathfinder.getReachableTiles(entity, includeAllies);
 }
 
-std::vector<const Tile*> Board::getReachableOccupiedTiles(const BoardEntity* entity) const
+std::vector<const Tile*> Board::getReachableOccupiedTiles(const BoardEntity* entity, bool includeAllies) const
 {
     std::vector<const Tile*> occupied;
-    for (const Tile* tile : getReachableTiles(entity))
+    for (const Tile* tile : getReachableTiles(entity, includeAllies))
         if (tile->hasEntity())
             occupied.push_back(tile);
     return occupied;
@@ -316,21 +316,15 @@ void Board::updateTileEffects()
 
         // אם המפלצת מתה מהאפקט (למשל מהלבה), ננקה אותה מהמשבצת
 		//no need this anymore because the entity has the tile!!!!!!!!
-        if (auto entity = tile->getEntity())
-        {
-            // Generic per-turn-boundary tick (see BoardEntity::onTurnBoundary) -
-            // this is the one existing place a "a player switch just
-            // happened" event already reaches every occupied tile, so
-            // turn-scoped status effects (Henrietta's Protection, Barzilla's
-            // empowered attack) piggyback on it instead of a new timer.
-            // Board never learns what any status effect means.
-            entity->onTurnBoundary();
-
-            if (entity->isReadyForRemoval()) // כמו ב-receiveAttackFrom - מחכה לאנימציית מוות אם יש
-            {
-                tile->clearEntity();
-            }
-        }
+        // Generic per-turn-boundary tick (see BoardEntity::onTurnBoundary) -
+        // this is the one existing place a "a player switch just happened"
+        // event already reaches every occupied tile, so turn-scoped status
+        // effects (Henrietta's Protection, Barzilla's empowered attack)
+        // piggyback on it instead of a new timer. Board never learns what
+        // any status effect means - it doesn't even need getEntity() any
+        // more for this, tile->tickTurnBoundary() handles its own entity
+        // (including the isReadyForRemoval()/clearEntity() cleanup) itself.
+        tile->tickTurnBoundary();
     }
 }
 
@@ -493,8 +487,10 @@ void Board::performAttack(BoardEntity* entity, Tile* targetTile)
     // Board never needs to know which concrete entity/animation this is,
     // nor does it ever compute or inspect a damage value: that stays
     // entirely below Tile::receiveAttackFrom, inside Monster::attack().
-    BoardEntity* target = targetTile->getEntity(); //למה זה בלוח???????
-    if (std::unique_ptr<AttackAnimation> animation = entity->createAttackAnimation(target))
+    // Passes the target TILE's own screen position, not the target entity -
+    // no createAttackAnimation override needs anything else from the
+    // target, so Board no longer needs targetTile->getEntity() at all here.
+    if (std::unique_ptr<AttackAnimation> animation = entity->createAttackAnimation(targetTile->getScreenPosition()))
     {
         animation->setOnImpact([targetTile, entity]() {
             targetTile->receiveAttackFrom(entity);
@@ -593,9 +589,10 @@ void Board::performMove(BoardEntity* entity, Tile* targetTile)
 
     if (!isMoveLegal) return;
 
-    // לא צריך m_grid.find({q,row}) - המפלצת יודעת ישירות על איזה Tile
-    // היא נמצאת, בזכות הקשר הדו-כיווני ב-setEntity/clearEntity.
-    Tile* sourceTile = entity->getCurrentTile();
+    // היה: entity->getCurrentTile() (קשר דו-כיווני שהוסר - ראו BoardEntity.h).
+    // עכשיו: המפלצת יודעת את המיקום שלה בעצמה (getQ/getRow, מקור אמת יחיד),
+    // ו-Board מחפשת את ה-Tile המתאים ב-m_grid שלה.
+    Tile* sourceTile = getMutableTileAt(entity->getQ(), entity->getRow());
     if (sourceTile == nullptr) return;
 
     // בונים את המסלול המדורג (משבצת-משבצת) במקום לקפוץ בקו ישר ליעד
@@ -621,26 +618,15 @@ void Board::update(float dt)
     for (auto& [coords, tile] : m_grid)
     {
 		//change this to one function!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        if (auto entity = tile->getEntity())
-        {
-            // Advances this entity's own animation state, whatever it may
-            // be - movement (Monster::m_pathQueue) and, now, an in-flight
-            // attack animation (Monster::m_attackAnimation) are both driven
-            // from the entity's own update() override. Board just relays
-            // the per-frame tick; it owns none of that state itself.
-            entity->update(dt);
-
-            // A dying entity (see BoardEntity::isDying/isReadyForRemoval)
-            // stayed linked to this tile specifically so the tick above
-            // could keep advancing its one-shot death animation - now that
-            // it's ticked, check whether that animation just finished and,
-            // if so, clear it. A no-op for every other entity: one that was
-            // never dying is never ready for removal here (it would already
-            // have been cleared immediately by Tile::receiveAttackFrom/
-            // updateTileEffects instead of ever reaching this loop again).
-            if (entity->isReadyForRemoval())
-                tile->clearEntity();
-        }
+        // Advances this tile's own entity's animation state, whatever it may
+        // be - movement (Monster::m_pathQueue) and an in-flight attack
+        // animation (Monster::m_attackAnimation) are both driven from the
+        // entity's own update() override. Board just relays the per-frame
+        // tick; it owns none of that state itself, and no longer needs
+        // getEntity() to relay it - tile->updateEntity(dt) is a no-op on an
+        // empty tile, and already handles the isReadyForRemoval()/
+        // clearEntity() cleanup for a just-finished death animation itself.
+        tile->updateEntity(dt);
     }
 }
 
@@ -654,17 +640,7 @@ bool Board::isAnimating() const
     // only this method, so none of them need to change either.
     for (auto const& [coords, tile] : m_grid)
     {
-        if (auto entity = tile->getEntity())
-        {
-            if (entity->isAnimating()) return true;
-            //if (entity->getType() == EntityType::Monster)
-            //{
-            //    // עכשיו אנחנו בטוחים שזו מפלצת, אז אפשר להמיר בבטחה
-            //    Monster* monster = static_cast<Monster*>(entity);
-            //    if (monster->isMoving()) return true;
-            //}
-
-        }
+        if (tile->isEntityAnimating()) return true;
     }
     return false; // <--- חסר לך את זה! אם אף אחד לא זז, מחזירים שקר
 }
@@ -756,11 +732,14 @@ void Board::highlightValidSpecialTargets(const Monster* caster)
 
     // Bounded by range now (getReachableTiles - the exact same reachability
     // query move/attack highlighting already uses) instead of checking every
-    // occupied tile on the whole board. getReachableTiles already includes
-    // ally-occupied tiles, not just enemies - Tile::isPassableFor only ever
-    // checks terrain, never occupancy, so an ally standing on ordinary
-    // ground is reached by this BFS exactly like an empty tile would be.
-    std::vector<const Tile*> inRange = getReachableTiles(caster);
+    // occupied tile on the whole board. includeAllies=true is required here:
+    // an occupied tile is normally excluded from getReachableTiles entirely
+    // (see Tile::setEntity - occupancy alone makes it "impassable"), with
+    // only an enemy getting the usual "impassable but still attackable"
+    // exception. Ally-targeted Specials (Muffintop, Henrietta, Barzilla)
+    // need that same exception extended to allies, or they'd never find a
+    // valid target at all.
+    std::vector<const Tile*> inRange = getReachableTiles(caster, /*includeAllies=*/true);
 
     // Whole range shown first, in the caster's own Special color but
     // lighter (halved alpha) - so the player sees the full reach, not only
@@ -798,7 +777,8 @@ void Board::applyKnockback(BoardEntity* entity, int dq, int dr, int maxTiles)
 {
     if (!entity) return;
 
-    Tile* sourceTile = entity->getCurrentTile();
+    // getMutableTileAt(getQ/getRow) instead of the removed entity->getCurrentTile() - see BoardEntity.h.
+    Tile* sourceTile = getMutableTileAt(entity->getQ(), entity->getRow());
     if (!sourceTile) return;
 
     Tile* current = sourceTile;

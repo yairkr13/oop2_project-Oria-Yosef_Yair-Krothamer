@@ -1,4 +1,5 @@
 #include "Tiles/Tile.h"
+#include <limits>
 
 Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)// <--- ��� ����� ������ ����� �� ����� ���!
     :m_q(q),
@@ -65,16 +66,26 @@ void Tile::setEntity(BoardEntity* entity)
     {
         m_entity->setCurrentTile(this);
     }*/
-    if (m_entity != nullptr)
-        m_entity->setCurrentTile(this);
+    // Removed (kept as comment, not deleted) along with BoardEntity::m_currentTile
+    // itself - see BoardEntity.h for why: this backlink duplicated m_q/m_row,
+    // which already track an entity's position authoritatively.
+    // if (m_entity != nullptr)
+    //     m_entity->setCurrentTile(this);
 }
 
 void Tile::clearEntity()
 {
-    if (m_entity != nullptr && m_entity->getCurrentTile() == this)
-    {
-        m_entity->setCurrentTile(nullptr);
-    }
+    // Old guard, kept as a comment - it existed only to avoid stomping a
+    // freshly-set m_currentTile after a move (Board::performMove calls
+    // targetTile->setEntity(entity) before sourceTile->clearEntity(), so by
+    // the time this ran, the entity's backlink already pointed at the NEW
+    // tile - this guard was what stopped clearing it out from under that).
+    // Now that there's no backlink to protect at all, clearEntity() no
+    // longer needs to ask the entity anything about itself.
+    // if (m_entity != nullptr && m_entity->getCurrentTile() == this)
+    // {
+    //     m_entity->setCurrentTile(nullptr);
+    // }
     m_entity = nullptr;
     m_isPassable = true;
 }
@@ -100,4 +111,41 @@ void Tile::receiveAttackFrom(BoardEntity* attacker)
         //defender->onDeath();
         clearEntity();
     }
+}
+
+void Tile::tickTurnBoundary()
+{
+    if (!m_entity) return;
+
+    m_entity->onTurnBoundary();
+    if (m_entity->isReadyForRemoval())
+        clearEntity();
+}
+
+void Tile::updateEntity(float dt)
+{
+    if (!m_entity) return;
+
+    m_entity->update(dt);
+    if (m_entity->isReadyForRemoval())
+        clearEntity();
+}
+
+bool Tile::isEntityAnimating() const
+{
+    return m_entity && m_entity->isAnimating();
+}
+
+void Tile::damageEntity(int amount)
+{
+    if (!m_entity) return;
+
+    m_entity->takeDamage(amount);
+    if (m_entity->isReadyForRemoval())
+        clearEntity();
+}
+
+float Tile::scoreAsAttackTarget() const
+{
+    return m_entity ? m_entity->scoreAsAttackTarget() : -std::numeric_limits<float>::infinity();
 }

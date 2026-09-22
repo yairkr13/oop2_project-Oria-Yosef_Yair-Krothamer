@@ -10,7 +10,7 @@ void BoardEntity::spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) {
     m_screenPos = screenPos;
 }
 
-std::unique_ptr<AttackAnimation> BoardEntity::createAttackAnimation(BoardEntity* target) const
+std::unique_ptr<AttackAnimation> BoardEntity::createAttackAnimation(sf::Vector2f targetPosition) const
 {
     return nullptr;
 }
