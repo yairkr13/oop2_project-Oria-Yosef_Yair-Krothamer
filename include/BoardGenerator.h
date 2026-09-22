@@ -40,13 +40,11 @@ struct BoardLayout
                           // without this struct needing to change again.
 
     // How many columns on each side are reserved for spawning and therefore
-    // never eligible for a special tile - see Board::getSpawnableTiles/
-    // highlightSpawnTiles, which independently hardcode this same "2
-    // columns" assumption today. Kept here (rather than hardcoded inside
-    // BoardGenerator) so at least tile-placement respects a per-layout
-    // value; those two Board methods are unchanged by this refactor and
-    // would need their own small follow-up to become fully layout-size-
-    // aware too - see the accompanying write-up.
+    // never eligible for a special tile - see BoardGenerator::applySpecialTiles
+    // and Board::spawnColumnRange, both of which derive their own column
+    // band from this same field instead of hardcoding "2 columns", so
+    // spawn placement, spawn highlighting, and special-tile placement all
+    // stay in sync with whatever `cols` a layout actually uses.
     int spawnColumnWidth;
 };
 

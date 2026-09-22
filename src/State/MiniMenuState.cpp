@@ -2,31 +2,42 @@
 #include "State/InstructionsState.h"
 #include "SpriteUtils.h"
 #include "AssetsManager.h"
+#include "Constants.h"
 
 namespace
-    //בכל הפרויקט יש יותר מדי const שהם עם מספרים. בא לי בהמשך לעשות את הכל לפי הגודל של החלון או הלוח!!!!!!
+    //בכל הפרויקט יש יותר מדי const שהם עם מספרים. בא לי בהמשך לעשות את הכל לפי הגודל של החלון או הלוח!!!!!! - כן
 {
     constexpr unsigned int POPUP_WIDTH = 640;
     constexpr unsigned int MENU_BUTTON_WIDTH = 140;
     constexpr float MENU_GAP = 12.f;
     constexpr unsigned int AUDIO_BUTTON_WIDTH = 60;
     constexpr int BUTTON_GAP_Y = 12;
-    const sf::Vector2i MUSIC_BUTTON_POSITION = { 497, 228 };
-    sf::Vector2i soundButtonPosition()
-    {
-        return {
-            MUSIC_BUTTON_POSITION.x,
-            MUSIC_BUTTON_POSITION.y + static_cast<int>(AUDIO_BUTTON_WIDTH) + BUTTON_GAP_Y
-        };
-    }
+
+    // Offset from the window's own center (a compile-time Config value, not
+    // a live window size - see Controller::Controller, the window never
+    // resizes). m_menu below and m_background (scaleAndCenter) already
+    // center themselves the same way - these two buttons, drawn on top of
+    // the same popup, need to move with the popup on a Config size change
+    // instead of staying at a screen position tuned only for the original
+    // 1280x720 build. Same offset the original absolute {497, 228} worked
+    // out to at that original size (497-640, 228-360).
+    constexpr sf::Vector2i MUSIC_BUTTON_OFFSET_FROM_CENTER = { -143, -132 };
+    constexpr sf::Vector2i MUSIC_BUTTON_POSITION = {
+        static_cast<int>(Config::WINDOW_WIDTH) / 2 + MUSIC_BUTTON_OFFSET_FROM_CENTER.x,
+        static_cast<int>(Config::WINDOW_HEIGHT) / 2 + MUSIC_BUTTON_OFFSET_FROM_CENTER.y
+    };
+    constexpr sf::Vector2i SOUND_BUTTON_POSITION = {
+        MUSIC_BUTTON_POSITION.x,
+        MUSIC_BUTTON_POSITION.y + static_cast<int>(AUDIO_BUTTON_WIDTH) + BUTTON_GAP_Y
+    };
 }
 
 MiniMenuState::MiniMenuState(sf::RenderWindow& window, std::function<void()> onExitGame, std::function<void()> onRestartGame)
     : m_window(window)
     , m_background(AssetsManager::getInstance().getTexture("mini_menu_bg"))
-    , m_menu({ static_cast<float>(window.getSize().x) / 2.f, static_cast<float>(window.getSize().y) / 2.f - 117.f }, MENU_BUTTON_WIDTH, MENU_GAP)
+    , m_menu({ static_cast<float>(Config::WINDOW_WIDTH) / 2.f, static_cast<float>(Config::WINDOW_HEIGHT) / 2.f - 117.f }, MENU_BUTTON_WIDTH, MENU_GAP)
     , m_volumeButton(MUSIC_BUTTON_POSITION, AUDIO_BUTTON_WIDTH) // כפתור מוזיקה (עליון)
-    , m_soundOnButton(soundButtonPosition(), AUDIO_BUTTON_WIDTH)  // כפתור סאונד (תחתון)
+    , m_soundOnButton(SOUND_BUTTON_POSITION, AUDIO_BUTTON_WIDTH)  // כפתור סאונד (תחתון)
     , m_onExitGame(std::move(onExitGame))
     , m_onRestartGame(std::move(onRestartGame))
 {

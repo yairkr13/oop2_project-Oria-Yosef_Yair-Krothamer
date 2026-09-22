@@ -4,10 +4,74 @@
 #include <utility>
 #include "Constants.h"
 #include "SoundPlayer.h"
+#include <stdexcept>
+#include <string>
+
+namespace
+{
+    // A board's total on-screen footprint, in pixels, for `count` tiles
+    // along one axis, at the current Config::TILE_RADIUS - the same
+    // hexWidth/1.5*TILE_RADIUS step tileAnchor() itself uses, plus one full
+    // tile (2*TILE_RADIUS) so the footprint covers the first and last
+    // tile's own far edge, not just their anchors. Shared by both axes
+    // (`step` is hexWidth/2 for columns, 1.5*TILE_RADIUS for rows) so
+    // Board::Board's centering math and its own validation agree on exactly
+    // what "the board's size" means.
+    float boardExtent(int count, float step)
+    {
+        return step * static_cast<float>(count - 1) + 2.f * Config::TILE_RADIUS;
+    }
+}
 
 Board::Board(const BoardLayout& layout)
     : m_layout(layout), m_pathfinder(m_grid)
 {
+    if (m_layout.rows <= 0 || m_layout.cols <= 0)
+    {
+        throw std::invalid_argument(
+            "BoardLayout rows/cols must be positive (got rows=" + std::to_string(m_layout.rows) +
+            ", cols=" + std::to_string(m_layout.cols) + ")");
+    }
+
+    // Left's spawn band is columns [0, spawnColumnWidth-1], Right's is
+    // [cols-spawnColumnWidth, cols-1] (see Board::spawnColumnRange) - too
+    // few columns makes those two bands overlap (or coincide entirely),
+    // letting both sides spawn onto the same tiles. Needs cols to fit both
+    // bands with no shared column.
+    if (m_layout.cols < 2 * m_layout.spawnColumnWidth)
+    {
+        throw std::invalid_argument(
+            "BoardLayout cols=" + std::to_string(m_layout.cols) + " is too small for spawnColumnWidth=" +
+            std::to_string(m_layout.spawnColumnWidth) + " (needs cols >= " +
+            std::to_string(2 * m_layout.spawnColumnWidth) + ", or the two sides' spawn columns overlap)");
+    }
+
+    float hexWidth = std::sqrt(3.f) * Config::TILE_RADIUS;
+    float boardWidth = boardExtent(m_layout.cols, hexWidth / 2.f);
+    float boardHeight = boardExtent(m_layout.rows, 1.5f * Config::TILE_RADIUS);
+
+    // The board only ever needs to fit above the bottom panel, not the
+    // window's full height - the panel is reserved space regardless of
+    // board shape (see GameplayState's m_bottomPanel).
+    float playAreaHeight = static_cast<float>(Config::WINDOW_HEIGHT) - Config::BOTTOM_PANEL_HEIGHT;
+
+    if (boardWidth > static_cast<float>(Config::WINDOW_WIDTH) || boardHeight > playAreaHeight)
+    {
+        throw std::out_of_range(
+            "BoardLayout " + std::to_string(m_layout.rows) + "x" + std::to_string(m_layout.cols) +
+            " is too large to fit the window (needs " + std::to_string(static_cast<int>(boardWidth)) + "x" +
+            std::to_string(static_cast<int>(boardHeight)) + "px, only " +
+            std::to_string(Config::WINDOW_WIDTH) + "x" + std::to_string(static_cast<int>(playAreaHeight)) +
+            "px available above the bottom panel)");
+    }
+
+    // Centered - horizontally in the window, vertically in the play area
+    // above the bottom panel - instead of anchored at a fixed point, so a
+    // wider/taller BoardLayout stays centered instead of growing off to one
+    // side (see the m_startX/m_startY comment in Board.h).
+    m_startX = (static_cast<float>(Config::WINDOW_WIDTH) - boardWidth) / 2.f;
+    m_startY = (playAreaHeight - boardHeight) / 2.f;
+
     createBoard();
 }
 
@@ -124,17 +188,25 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
 //    return false;
 //}
 
+std::pair<int, int> Board::spawnColumnRange(PlayerSide side) const
+{
+    return (side == PlayerSide::Left)
+        ? std::pair{ 0, m_layout.spawnColumnWidth - 1 }
+        : std::pair{ m_layout.cols - m_layout.spawnColumnWidth, m_layout.cols - 1 };
+}
+
 void Board::highlightSpawnTiles(PlayerSide side)
 {
     clearHighlights();
+
+    auto [minQ, maxQ] = spawnColumnRange(side);
 
     std::vector<const Tile*> spawnTiles;
     for (auto& [coords, tile] : m_grid)
     {
         if (tile->hasEntity()) continue;
 
-        if ((side == PlayerSide::Left && coords.first <= 1) ||
-            (side == PlayerSide::Right && coords.first >= 12))
+        if (coords.first >= minQ && coords.first <= maxQ)
         {
             spawnTiles.push_back(tile.get());
         }
@@ -299,7 +371,7 @@ void Board::clearHighlights()
 sf::Vector2f Board::tileAnchor(int q, int row) const
 {
     float width = std::sqrt(3.f) * Config::TILE_RADIUS;
-    return { START_X + (width / 2.f) * q, START_Y + (1.5f * Config::TILE_RADIUS) * row };
+    return { m_startX + (width / 2.f) * q, m_startY + (1.5f * Config::TILE_RADIUS) * row };
 }
 
 sf::Vector2f Board::tileToScreen(int q, int row) const
@@ -388,8 +460,7 @@ std::vector<const Tile*> Board::getSpawnableTiles(const Monster* monster, Player
     std::vector<const Tile*> spawnable;
     if (!monster || monster->isOnBoard()) return spawnable;
 
-    int minQ = (side == PlayerSide::Left) ? 0 : 12; //fix this
-    int maxQ = (side == PlayerSide::Left) ? 1 : 13;
+    auto [minQ, maxQ] = spawnColumnRange(side);
 
     for (auto& [coords, tile] : m_grid)
     {
@@ -648,10 +719,10 @@ bool Board::isAnimating() const
 std::pair<int, int> Board::screenToTile(const sf::Vector2f& pos) const
 {
     // מזיזים את pos למערכת הצירים שעליה tileToScreen בנוי - מחסירים את נקודת
-    // המוצא (START_X/START_Y) וגם את TILE_RADIUS ש-tileToScreen מוסיף בסוף כדי
+    // המוצא (m_startX/m_startY) וגם את TILE_RADIUS ש-tileToScreen מוסיף בסוף כדי
     // למרכז את המשושה (ה-shape עצמו ממוקם לפי הפינה השמאלית-עליונה, לא המרכז).
-    float x = pos.x - START_X - Config::TILE_RADIUS;
-    float y = pos.y - START_Y - Config::TILE_RADIUS;
+    float x = pos.x - m_startX - Config::TILE_RADIUS;
+    float y = pos.y - m_startY - Config::TILE_RADIUS;
 
     // 1. המרה ל-axial שברי (pointy-top hex, size = TILE_RADIUS)
     float q_axial_frac = (std::sqrt(3.f) / 3.f * x - 1.f / 3.f * y) / Config::TILE_RADIUS;
@@ -687,6 +758,14 @@ std::pair<int, int> Board::screenToTile(const sf::Vector2f& pos) const
 }
 //
 //// Board.cpp - הוספה, לא נוגעת ב-Card בכלל, רק ב-Tile/geometry
+const Tile* Board::pickRandomTile(const std::vector<const Tile*>& tiles) const
+{
+    if (tiles.empty()) return nullptr;
+
+    std::uniform_int_distribution<size_t> dist(0, tiles.size() - 1);
+    return tiles[dist(rng())];
+}
+
 bool Board::isSpawnPositionValid(const sf::Vector2f& pos) const
 {
     const Tile* tile = getTileAtScreenPosition(pos);

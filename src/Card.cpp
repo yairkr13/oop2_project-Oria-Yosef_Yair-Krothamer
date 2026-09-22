@@ -43,8 +43,8 @@ void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected
     const sf::Texture& tex = AssetsManager::getInstance().getTexture(getCardTextureKey());
     sf::Sprite sprite(tex);
 
-    float scaleX = Config::CARD_WIDTH / static_cast<float>(tex.getSize().x);
-    float scaleY = Config::CARD_HEIGHT / static_cast<float>(tex.getSize().y);
+    float scaleX = WIDTH / static_cast<float>(tex.getSize().x);
+    float scaleY = HEIGHT / static_cast<float>(tex.getSize().y);
 
     sf::Vector2f drawPos = position;
     if (isSelected)
@@ -52,8 +52,8 @@ void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected
         constexpr float enlarge = 1.08f;
         scaleX *= enlarge;
         scaleY *= enlarge;
-        drawPos.x -= (Config::CARD_WIDTH * (enlarge - 1.f)) / 2.f;
-        drawPos.y -= (Config::CARD_HEIGHT * (enlarge - 1.f)) / 2.f;
+        drawPos.x -= (WIDTH * (enlarge - 1.f)) / 2.f;
+        drawPos.y -= (HEIGHT * (enlarge - 1.f)) / 2.f;
     }
 
     sprite.setPosition(drawPos);
@@ -79,13 +79,13 @@ void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected
 
 bool Card::isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPos) const
 {
-    sf::FloatRect cardRect(cardPos, { Config::CARD_WIDTH, Config::CARD_HEIGHT });
+    sf::FloatRect cardRect(cardPos, { WIDTH, HEIGHT });
     return cardRect.contains(mousePos);
 }
 
 void Card::drawBoarder(sf::RenderWindow& window, sf::Vector2f position, sf::Color color) const
 {
-    sf::RectangleShape border({ Config::CARD_WIDTH + 6.f, Config::CARD_HEIGHT + 6.f });
+    sf::RectangleShape border({ WIDTH + 6.f, HEIGHT + 6.f });
     border.setPosition({ position.x - 3.f, position.y - 3.f });
     border.setFillColor(sf::Color::Transparent);
     border.setOutlineThickness(3.f);
@@ -125,8 +125,8 @@ void Card::drawStatusText(sf::RenderWindow& window, sf::Vector2f drawPos, const 
 
     sf::FloatRect bounds = statusText.getLocalBounds();
     statusText.setPosition({
-        drawPos.x + (Config::CARD_WIDTH - bounds.size.x) / 2.f,
-        drawPos.y + (Config::CARD_HEIGHT - bounds.size.y) / 2.f
+        drawPos.x + (WIDTH - bounds.size.x) / 2.f,
+        drawPos.y + (HEIGHT - bounds.size.y) / 2.f
         });
     window.draw(statusText);
 }

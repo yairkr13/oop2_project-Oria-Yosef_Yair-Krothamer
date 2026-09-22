@@ -3,10 +3,32 @@
 #include "Constants.h"
 #include "AssetsManager.h"
 #include "MusicManager.h"
+#include <stdexcept>
+#include <string>
 
 Controller::Controller()
 {
-    m_window.create(sf::VideoMode({ Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT }), "Phobies");
+    // Checked here, before the window is actually created, rather than a
+    // static_assert in Constants.h - main() already wraps Controller's
+    // construction in a try/catch (see main.cpp) that prints e.what()
+    // cleanly, a clearer failure than the wall of repeated compiler errors
+    // a static_assert in a header included almost everywhere produces.
+    if (Config::WINDOW_WIDTH < Config::MIN_WINDOW_WIDTH || Config::WINDOW_WIDTH > Config::MAX_WINDOW_WIDTH ||
+        Config::WINDOW_HEIGHT < Config::MIN_WINDOW_HEIGHT || Config::WINDOW_HEIGHT > Config::MAX_WINDOW_HEIGHT)
+    {
+        throw std::out_of_range(
+            "Config::WINDOW_WIDTH/HEIGHT (" + std::to_string(Config::WINDOW_WIDTH) + "x" +
+            std::to_string(Config::WINDOW_HEIGHT) + ") is outside the supported range (" +
+            std::to_string(Config::MIN_WINDOW_WIDTH) + "-" + std::to_string(Config::MAX_WINDOW_WIDTH) + " x " +
+            std::to_string(Config::MIN_WINDOW_HEIGHT) + "-" + std::to_string(Config::MAX_WINDOW_HEIGHT) + ")");
+    }
+
+    // No sf::Style::Resize - the window is a fixed size for its whole
+    // lifetime (no maximize button, no draggable edges), so every position
+    // computed from Config::WINDOW_WIDTH/HEIGHT stays valid without any
+    // resize handling anywhere else in the game.
+    m_window.create(sf::VideoMode({ Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT }), "Phobies",
+        sf::Style::Titlebar | sf::Style::Close);
     m_window.setFramerateLimit(60);
 
     // Only the loading screen's own two assets are loaded synchronously

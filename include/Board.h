@@ -12,6 +12,7 @@
 #include <random>
 #include <algorithm>
 #include <memory>
+#include <utility>
 //try
 class Board
 {
@@ -126,14 +127,15 @@ public:  ///להוסיף const לכל הפונקציות הציבוריות!!!!!
 	//bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
 	bool spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile);
 
-	// מקור רנדומליות אחד ומשותף לכל הלוח (במקום std::mt19937 מקומי במקום אחד ו-rand() במקום אחר)
-	static std::mt19937& rng()
-	{
-		static std::mt19937 gen(std::random_device{}());
-		return gen;
-	}
 	// Board.h - להוסיף תחת public:
 	bool isSpawnPositionValid(const sf::Vector2f& pos) const;
+
+	// Picks one tile uniformly at random out of `tiles` (using Board's own
+	// shared rng() below), returning nullptr for an empty list. Lets a
+	// caller like AIPlayer (see AIPlayer::onTurnStart, choosing a spawn
+	// tile among candidates) ask Board to make the random pick instead of
+	// reaching into Board's own random source itself.
+	const Tile* pickRandomTile(const std::vector<const Tile*>& tiles) const;
 
 	// The board's own vertical center row - forwards to BoardLayout's own
 	// computation (see BoardGenerator.h) rather than Board re-deriving it
@@ -181,6 +183,17 @@ private:
 	Tile* getMutableTileAt(int q, int row) const;
 	void highlightNeighbors(const BoardEntity* entity); //למה זה ציבורי??????
 
+	// מקור רנדומליות אחד ומשותף לכל הלוח (במקום std::mt19937 מקומי במקום אחד ו-rand() במקום אחר).
+	// Private - Board.cpp's own methods (generateSpecialTiles, pickRandomTile)
+	// are the only callers now; an outside caller that needs a random pick
+	// asks pickRandomTile() above instead of reaching into Board's own
+	// random source directly.
+	static std::mt19937& rng()
+	{
+		static std::mt19937 gen(std::random_device{}());
+		return gen;
+	}
+
 	// Generic "paint these tiles this color" primitive - private (an
 	// internal implementation detail Board uses on itself), now actually
 	// shared by highlightNeighbors/highlightSpawnTiles/highlightValidSpecialTargets
@@ -192,6 +205,15 @@ private:
 	// "movable"), so a caller that just wants that doesn't need to repeat it.
 	void highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color = sf::Color(150, 220, 150, 180));
 	//std::vector<Tile*> getOccupiedTiles() const;
+
+	// The [minQ, maxQ] column band reserved for `side`'s spawns - derived
+	// from m_layout.cols/spawnColumnWidth instead of each caller hardcoding
+	// its own copy of "2 columns at the edge" (which is what
+	// highlightSpawnTiles/getSpawnableTiles used to do, independently, both
+	// tied to the original 14-column standardLayout() and never following a
+	// wider/narrower BoardLayout). Shared by both, so there's exactly one
+	// place that knows what "the spawn area" means.
+	std::pair<int, int> spawnColumnRange(PlayerSide side) const;
 	// performAction()'s two independent branches, split out so each reads
 	// as one responsibility. performAttack coordinates the attack (wires an
 	// animation if the attacker supplies one, otherwise resolves through
@@ -256,7 +278,15 @@ private:
 	// its contents) never changes afterward.
 	BoardPathfinder m_pathfinder;
 
-	// Board layout constants
-	static constexpr float START_X = 320.f; //לעשות עוד ללוח ?????נגיד הקצוות
-	static constexpr float START_Y = 30.f;
+	// The board's own on-screen anchor - NOT a fixed constant any more: a
+	// board's total pixel footprint depends on m_layout.rows/cols (a runtime
+	// BoardLayout value, not a Config constant), so a fixed anchor left the
+	// board only centered for the exact 7x14 standardLayout() it was tuned
+	// against - widening cols kept the left edge pinned in place and grew
+	// the board rightward instead of staying centered. Computed once in the
+	// constructor (see Board::Board) from the actual layout, so the board is
+	// centered - horizontally in the window, vertically in the play area
+	// above the bottom panel - for whatever shape m_layout turns out to be.
+	float m_startX;
+	float m_startY;
 };

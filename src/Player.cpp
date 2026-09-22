@@ -68,7 +68,7 @@ void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
 
     // --- חישוב מיקום בציר X (ימין או שמאל) ---
     // SFML 3: משתמשים ב-bounds.size.x במקום ב-width
-    float xPos = alignRight ? Config::WINDOW_WIDTH - 20.f - bounds.size.x : 20.f;
+    float xPos = alignRight ? static_cast<float>(Config::WINDOW_WIDTH) - 20.f - bounds.size.x : 20.f;
 
     // --- חישוב מיקום בציר Y (מרכז אנכי מושלם) ---
     // SFML 3: משתמשים ב-bounds.size.y וב-bounds.position.y
@@ -89,9 +89,12 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedF
 
     for (size_t i = 0; i < m_hand.size(); ++i)
     {
-        float startX = alignRight ?
-            (Config::WINDOW_WIDTH - 20.f - Config::CARD_WIDTH - (i * Config::CARD_SPACING)) :
-            (20.f + (i * Config::CARD_SPACING));
+        // Dead code, removed (kept as a comment, not deleted): startX was
+        // computed here but never actually read - getCardPosition(i, ...)
+        // below already redoes the exact same computation itself.
+        // float startX = alignRight ?
+        //     (Config::WINDOW_WIDTH - 20.f - Card::WIDTH - (i * CARD_SPACING)) :
+        //     (20.f + (i * CARD_SPACING));
 
         bool isSelected = (selectedFromHand && m_hand[i].get() == selectedFromHand);
 
@@ -177,7 +180,7 @@ std::string Player::getCardTooltipAt(const sf::Vector2f& pos) const
 //}
 Card* Player::handleHandClick(sf::Vector2f mousePos, bool alignRight) const
 {
-    if (mousePos.y < Config::BOTTOM_PANEL_Y) return nullptr;
+    if (mousePos.y < BOTTOM_PANEL_TOP_Y) return nullptr;
 
     Card* card = getCardAtPosition(mousePos, alignRight);
     if (card && !card->isPlayed() && card->getCost() > m_keys)

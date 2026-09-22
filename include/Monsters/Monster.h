@@ -50,6 +50,13 @@ public:
     //int getCost() const { return m_cost; }
     int getRange() const override { return m_range; }
 
+    // How much damage this monster's next attack would actually deal right
+    // now - mirrors the exact computation Monster::attack() itself uses
+    // (m_attackDamage * m_attackMultiplier), so a caller predicting a kill
+    // (see AIPlayer::findBestTarget) uses the same number attack() will
+    // actually apply, empowerment included.
+    int getAttackDamage() const { return static_cast<int>(m_attackDamage * m_attackMultiplier); }
+
     // How far this monster can ATTACK - separate from getRange() (which
     // Board's reachability BFS also uses for movement), so a monster whose
     // Special temporarily extends its reach (see Barzilla's Empowered

@@ -7,11 +7,24 @@
 #include "Card.h"
 #include <iostream>
 #include "Constants.h"
+#include <random>
 
 namespace
 {
     constexpr unsigned int MINI_MENU_BUTTON_WIDTH = 90;
     const sf::Vector2i MINI_MENU_BUTTON_POSITION = { 170, 10 };
+
+    // Picks "game_bg_1" or "game_bg_2" with equal odds - a fresh
+    // std::mt19937 each call (not a shared static one, unlike Board::rng())
+    // since this only ever runs once per GameplayState, at construction -
+    // no reason for it to share state across games the way Board's own
+    // board-generation randomness does.
+    const char* randomGameBackgroundKey()
+    {
+        std::mt19937 gen(std::random_device{}());
+        std::uniform_int_distribution<int> dist(1, 2);
+        return dist(gen) == 1 ? "game_bg_1" : "game_bg_2";
+    }
 }
 
 std::unique_ptr<Player> GameplayState::makePlayer2(GameMode mode)
@@ -24,9 +37,9 @@ std::unique_ptr<Player> GameplayState::makePlayer2(GameMode mode)
 
 GameplayState::GameplayState(sf::RenderWindow& window, GameMode mode)
     : m_window(window)
-    , m_background(AssetsManager::getInstance().getTexture("game_bg"))
+    , m_background(AssetsManager::getInstance().getTexture(randomGameBackgroundKey()))
     , m_mode(mode)
-    , m_board()
+    , m_board(BoardGenerator::standardLayout())
     , m_player1(std::make_unique<Player>(PlayerSide::Left))
     , m_player2(makePlayer2(mode))
     , m_turnManager(*m_player1, *m_player2, m_board)
@@ -39,8 +52,11 @@ GameplayState::GameplayState(sf::RenderWindow& window, GameMode mode)
 
     m_turnManager.setOnPlayerSwitched([this]() { clearSelectionState(); });
 
+    // Matches the same windowHeight - BOTTOM_PANEL_HEIGHT computation
+    // Player::BOTTOM_PANEL_TOP_Y uses, so the panel Player draws cards onto
+    // and the one drawn here always agree on where it actually is.
     m_bottomPanel.setSize({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
-    m_bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
+    m_bottomPanel.setPosition({ 0.f, static_cast<float>(Config::WINDOW_HEIGHT) - Config::BOTTOM_PANEL_HEIGHT });
     m_bottomPanel.setFillColor(sf::Color(40, 40, 40));
 
     m_endTurnHintText.setString("PRESS SPACE TO END TURN");
@@ -48,8 +64,8 @@ GameplayState::GameplayState(sf::RenderWindow& window, GameMode mode)
     m_endTurnHintText.setFillColor(sf::Color(200, 200, 200, 180)); // צבע אפור-לבן עדין מעט שקוף
 
     // מיקום במרכז X ובחלק התחתון ביותר של המסך (12 פיקסלים מהקצה)
-    float centerX = m_window.getSize().x / 2.0f;
-    float bottomY = m_window.getSize().y - 12.0f;
+    float centerX = static_cast<float>(Config::WINDOW_WIDTH) / 2.0f;
+    float bottomY = static_cast<float>(Config::WINDOW_HEIGHT) - 12.0f;
     m_endTurnHintText.setPosition({ centerX, bottomY });
 }
 
@@ -202,7 +218,7 @@ void GameplayState::handle(const sf::Event::MouseMoved& event)
 
     Player& current = m_turnManager.getCurrentPlayer();
 
-    if (mousePos.y > Config::BOTTOM_PANEL_Y)
+    if (mousePos.y > static_cast<float>(Config::WINDOW_HEIGHT) - Config::BOTTOM_PANEL_HEIGHT)
     {
         // Player מחזיר רק טקסט - הקפסולציה נשמרה לחלוטין!
         std::string tooltipText = current.getCardTooltipAt(mousePos);
@@ -436,7 +452,7 @@ void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
 
     Player& current = m_turnManager.getCurrentPlayer();
 
-    if (pos.y > Config::BOTTOM_PANEL_Y)
+    if (pos.y > static_cast<float>(Config::WINDOW_HEIGHT) - Config::BOTTOM_PANEL_HEIGHT)
     {
         bool isPlayer2 = (&current == m_player2.get());
 

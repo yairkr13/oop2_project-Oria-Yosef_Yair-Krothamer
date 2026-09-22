@@ -2,11 +2,21 @@
 #include "State/GameplayState.h"
 #include "SpriteUtils.h"
 #include "AssetsManager.h"
+#include "Constants.h"
+
+namespace
+{
+    // Offset from the window's own vertical center - the same ratio the old
+    // fixed 310.f represented at the window's original 720-tall creation
+    // size (310 - 360 center = -50.f), expressed as a compile-time Config
+    // value now instead of staying pinned to that original size.
+    constexpr float MENU_Y_OFFSET_FROM_CENTER = -50.f;
+}
 
 GameModeState::GameModeState(sf::RenderWindow& window)
     : m_window(window)
     , m_background(AssetsManager::getInstance().getTexture("menu_bg"))
-    , m_menu({ static_cast<float>(window.getSize().x) / 2.f, 310.f }, 255, 18.f)
+    , m_menu({ static_cast<float>(window.getSize().x) / 2.f, static_cast<float>(Config::WINDOW_HEIGHT) / 2.f + MENU_Y_OFFSET_FROM_CENTER }, 255, 18.f)
 {
     scaleBackgroundToWindow();
     buildMenu();

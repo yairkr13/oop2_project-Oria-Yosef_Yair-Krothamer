@@ -31,7 +31,7 @@ namespace BoardGenerator
     {
         return BoardLayout{
             /* rows */ 7,
-            /* cols */ 14,
+            /* cols */ 20,
             /* lavaTileCount */ 2,
             /* holeTileCount */ 2,
             /* panicPointCount */ 1,

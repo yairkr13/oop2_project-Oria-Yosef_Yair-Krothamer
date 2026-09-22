@@ -3,6 +3,7 @@
 #include "State/InstructionsState.h"
 #include "SpriteUtils.h"
 #include "AssetsManager.h"
+#include "Constants.h"
 
 namespace
 {
@@ -18,6 +19,12 @@ namespace
     constexpr unsigned int AUDIO_BUTTON_WIDTH = 60;
     constexpr int AUDIO_BUTTON_TOP_MARGIN = 20;
     constexpr int BUTTON_GAP = 15; // רווח בין שני הכפתורים
+
+    // Offset from the window's own vertical center - the same ratio the old
+    // fixed 350.f represented at the window's original 720-tall creation
+    // size (350 - 360 center = -10.f), expressed as a compile-time Config
+    // value now instead of staying pinned to that original size.
+    constexpr float MENU_Y_OFFSET_FROM_CENTER = -10.f;
 
     // חישוב המיקום של כפתור המוזיקה (משמאל)
     sf::Vector2i musicButtonPosition(const sf::RenderWindow& window)
@@ -40,7 +47,7 @@ namespace
 MenuState::MenuState(sf::RenderWindow& window) //למה זה excplicit?????
     : m_window(window)
     , m_background(AssetsManager::getInstance().getTexture("menu_bg"))
-    , m_menu({ static_cast<float>(window.getSize().x) / 2.f, 350.f }, 340, 22.f)
+    , m_menu({ static_cast<float>(window.getSize().x) / 2.f, static_cast<float>(Config::WINDOW_HEIGHT) / 2.f + MENU_Y_OFFSET_FROM_CENTER }, 340, 22.f)
     , m_volumeButton(musicButtonPosition(window), AUDIO_BUTTON_WIDTH)  // כפתור מוזיקה - שמאלה
     , m_soundOnButton(soundButtonPosition(window), AUDIO_BUTTON_WIDTH) // כפתור אפקטים - ימינה
 {

@@ -9,6 +9,14 @@ class Monster;
 class Card
 {
 public:
+    // Moved here from Config (Constants.h) - a card's own on-screen size is
+    // Card's own business, not something every unrelated file including
+    // Constants.h needs visibility into. Public so Player (which lays out a
+    // row of cards, and needs to know how wide/tall one is to space them)
+    // can reference Card::WIDTH/HEIGHT directly instead of a separate copy.
+    static constexpr float WIDTH = 80.f;
+    static constexpr float HEIGHT = 100.f;
+
     Card(std::string monsterId, int cost, std::string textureKey, PlayerSide side);
 
     void draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const;

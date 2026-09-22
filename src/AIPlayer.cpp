@@ -4,6 +4,17 @@
 #include <iostream>
 #include <limits>
 
+namespace
+{
+    // Large enough to always outrank any possible non-lethal score (which
+    // never exceeds -1 - see scoreAsAttackTarget()) while still preserving
+    // the underlying health-based ordering *among* lethal candidates (added
+    // on top of, not instead of, the candidate's own score) - and small
+    // enough to never approach Heart's own infinity score, so Heart still
+    // always wins regardless of this bonus.
+    constexpr float LETHAL_HIT_BONUS = 100000.f;
+}
+
 AIPlayer::AIPlayer(PlayerSide side)
     : Player(side)
 {
@@ -34,10 +45,21 @@ const Tile* AIPlayer::findBestTarget(const Board& board, Monster* monster) const
 		//first priority: if there's an enemy in range, attack the best-scoring one
         if (tile->hasEntity() && tile->isOccupiedByEnemy(getSide()))
         {
+            // Purely arithmetic on the existing score - no new virtual hook
+            // needed. scoreAsAttackTarget() is -health for an ordinary
+            // monster, so score + incomingDamage >= 0 exactly when this
+            // attack would kill it (incomingDamage >= health). A lethal hit
+            // gets a large flat bonus added on top of its own score - so it
+            // always outranks any non-lethal one, while still preferring
+            // the lowest-health kill among several lethal candidates (same
+            // as it already preferred lowest-health among non-lethal ones).
             float score = tile->scoreAsAttackTarget();
-            if (score > bestAttackScore)
+            bool wouldKill = (score + monster->getAttackDamage() >= 0.f);
+            float finalScore = wouldKill ? (score + LETHAL_HIT_BONUS) : score;
+
+            if (finalScore > bestAttackScore)
             {
-                bestAttackScore = score;
+                bestAttackScore = finalScore;
                 bestAttackTarget = tile;
             }
             continue; // still need to check the remaining enemies' scores
@@ -105,8 +127,7 @@ void AIPlayer::onTurnStart(Board& board)
         if (candidates.empty())
             break;
 
-        std::uniform_int_distribution<size_t> dist(0, candidates.size() - 1);
-        const Tile* chosenTile = candidates[dist(Board::rng())];
+        const Tile* chosenTile = board.pickRandomTile(candidates);
 
         // playCard מוריד מפתחות, מייצר Monster ומכניס ל-m_monsters
         

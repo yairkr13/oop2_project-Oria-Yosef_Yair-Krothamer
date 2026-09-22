@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <string>
+#include "Constants.h"
 
 class Tooltip {
 public:
@@ -15,7 +16,7 @@ public:
         m_background.setOutlineThickness(1.5f);
     }
 
-    void show(const std::string& text, const sf::Vector2f& mousePos, float windowWidth = Config::WINDOW_WIDTH) {
+    void show(const std::string& text, const sf::Vector2f& mousePos) {
         if (text.empty()) {
             m_visible = false;
             return;
@@ -28,12 +29,19 @@ public:
         sf::Vector2f tooltipSize = { textBounds.size.x + padding * 2.f, textBounds.size.y + padding * 2.f };
         m_background.setSize(tooltipSize);
 
+        constexpr float windowWidth = static_cast<float>(Config::WINDOW_WIDTH);
+        constexpr float windowHeight = static_cast<float>(Config::WINDOW_HEIGHT);
+
         // 1. ברירת מחדל: מיקום מימין ולמטה מהעכבר
         sf::Vector2f finalPos = mousePos + sf::Vector2f(15.f, 15.f);
 
         // 2. אם החריגה מגיעה אל מעבר לקצה הימני - נזיז אותו לשמאל העכבר!
         if (finalPos.x + tooltipSize.x > windowWidth) {
             finalPos.x = mousePos.x - tooltipSize.x - 15.f;
+        }
+        // 3. אותו דבר כלפי מטה - היה חסר קודם (רק הקצה הימני נבדק).
+        if (finalPos.y + tooltipSize.y > windowHeight) {
+            finalPos.y = mousePos.y - tooltipSize.y - 15.f;
         }
 
         m_background.setPosition(finalPos);

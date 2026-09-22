@@ -9,7 +9,7 @@ void AssetsManager::loadBootAssets()
     load<sf::Texture>("spinner", "resources/Menu/Spinner.png");
 }
 
-void AssetsManager::queueRemainingAssets() //мод длм фд? дан афщш мщйн рвйг аъ дйлемеъ дойезгеъ бзмч азш??????
+void AssetsManager::queueRemainingAssets() //пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ? пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ??????
 {
     using Kind = PendingAsset::Kind;
 
@@ -42,7 +42,13 @@ void AssetsManager::queueRemainingAssets() //мод длм фд? дан афщш мщйн рвйг аъ д
     { Kind::Texture, "GoToMiniMenuButton", "resources/Button/GoToMiniMenuButton.png" },
 
     { Kind::Texture, "heart100", "resources/Heart/Heart100.png" },
-    { Kind::Texture, "game_bg", "resources/Background/Background1.png" },
+    // Both loaded up front (GameplayState picks one at random per new game
+    // - see GameplayState::randomGameBackgroundKey) rather than just the
+    // one "game_bg" this used to be - loadNext() drains the whole queue
+    // before MenuState is ever reachable, so both are already available
+    // by the time any GameplayState gets constructed.
+    { Kind::Texture, "game_bg_1", "resources/Background/Background1.png" },
+    { Kind::Texture, "game_bg_2", "resources/Background/BackGround2.png" },
     { Kind::Texture, "BonePile", "resources/StaticObject/BonePile.png" },
 
     { Kind::Texture, "muffintop", "resources/Monster/Muffintop/Muffintop.png" },
@@ -136,7 +142,7 @@ bool AssetsManager::loadNext()
 //
 //    const PendingAsset& asset = m_pendingAssets[m_nextPendingIndex];
 //    switch (asset.kind)
-//    {//мод цшйк аъ лм дбгйчд джаъ????афщш мтщеъ ферчцйд ъбрйъйъ
+//    {//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ????пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 //    case PendingAsset::Kind::Texture: loadTexture(asset.name, asset.filePath); break;
 //    case PendingAsset::Kind::Font:    loadFont(asset.name, asset.filePath);    break;
 //    case PendingAsset::Kind::Music:   loadMusic(asset.name, asset.filePath);   break;
@@ -212,10 +218,10 @@ bool AssetsManager::loadNext()
 //
 //sf::Music& AssetsManager::getMusic(const std::string& name) const
 //{
-//    // аеъд getAsset<T> двршйъ бгйеч лое дичсиешеъ/ферийн - д-const_cast лап
-//    // ооечг еоъетг: unique_ptr<T>::operator* ъойг озжйш T& ма-чбет (д-constness
-//    // ма "тебш гшле"), аж айп сйбд илрйъ аойъйъ мщлфм аъ мевйчъ д-lookup шч
-//    // лгй мчбм сев дзжшд щерд - шч мдешйг аъ д-const щвебш лап ойеъш.
+//    // пїЅпїЅпїЅпїЅ getAsset<T> пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅпїЅпїЅ - пїЅ-const_cast пїЅпїЅпїЅ
+//    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ: unique_ptr<T>::operator* пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ T& пїЅпїЅ-пїЅпїЅпїЅпїЅ (пїЅ-constness
+//    // пїЅпїЅ "пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ"), пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ-lookup пїЅпїЅ
+//    // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ - пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ-const пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
 //    return const_cast<sf::Music&>(getAsset(m_music, name, "music track"));
 //}
 //

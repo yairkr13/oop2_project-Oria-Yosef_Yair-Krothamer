@@ -2,12 +2,22 @@
 #include "SpriteUtils.h"
 #include "AssetsManager.h"
 #include "State/MenuState.h"
+#include "Constants.h"
+
+namespace
+{
+    // Offset from the window's own vertical center - the same ratio the old
+    // fixed 260.f represented at the window's original 720-tall creation
+    // size (260 - 360 center = -100.f), expressed as a compile-time Config
+    // value now instead of staying pinned to that original size.
+    constexpr float MENU_Y_OFFSET_FROM_CENTER = -100.f;
+}
 
 GameOverState::GameOverState(sf::RenderWindow& window,const PlayerSide& winner,
     std::function<std::unique_ptr<State>()> createNextState)
     : m_window(window)
     , m_background(AssetsManager::getInstance().getTexture("gameover_bg"))
-    , m_menu({ static_cast<float>(window.getSize().x) / 2.f, 260.f }, 340, 22.f)
+    , m_menu({ static_cast<float>(window.getSize().x) / 2.f, static_cast<float>(Config::WINDOW_HEIGHT) / 2.f + MENU_Y_OFFSET_FROM_CENTER }, 340, 22.f)
     , m_winnerText(AssetsManager::getInstance().getFont("Lilita"))
     , m_createNextState(std::move(createNextState)) 
 {
@@ -49,7 +59,7 @@ void GameOverState::onExitClicked()
 
 void GameOverState::onMainMenuClicked()
 {
-    // îòáø áçæøä ìúôøéè äøàùé
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
     transitionTo(std::make_unique<MenuState>(m_window));
 }
 
@@ -62,7 +72,7 @@ void GameOverState::draw(sf::RenderWindow& window) const
 
 void GameOverState::update(sf::Time deltaTime)
 {
-    // ğéúï ìäåñéó ëàï àô÷èéí àå àğéîöéåú ìè÷ñè àí øåöéí
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
 }
 
 void GameOverState::handleEvent(const sf::Event& event)
