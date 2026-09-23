@@ -99,10 +99,6 @@ void MiniMenuState::update(sf::Time deltaTime)
 
 void MiniMenuState::handleEvent(const sf::Event& event)
 {
-    //handleCloseEvent(event);
-    //if (isTransitioning())
-    //    return;
-
     m_menu.handleEvent(event);
     m_volumeButton.handleEvent(event);
     m_soundOnButton.handleEvent(event);

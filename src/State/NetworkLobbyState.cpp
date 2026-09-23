@@ -211,6 +211,7 @@ void NetworkLobbyState::handleEvent(const sf::Event& event)
     }
     else if (const auto* key = event.getIf<sf::Event::KeyPressed>())
     {
+        // Backspace only does something once there's actually a character to remove.
         if (key->code == sf::Keyboard::Key::Backspace && !m_addressInput.empty())
         {
             m_addressInput.pop_back();

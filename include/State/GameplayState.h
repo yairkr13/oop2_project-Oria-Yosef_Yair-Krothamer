@@ -70,12 +70,8 @@ private:
 
     // Hand-selected monster awaiting placement. UI/gameplay-input state,
     // not board state.
-    //Monster* m_selectedFromHand = nullptr;
-
     Card* m_selectedFromHand = nullptr;   // hand card selected, not yet placed
     Card* m_pendingSpecialCard = nullptr; // played card whose special is awaiting a target
-
-    //BoardEntity* m_selectedEntity = nullptr;
 	BoardEntity* m_selectedEntity = nullptr; // non-owning; owned by whichever Player has the entity
 
     std::optional<Button> m_miniMenuButton;
