@@ -128,6 +128,11 @@ bool NetworkConnection::connectToHost(const std::string& hostAddress, unsigned s
     return true;
 }
 
+bool NetworkConnection::isConnected() const
+{
+    return m_connected;
+}
+
 std::string NetworkConnection::getLocalAddress()
 {
     char hostname[256];
@@ -237,6 +242,11 @@ void NetworkConnection::update()
     // neither needs anything different done here right now.
 }
 
+bool NetworkConnection::hasMessage() const
+{
+    return !m_completedIncoming.empty();
+}
+
 std::vector<std::uint8_t> NetworkConnection::popMessage()
 {
     if (m_completedIncoming.empty()) return {};
@@ -258,4 +268,9 @@ void NetworkConnection::disconnect()
         m_listenSocket = 0;
     }
     m_connected = false;
+}
+
+const std::string& NetworkConnection::getLastError() const
+{
+    return m_lastError;
 }

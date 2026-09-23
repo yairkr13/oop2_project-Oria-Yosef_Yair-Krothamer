@@ -50,7 +50,7 @@ public:
     // if the attempt fails outright).
     bool connectToHost(const std::string& hostAddress, unsigned short port);
 
-    bool isConnected() const { return m_connected; }
+    bool isConnected() const;
 
     // This machine's own LAN IP address (e.g. "192.168.1.42") - shown to
     // the hosting player so they can read it out to whoever's joining (see
@@ -68,12 +68,12 @@ public:
     // Never blocks. Called once per frame.
     void update();
 
-    bool hasMessage() const { return !m_completedIncoming.empty(); }
+    bool hasMessage() const;
     std::vector<std::uint8_t> popMessage();
 
     void disconnect();
 
-    const std::string& getLastError() const { return m_lastError; }
+    const std::string& getLastError() const;
 
 private:
     bool setNonBlocking(std::uintptr_t sock);

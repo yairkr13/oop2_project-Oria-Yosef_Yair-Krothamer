@@ -15,18 +15,14 @@ public:
     MusicManager(const MusicManager&) = delete;
     MusicManager& operator=(const MusicManager&) = delete;
 
-    static MusicManager& getInstance()
-    {
-        static MusicManager instance;
-        return instance;
-    }
+    static MusicManager& getInstance();
 
     // Plays `track` looping if it isn't already the active one - stopping
     // whatever else was playing first. MusicTrack::None just stops.
     void playTrack(MusicTrack track);
 
     void toggleMute();
-    bool isMuted() const { return m_muted; }
+    bool isMuted() const;
 
 private:
     MusicManager() = default;

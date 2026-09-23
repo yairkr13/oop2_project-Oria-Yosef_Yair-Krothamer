@@ -25,11 +25,7 @@ public:
     SoundPlayer(const SoundPlayer&) = delete;
     SoundPlayer& operator=(const SoundPlayer&) = delete;
 
-    static SoundPlayer& getInstance()
-    {
-        static SoundPlayer instance;
-        return instance;
-    }
+    static SoundPlayer& getInstance();
 
     // Fire-and-forget: looks up `name`'s buffer (via AssetsManager), builds
     // an sf::Sound bound to it, and plays it immediately. Safe to call many
@@ -38,8 +34,8 @@ public:
     // don't cut each other off the way replaying one shared sf::Sound would.
     void play(const std::string& name);
 
-    void toggleMute() { m_muted = !m_muted; }
-    bool isMuted() const { return m_muted; }
+    void toggleMute();
+    bool isMuted() const;
 
 private:
     SoundPlayer() = default;
