@@ -73,8 +73,6 @@ void BoardEntity::onTurnBoundary()
 void BoardEntity::drawHealthBar(sf::RenderWindow& window) const
 {
     if (!isAlive()) return;
-    /*if (m_side == currentPlayer)
-        return;*/
         // 1. ����� ����� ��� ����� (����, 80% ����� ����� ����)
     float barWidth = Config::MONSTER_BOARD_SIZE * 0.65f;
     float barHeight = 6.f;

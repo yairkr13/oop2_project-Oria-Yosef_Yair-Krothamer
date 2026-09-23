@@ -14,8 +14,7 @@ class Monster; // Forward declaration - Tile.h already pulls in the full type, b
 //
 // Only ever constructed and owned by Board (see Board::m_pathfinder) - not
 // part of Board's own public API. Board keeps its existing public
-// getReachableTiles/getPathTo methods (and, commented out for now, its
-// getExtendedAttackOnlyTiles - see below) and simply forwards to this
+// getReachableTiles/getPathTo methods and simply forwards to this
 // internally, so no other caller (GameplayState, AIPlayer, Board's own
 // performMove/highlightNeighbors) needs to know this class exists or
 // change how it talks to Board at all.
@@ -40,7 +39,6 @@ public:
     // already made for an enemy standing there, just for the other side.
     // Needed for Special-ability target search (see Board::highlightValidSpecialTargets/
     // getReachableOccupiedTiles), which must see allies too, not just enemies.
-    //std::vector<Tile*> getReachableTiles(Monster* monster) const;
     std::vector<const Tile*> getReachableTiles(const BoardEntity* entity, bool includeAllies = false) const;
 
     // Enemy tiles reachable ONLY because of a monster's extended attack
@@ -53,20 +51,13 @@ public:
     // the underlying attackRange/outExtendedAttackOnly plumbing inside
     // computeReachability below is left in place either way, since it's
     // shared with getReachableTiles/getPathTo and harmless while unused.
-    //std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;
-    //std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
 
     // שלב ב': אותה שאילתה, אבל מחזירה את המסלול המדורג (לפי סדר) מהמפלצת ל-target
     // הספציפי, לא רק "מה אפשר". target חייב להיות tile שכבר יצא מ-getReachableTiles
     // (כלומר תנועה, לא תקיפה) - אחרת מוחזרת רשימה ריקה.
-   // std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
     std::vector<const Tile*> getPathTo(const BoardEntity* entity, const Tile* target) const;
 private:
     // ה-BFS המשותף (מעבר יחיד) שגם getReachableTiles וגם getPathTo נשענים עליו.
-    /*void computeReachability(Monster* monster,
-        std::vector<Tile*>& outReachable,
-        std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
-        std::vector<Tile*>* outExtendedAttackOnly = nullptr) const;*/
     void computeReachability(const BoardEntity* entity,
         std::vector<Tile*>& outReachable,
         std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
@@ -75,12 +66,6 @@ private:
 
     // The one place that answers "can this entity enter/traverse this
     // neighboring Tile" for the BFS above.
-    /*bool visitNeighbor(Monster* monster, Tile* tile,
-        const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
-        int neighborDist, int range, int attackRange,
-        std::vector<Tile*>& outReachable,
-        std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
-        std::vector<Tile*>* outExtendedAttackOnly) const;*/
     bool visitNeighbor(const BoardEntity* entity, Tile* tile, //למה לא עשינו CONST גם למשבצת??????
         const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
         int neighborDist, int range, int attackRange, bool includeAllies,

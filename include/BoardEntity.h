@@ -3,11 +3,6 @@
 #include "Constants.h"
 #include <memory>
 class Monster; // Forward declaration
-//
-//enum class EntityType {
-//    Monster,
-//    Heart
-//};
 
 class Tile; // Forward declaration
 class AttackAnimation; // Forward declaration
@@ -21,8 +16,6 @@ public:
     // ����� �����: ���������� ����� �������� ��� �� default, ���� ���� �-cpp
     virtual ~BoardEntity() = default;
 
-    //virtual int getRange() const { return 0; }
-    // ����� ������� ������ ����:
     virtual void draw(sf::RenderWindow& window, PlayerSide currentSide) const = 0;
     virtual void takeDamage(int damage);
 
@@ -40,7 +33,6 @@ public:
     int getHealth() const { return m_health; }
 
     virtual bool isAlive() const;
-    //virtual int getHealth() const = 0;
     virtual PlayerSide getSide() const = 0;
     bool isEnemyOf(PlayerSide otherSide) const { return getSide() != otherSide; }
     bool isAllyOf(PlayerSide otherSide) const { return getSide() == otherSide; }
@@ -64,12 +56,8 @@ public:
     // state (see Barzilla's empowered attack) override this and chain to the
     // base implementation.
     virtual void onTurnBoundary();
-    //virtual EntityType getType() const = 0;
-    // 
-    //virtual bool isSelectable() const { return false; } // ����� ����: �� �� ���� �����
     virtual bool canBeSelectedBy(PlayerSide side) const { return false; }
 
-    //virtual bool isSelected() const { return false; }
     virtual bool isMoving() const { return false; }
 
     // True while this entity is playing its own attack animation (see
@@ -116,19 +104,14 @@ public:
     // ask only this - never isAlive() directly - to decide whether to call
     // Tile::clearEntity().
     virtual bool isReadyForRemoval() const { return !isAlive(); }
-    //// --- �������� �����: ��� ��-������ �� ������ ---
-    //void setCurrentTile(Tile* tile) { m_currentTile = tile; }
-    //Tile* getCurrentTile() const { return m_currentTile; }
-    // Removed (kept as comments, not deleted): m_currentTile duplicated
-    // m_q/m_row (already the authoritative position, always kept in sync by
-    // spawnOnBoard/moveTo/moveAlongPath) with a second, separately-maintained
-    // reference to the same fact - the two could only ever drift apart, never
-    // add real information. Every caller that needs "which Tile is this
-    // entity on" already has (or can easily get) a Board& and this entity's
-    // own getQ()/getRow(), and can ask Board::getTileAt/getMutableTileAt
-    // directly - the single source of truth Board already owns.
-    // void setCurrentTile(Tile* tile) { m_currentTile = tile; }
-    // Tile* getCurrentTile() const { return m_currentTile; }
+    // Removed: m_currentTile duplicated m_q/m_row (already the authoritative
+    // position, always kept in sync by spawnOnBoard/moveTo/moveAlongPath)
+    // with a second, separately-maintained reference to the same fact - the
+    // two could only ever drift apart, never add real information. Every
+    // caller that needs "which Tile is this entity on" already has (or can
+    // easily get) a Board& and this entity's own getQ()/getRow(), and can
+    // ask Board::getTileAt/getMutableTileAt directly - the single source of
+    // truth Board already owns.
 
 
     // --- �������� ��� ������ (����� ���� ���� ������� ����) ---
@@ -140,7 +123,6 @@ public:
     virtual void update(float dt) {}
     virtual bool canFly() const { return false; }
     sf::Vector2f getScreenPosition() const { return m_screenPos; }
-    //virtual Monster* asMonster() { return nullptr; }
     virtual bool canBeTargetedBySpecial() const { return false; }
 
     // Optional visual for this entity's attack: nullptr (the default, used
@@ -209,7 +191,6 @@ protected:
     int m_q;
     int m_row;
     sf::Vector2f m_screenPos;
-    // Tile* m_currentTile; - removed, see setCurrentTile/getCurrentTile above
 
 private:
     // Only ever touched here in BoardEntity.cpp - neither Monster nor Heart

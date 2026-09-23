@@ -44,6 +44,8 @@ bool BoardPathfinder::visitNeighbor(const BoardEntity* entity, Tile* tile,
         // אם המשבצת לא עבירה לתנועה (כולל בגלל שהיא תפוסה - ראו Tile::setEntity),
         // עדיין נבדוק אם יש עליה אויב שניתן לתקוף מרחוק/באוויר - ואם includeAllies
         // ביקש זאת, גם אם יש עליה בן-ברית (למטרות Special, לא תנועה/תקיפה).
+        // Impassable but still a valid attack/Special target: an enemy is
+        // always recorded, an ally only when includeAllies was requested.
         if (tile->isOccupiedByEnemy(entity->getSide()) ||
             (includeAllies && tile->isOccupiedByAlly(entity->getSide())))
             recordReachability(tile, neighbor, parent, neighborDist, range, attackRange,
@@ -71,7 +73,7 @@ void BoardPathfinder::computeReachability(const BoardEntity* entity,
     int q = entity->getQ();
     int row = entity->getRow();
     int range = entity->getRange();
-    int attackRange = entity->getAttackRange(); // == range for every monster currently in the game (see Board.h's now-commented-out getExtendedAttackOnlyTiles)
+    int attackRange = entity->getAttackRange(); // == range for every monster currently in the game (no monster overrides getAttackRange any more)
     int bfsLimit = std::max(range, attackRange); // walk far enough to find extended-only enemies too
 
     std::map<std::pair<int, int>, int> visited; // מרחק בלבד - פנימי לחישוב, לא מוחזר
@@ -121,82 +123,21 @@ void BoardPathfinder::computeReachability(const BoardEntity* entity,
     }
 }
 
-//std::vector<Tile*> BoardPathfinder::getReachableTiles(Monster* monster) const
-//{
-//    std::vector<Tile*> reachable;
-//    std::map<std::pair<int, int>, std::pair<int, int>> parent; // לא בשימוש כאן, רק כי computeReachability דורש אותו
-//    computeReachability(monster, reachable, parent);
-//    return reachable;
-//}
 std::vector<const Tile*> BoardPathfinder::getReachableTiles(const BoardEntity* entity, bool includeAllies) const
 {
     std::vector<Tile*> reachable;
     std::map<std::pair<int, int>, std::pair<int, int>> parent; // לא בשימוש כאן, רק כי computeReachability דורש אותו
     computeReachability(entity, reachable, parent, includeAllies);
-    //return reachable;
     return { reachable.begin(), reachable.end() };//to be a const
 }
-//
-// Commented out (not deleted) - its only caller was Board::getExtendedAttackOnlyTiles,
-// itself commented out for the same reason (see Board.cpp/BoardPathfinder.h):
-// currently always empty, since no monster overrides getAttackRange() to
-// differ from getRange() any more now that Barzilla's Empowered Attack is
-// ally-targeted instead of self-extending its own reach.
-//
-//std::vector<Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(Monster* monster) const
-//{
-//    std::vector<Tile*> reachable, extended;
-//    std::map<std::pair<int, int>, std::pair<int, int>> parent; // unused here, same as above
-//    computeReachability(monster, reachable, parent, &extended);
-//    return extended;
-//}
-//std::vector<const Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(const BoardEntity* entity) const
-//{
-//    std::vector<Tile*> reachable, extended;
-//    std::map<std::pair<int, int>, std::pair<int, int>> parent;
-//    computeReachability(entity, reachable, parent, &extended);
-//    return { extended.begin(), extended.end() };
-//}
 
 // שחזור המסלול: הולכים אחורה מה-target דרך outParent עד שמגיעים למקור, ואז
 // הופכים את הסדר (כי בנינו אותו מהסוף להתחלה). אם target לא הופיע ב-parent
 // בכלל - זה אומר שהוא לא נגיש (או שהוא עצמו נקודת המוצא), ומוחזרת רשימה ריקה.
-//std::vector<Tile*> BoardPathfinder::getPathTo(Monster* monster, Tile* target) const
-//{
-//    std::vector<Tile*> path;
-//    if (!monster || !target) return path;
-//
-//    std::vector<Tile*> reachable;
-//    std::map<std::pair<int, int>, std::pair<int, int>> parent;
-//    computeReachability(monster, reachable, parent);
-//
-//    std::pair<int, int> sourceCoords = { monster->getQ(), monster->getRow() };
-//    std::pair<int, int> targetCoords = { target->getQ(), target->getRow() };
-//
-//    if (targetCoords == sourceCoords) return path; // כבר שם
-//    if (!parent.count(targetCoords)) return path;   // לא נגיש - לא אמור לקרות בפועל
-//
-//    std::vector<std::pair<int, int>> reversedCoords;
-//    std::pair<int, int> cur = targetCoords;
-//    while (cur != sourceCoords)
-//    {
-//        reversedCoords.push_back(cur);
-//        cur = parent.at(cur);
-//    }
-//    std::reverse(reversedCoords.begin(), reversedCoords.end());
-//
-//    for (auto& coords : reversedCoords)
-//    {
-//        auto it = m_grid.find(coords);
-//        if (it != m_grid.end())
-//            path.push_back(it->second.get());
-//    }
-//
-//    return path;
-//}
 std::vector<const Tile*> BoardPathfinder::getPathTo(const BoardEntity* entity, const Tile* target) const
 {
     std::vector<Tile*> path;
+    // Nothing to path for without both a mover and a destination.
     if (!entity || !target) return { path.begin(), path.end() };
 
     std::vector<Tile*> reachable;
@@ -206,6 +147,8 @@ std::vector<const Tile*> BoardPathfinder::getPathTo(const BoardEntity* entity, c
     std::pair<int, int> sourceCoords = { entity->getQ(), entity->getRow() };
     std::pair<int, int> targetCoords = { target->getQ(), target->getRow() };
 
+    // Already standing there (no path needed), or target never showed up in
+    // outParent at all - i.e. genuinely unreachable. Either way: empty path.
     if (targetCoords == sourceCoords) return { path.begin(), path.end() };
     if (!parent.count(targetCoords)) return { path.begin(), path.end() };
 
@@ -225,6 +168,5 @@ std::vector<const Tile*> BoardPathfinder::getPathTo(const BoardEntity* entity, c
             path.push_back(it->second.get());
     }
 
-    //return path;
     return { path.begin(), path.end() };
 }

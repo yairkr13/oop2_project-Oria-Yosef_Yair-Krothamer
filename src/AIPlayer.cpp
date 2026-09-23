@@ -21,6 +21,7 @@ AIPlayer::AIPlayer(PlayerSide side)
 
 const Tile* AIPlayer::findBestTarget(const Board& board, const Monster* monster) const
 {
+    // Nothing to do for a missing or already-dead monster.
     if (!monster || !monster->isAlive()) return nullptr;
 
 	//ask the board what tiles are reachable for this monster, and then the AI will decide what to do with them
@@ -71,6 +72,8 @@ const Tile* AIPlayer::findBestTarget(const Board& board, const Monster* monster)
                 ? HexGrid::distance(tile->getQ(), tile->getRow(), goalTile->getQ(), goalTile->getRow())
                 : tile->getQ(); // no goal tile (shouldn't happen) - falls back to the old Q-only heuristic
 
+            // First candidate found, or a strictly closer one than what's
+            // been picked so far.
             if (!bestMoveTarget || dist < bestMoveDistance)
             {
                 bestMoveDistance = dist;
@@ -85,6 +88,8 @@ const Tile* AIPlayer::findBestTarget(const Board& board, const Monster* monster)
 
 const Tile* AIPlayer::findBestSpecialTarget(const Board& board, const Monster* monster) const
 {
+    // Nothing to search for if there's no monster, or its Special isn't
+    // usable right now (dead, on cooldown, etc.).
     if (!monster || !monster->canUseSpecialAbilityNow()) return nullptr;
 
     // Only ever occupied tiles - a Special never targets an empty tile, so
@@ -117,7 +122,9 @@ void AIPlayer::onTurnStart(Board& board)
     for (auto& cardPtr : m_hand)
     {
         Card* card = cardPtr.get();
-        
+
+        // Skip a missing/already-played card, or one this AI can't
+        // currently afford.
         if (!card || card->isPlayed() || card->getCost() > m_keys)
             continue;
 
@@ -132,7 +139,6 @@ void AIPlayer::onTurnStart(Board& board)
         
         if (monster)
         {
-            //board.spawnMonsterOnTile(monster, chosenTile);
             board.spawnEntityOnTile(monster, chosenTile);
         }
     }

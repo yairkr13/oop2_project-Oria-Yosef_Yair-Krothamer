@@ -72,6 +72,8 @@ bool NetworkConnection::startHosting(unsigned short port)
 
 bool NetworkConnection::acceptConnection()
 {
+    // Nothing to accept if already connected, or if this side never started
+    // hosting (no listening socket to accept on) in the first place.
     if (m_connected || m_listenSocket == 0) return false;
 
     SOCKET accepted = accept(toSocket(m_listenSocket), nullptr, nullptr);
@@ -117,6 +119,8 @@ bool NetworkConnection::connectToHost(const std::string& hostAddress, unsigned s
     // once update() below observes the socket has actually become writable
     // (the standard non-blocking-connect completion signal).
     int result = connect(sock, reinterpret_cast<sockaddr*>(&address), sizeof(address));
+    // A real failure, not the expected "connection attempt still in
+    // progress" result every non-blocking connect() starts with.
     if (result == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK)
     {
         m_lastError = "connect() failed";

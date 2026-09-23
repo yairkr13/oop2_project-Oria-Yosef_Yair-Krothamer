@@ -52,12 +52,6 @@ public:
     // יוצר Monster חדש, מעביר בעלות החוצה, אבל שומר observer pointer לעצמו
     std::unique_ptr<Monster> spawnMonster();
 
-    // Player קורא לזה כשהמפלצת מתה/יורדת מהלוח - מנתק את הקישור לפני שהיא נהרסת
-    // No longer called anywhere (kept, not deleted): Player::removeDeadMonsters()
-    // now erases the whole Card via isGone() directly instead of unlinking
-    // first and erasing later - see there.
-    // void clearLink() { m_linkedMonster = nullptr; }
-
 private:
     void drawBoarder(sf::RenderWindow& window, sf::Vector2f position, sf::Color color) const;
     void drawCostText(sf::RenderWindow& window, sf::Vector2f drawPos, const sf::Font& font, bool enoughKeys) const;
@@ -70,5 +64,4 @@ private:
     std::string m_textureKey;
     PlayerSide m_side;
     Monster* m_linkedMonster = nullptr; //only observer, player is the owner
-    // bool m_monsterDied = false; - removed, see isGone()/clearLink() above
 };

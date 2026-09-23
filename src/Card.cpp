@@ -23,8 +23,6 @@ std::unique_ptr<Monster> Card::spawnMonster()
 
 void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const //chege enough keys
 {
-    //if (!m_linkedMonster) //אמור לעבוד לא? כי המפלצת שהיא מתה אז מוחקים אותה מהשחקן???????
-		//return;
     // Belt-and-suspenders: Player::removeDeadMonsters() already erases a
     // Card the same frame isGone() becomes true (see there), so draw()
     // should never actually see one - this stays only as a cheap safety net
@@ -61,6 +59,8 @@ void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected
 
     if (isPlayed())
         sprite.setColor(sf::Color(255, 255, 255, 100));
+	// Overrides the dimmed "played" tint above when the linked monster's
+	// Special is ready - a ready Special should always read as fully lit.
 	if (m_linkedMonster && m_linkedMonster->isSpecialReady())
 		sprite.setColor(sf::Color(255, 255, 255));
 

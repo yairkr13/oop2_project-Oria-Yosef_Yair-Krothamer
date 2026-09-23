@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
-//try
+
 class Board
 {
 public:  // הפונקציות הציבוריות שיכלו להיות const - כן, נוספו (ראו למטה)
@@ -23,14 +23,10 @@ public:  // הפונקציות הציבוריות שיכלו להיות const - 
 	// never needs to change to support it.
 	explicit Board(const BoardLayout& layout = BoardGenerator::standardLayout());
 	void draw(sf::RenderWindow& window, PlayerSide currentSide) const;
-	//bool isTilePassable(Tile* start, Tile* end) const;
 
 	void update(float dt) const;
 	bool isAnimating() const;
 
-
-	//bool trySpawnMonster(const sf::Vector2f& pos, std::shared_ptr<Monster> monster);
-	//bool trySpawnMonster(const sf::Vector2f& pos, Monster* monster);
 	void highlightSpawnTiles( PlayerSide side) const;
 	void clearHighlights() const;
 
@@ -51,9 +47,7 @@ public:  // הפונקציות הציבוריות שיכלו להיות const - 
 	// מספק את רשימת המשבצות החוקיות לזימון עבור הצד הזה; AIPlayer בוחר מתוכה.
 	std::vector<const Tile*> getSpawnableTiles(const Monster* monster, PlayerSide side) const;
 
-	//bool AI_SpawnMonster(Monster* monster, PlayerSide side);
 	void performAction(BoardEntity* entity,const Tile* targetTile) const;// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
-	//void performAction(Monster* monster, Tile* targetTile);// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
 	// Validates that `entity` may currently be selected by `side` and, if
 	// so, highlights its move/attack options - exactly what GameplayState
@@ -66,7 +60,6 @@ public:  // הפונקציות הציבוריות שיכלו להיות const - 
 	// Board itself no longer tracks "who is selected" - that's interaction
 	// state, not board state.
 	bool selectEntity(const BoardEntity* entity, PlayerSide side) const; //למה יש את הפונקציה הזאת בלוח???? מה היא עושה?????
-	//bool selectMonster(Monster* monster, PlayerSide side);
 
 
 	// Highlights every Tile in `tiles` with `color` - the generic operation
@@ -77,7 +70,6 @@ public:  // הפונקציות הציבוריות שיכלו להיות const - 
 	// about *why* these tiles are being highlighted - same "Board owns Tile
 	// painting, never a bystander" principle highlightNeighbors already
 	// follows.
-	//void highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color); //למה הפונקציה הזאת היא ציבורית??????
 
 
 	// שלב א' של הפירוק: כל ה-tiles שהמפלצת יכולה להגיע/לתקוף אליהם, בלי לצייר
@@ -89,7 +81,6 @@ public:  // הפונקציות הציבוריות שיכלו להיות const - 
 	// actual BFS lives in BoardPathfinder (see m_pathfinder below); this
 	// just forwards. No caller (GameplayState, AIPlayer, Board's own
 	// performMove/highlightNeighbors) needs to know that or change anything.
-	//std::vector<Tile*> getReachableTiles(Monster* monster) const;
 	// `includeAllies` (default false, unchanged for performMove/highlightNeighbors)
 	// - see BoardPathfinder::getReachableTiles for why: an ally-occupied
 	// tile is normally excluded the same way any occupied tile is (it's
@@ -115,14 +106,11 @@ public:  // הפונקציות הציבוריות שיכלו להיות const - 
 	// (never appears in getReachableTiles, so performAction's movement branch
 	// already rejects them - see there), purely an additional set for
 	// highlighting "this monster can strike here but not stand here."
-	// Commented out (not deleted): this served Barzilla's OLD Empowered
-	// Attack, which used to extend his own getAttackRange() - now that it's
+	// Not exposed any more: this served Barzilla's OLD Empowered Attack,
+	// which used to extend his own getAttackRange() - now that it's
 	// ally-targeted instead (see Barzilla.h), no monster overrides
 	// getAttackRange() any more, so this would always be empty for everyone.
-	/*std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;*/
-	//std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
 
-	//bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
 	bool spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile) const;
 
 	// Picks one tile uniformly at random out of `tiles` (using Board's own
@@ -161,13 +149,6 @@ public:  // הפונקציות הציבוריות שיכלו להיות const - 
 	const Tile* getTileAt(int q, int row) const;
 
 
-	// Every currently-occupied Tile, board-wide - a plain occupancy fact.
-	// Commented out (not deleted): its only caller, highlightValidSpecialTargets,
-	// now bounds candidates by range (getReachableTiles) instead of checking
-	// the whole board, so this is unused - kept in case a future need for
-	// "every occupied tile, unbounded by range" comes up again.
-	/*std::vector<const Tile*> getOccupiedTiles() const;*/
-	//void highlightNeighbors(const BoardEntity* entity); //למה זה ציבורי??????
 	void highlightValidSpecialTargets(const Monster* caster) const;
 	// Pushes `entity` up to `maxTiles` steps in direction (dq, dr), stopping
 	// at the first blocked/occupied/off-board tile - purely mechanical
@@ -209,7 +190,6 @@ private:
 	// Default color matches Tile::setHighlighted's own default (plain green -
 	// "movable"), so a caller that just wants that doesn't need to repeat it.
 	void highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color = sf::Color(150, 220, 150, 180)) const;
-	//std::vector<Tile*> getOccupiedTiles() const;
 
 	// The [minQ, maxQ] column band reserved for `side`'s spawns - derived
 	// from m_layout.cols/spawnColumnWidth instead of each caller hardcoding
@@ -228,23 +208,10 @@ private:
 	// the existing movement coordination (reachability/path/target-tile
 	// handling) unchanged.
 	void performAttack(BoardEntity* entity, Tile* targetTile) const;
-	//void performMove(Monster* monster, Tile* targetTile);
-	/*void performAttack(BoardEntity* entity, Tile* targetTile);
-	void performMove(Monster* monster, Tile* targetTile);*/
 	void performMove(BoardEntity* entity, Tile* targetTile) const;
 
-	//void setHighlight(const sf::Vector2f& pos, int range);
-	//sf::Vector2f tileToScreen(int q, int row) const;
-	//void highlightNeighbors(int q, int row, int range);
-	//void highlightNeighbors(Monster* monster); // שינוי חתימה
-	//void highlightNeighbors(BoardEntity* entity);
-	//Tile* getLeftmostTileInRow(int row) const;
-	//Tile* getRightmostTileInRow(int row) const;
 	// getExtremeTileInRow moved up to the public section above.
 	std::pair<int, int> screenToTile(const sf::Vector2f& pos) const;
-
-	//bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
-	// פונקציית ליבה שמבצעת את הפעולה הפיזית על הלוח (משותפת לאדם ולמחשב)
 
 	// The hex grid's raw base position for (q,row) - NOT the tile's visual
 	// center. This is what Tile's own constructor needs: Tile's shape never
@@ -272,8 +239,6 @@ private:
 	// here instead.
 	BoardLayout m_layout;
 
-	// ��� public:
-	//std::vector <Monster*> m_monsters;
 	std::map<std::pair<int, int>, std::unique_ptr<Tile>> m_grid;
 
 	// Owns the reachability/pathfinding BFS - see BoardPathfinder.h. Reads

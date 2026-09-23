@@ -8,29 +8,17 @@
 
 class Board;
 
-//check
 class Player //: public StaticObject do an heart tile
 {
 public:
     Player(PlayerSide side);
     virtual ~Player() = default; // <--- ������ �� ����� ���!
-	//bool handleClick(const sf::Vector2f& pos);
-    //Card* handleCardClick(sf::Vector2f mousePos);
     bool isDead() const;
-    //align right - to delete and use side 
 
-    // �����: ���� ������ ���� (���� ����) ���� ������ ������ ���
-    //void draw(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;
     void draw(sf::RenderWindow& window, bool alignRight, const Card* selectedFromHand = nullptr) const;
 
     Card* handleHandClick(sf::Vector2f mousePos, bool alignRight) const;
 
-    /*void draw(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand = nullptr) const;
-    void drawKeys(sf::RenderWindow& window, bool alignRight) const;
-    std::shared_ptr<Monster> handleHandClick(sf::Vector2f mousePos, bool alignRight) const;*/
-
-    //void draw(sf::RenderWindow& window) const;
-    //const sf::Vector2f& getPosition() const;
 	void endTurn();
     PlayerSide getSide() const { return m_side; }
 
@@ -53,17 +41,9 @@ public:
     // the same thing on a remote peer's own computer, for GameAction::cardIndex
     // (see RemotePlayer). -1 if `card` isn't actually in this hand.
     int indexOfCard(const Card* card) const;
-//private:
 protected:
-    //void drawHand(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;
-    //void drawHand(sf::RenderWindow& window, bool alignRight, Card* selectedFromHand = nullptr) const;
-    //void drawKeys(sf::RenderWindow& window, bool alignRight) const;
-
-    //
-	//std::vector<std::unique_ptr<Card>> m_cards;
     int m_keys;
 
-    //std::vector<std::shared_ptr<Monster>> m_monsters;
     std::vector<std::unique_ptr<Monster>> m_monsters;
     std::vector<std::unique_ptr<Card>> m_hand;
 private:
