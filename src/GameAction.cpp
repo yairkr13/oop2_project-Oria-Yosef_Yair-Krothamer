@@ -3,12 +3,8 @@
 
 namespace
 {
-    // Every field is written as a plain 4-byte native int (no htonl/ntohl -
-    // unlike NetworkConnection's own length prefix, this never needs to be
-    // understood by anything other than another copy of this same project,
-    // always compiled for the same Windows x64 target, so there's no real
-    // byte-order mismatch to guard against here, and it keeps this file
-    // free of any networking-specific header).
+    // Plain 4-byte native int, not htonl/ntohl - only ever read by another
+    // copy of this same project on the same target, so no byte-order concern.
     void writeInt(std::vector<std::uint8_t>& out, int value)
     {
         std::uint8_t bytes[4];
@@ -47,7 +43,7 @@ std::vector<GameAction> deserializeActions(const std::vector<std::uint8_t>& byte
     std::vector<GameAction> actions;
 
     // 4 (count) + at least one full 25-byte record if count > 0 - anything
-    // shorter is a malformed/truncated message, not a valid empty list.
+    // shorter is malformed/truncated, not a valid empty list.
     if (bytes.size() < 4) return actions;
 
     int count = readInt(bytes.data());

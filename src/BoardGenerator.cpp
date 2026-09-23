@@ -9,28 +9,17 @@ namespace
 {
     using Grid = std::map<std::pair<int, int>, std::unique_ptr<Tile>>;
 
-    // PlayerVsRemote only (see Board::generateSpecialTiles) - both peers
-    // must end up with an IDENTICAL board, and relying on a shared random
-    // seed to guarantee that turned out not to hold up in practice across
-    // two separate machines. A hardcoded list sidesteps the whole question:
-    // there's no RNG left to possibly desync. Coordinates are valid tiles
-    // of BoardGenerator::standardLayout() specifically (7 rows, 20 cols,
-    // spawnColumnWidth 2 -> q in [2,17], and q's parity must match the
-    // row's - see buildBaseGrid) - the only layout PlayerVsRemote ever
-    // actually builds.
+    // PlayerVsRemote only: a hardcoded coordinate list guarantees both peers
+    // get an identical board with no RNG left to desync. Valid only for
+    // standardLayout() (7 rows, 20 cols, spawnColumnWidth 2).
     const std::vector<std::pair<int, int>> FIXED_SPECIAL_TILE_COORDS = {
         { 4, 0 }, { 13, 5 },   // lava
         { 8, 2 }, { 12, 4 },   // hole
         { 7, 3 },              // panic point
     };
 
-    // Shared by every special-tile placement below: builds TileType at
-    // `coords`'s screen position and inserts it into `grid`. TileType is
-    // always known at the call site (never chosen at runtime), and
-    // constructor argument lists genuinely differ between Tile subtypes
-    // (PanicPoint needs both Hearts; Hole/LavaTile need neither) - Args...
-    // forwards whatever extra constructor arguments TileType needs beyond
-    // (q, row, position).
+    // Builds TileType at coords's screen position and inserts it into grid.
+    // Args... forwards whatever extra constructor arguments TileType needs.
     template <typename TileType, typename... Args>
     void placeSpecialTile(Grid& grid, const std::pair<int, int>& coords,
         const std::function<sf::Vector2f(int, int)>& anchorToScreen, Args&&... extraArgs)
@@ -63,7 +52,7 @@ namespace BoardGenerator
     {
         Grid grid;
 
-        // שלב א': יצירת הלוח כרגיל עם משבצות רגילות
+        // Plain grid of ordinary tiles.
         for (int row = 0; row < layout.rows; ++row)
         {
             int start_col = (row % 2 == 0) ? 0 : 1;
@@ -92,7 +81,7 @@ namespace BoardGenerator
         }
         else
         {
-            // אוספים משבצות רק מהאיזור המותר (בלי הטורים הקיצוניים של הזימונים והלבבות)
+            // Only collect candidates outside the spawn margins.
             std::vector<std::pair<int, int>> allCoords;
             int minQ = layout.spawnColumnWidth;
             int maxQ = layout.cols - 1 - layout.spawnColumnWidth;

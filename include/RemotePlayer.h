@@ -8,49 +8,36 @@
 class Board;
 
 // A Player whose turn is driven by another computer over the network,
-// instead of local mouse/keyboard input (see GameplayState's handle*
-// methods) or an AI heuristic (see AIPlayer) - the third case
-// Player::onTurnStart/updateTurn/isBusy already anticipates.
-//
-// Owns BOTH directions of this match's network traffic, not just the
-// "replay the opponent's turn" half its name suggests, and owns the
-// NetworkConnection itself - it's the one class that actually needs it, so
-// GameplayState never touches a GameAction, a byte, or the connection
-// directly, only ever recordLocalAction()/sendRecordedActions()/pollIncoming().
+// instead of local input (GameplayState) or an AI heuristic (AIPlayer).
+// Owns both directions of this match's network traffic and the
+// NetworkConnection itself - GameplayState only ever calls
+// recordLocalAction()/sendRecordedActions()/pollIncoming().
 class RemotePlayer : public Player
 {
 public:
-    // `connection` must already be connected (see the lobby State) and
-    // must outlive this RemotePlayer - owned by whoever also owns the
-    // GameplayState this player belongs to.
+    // connection must already be connected and must outlive this
+    // RemotePlayer - owned by whoever also owns the GameplayState.
     RemotePlayer(PlayerSide side, NetworkConnection& connection);
 
     void onTurnStart(Board& board) override;
     void updateTurn(Board& board) override;
     bool isBusy() const override;
 
-    // Called by GameplayState as the local human (the OTHER Player in this
-    // match) acts, only while playing PlayerVsRemote.
+    // Called by GameplayState as the local human acts, only while playing PlayerVsRemote.
     void recordLocalAction(const GameAction& action);
 
-    // Called once, when the local human's own turn ends: appends the
-    // EndTurn marker, serializes everything recorded since the last call,
-    // and sends it - then clears the recorded list for next time.
+    // Called once the local human's turn ends: appends EndTurn, serializes
+    // everything recorded since last call, sends it, then clears the list.
     void sendRecordedActions();
 
-    // Called once per frame (see GameplayState::update) regardless of
-    // whose turn it locally is, so the connection is always serviced -
-    // pumps the socket and, if a full message has arrived, feeds it into
-    // this player's own pending-actions queue.
+    // Called once per frame regardless of whose turn it locally is, so the
+    // connection is always serviced.
     void pollIncoming();
 
 private:
     void receiveTurnActions(std::vector<GameAction> actions);
     // Replays one GameAction through the same Board/Monster calls a local
-    // click would make (Board::spawnEntityOnTile/performAction,
-    // Monster::useSpecialAbility) - never a parallel "apply the result"
-    // mechanism, so this player's turn always plays out through the exact
-    // same rules as everyone else's.
+    // click would make, never a parallel "apply the result" mechanism.
     void applyAction(const GameAction& action, Board& board);
 
     NetworkConnection& m_connection;

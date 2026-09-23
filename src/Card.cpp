@@ -15,20 +15,14 @@ bool Card::isGone() const
 
 int Card::getCost() const { return m_cost; }
 PlayerSide Card::getSide() const { return m_side; }
-
-// האם הקלף כבר "שוחק" - יש לו מפלצת חיה מקושרת על הלוח
 bool Card::isPlayed() const { return m_linkedMonster != nullptr; }
-
 const Monster* Card::getLinkedMonster() const { return m_linkedMonster; }
 
-// Mutable access - only for the few callers that actually need to
-// change the monster itself (useSpecialAbility, cancelSpecialAbility).
-// Same reasoning/naming as Tile::getMutableEntity().
+// Mutable access - only for callers that change the monster itself (useSpecialAbility, cancelSpecialAbility).
 Monster* Card::getMutableLinkedMonster() const { return m_linkedMonster; }
 
 std::string Card::getCardTextureKey() const { return m_textureKey + "_card"; }
 
-//למה פה ולא בmonster factory?
 std::unique_ptr<Monster> Card::spawnMonster()
 {
     std::unique_ptr<Monster> monster = MonsterFactory::create(m_monsterId, m_side);
@@ -36,14 +30,10 @@ std::unique_ptr<Monster> Card::spawnMonster()
     return monster;
 }
 
-void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const //chege enough keys
+void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const
 {
-    //if (!m_linkedMonster) //אמור לעבוד לא? כי המפלצת שהיא מתה אז מוחקים אותה מהשחקן???????
-		//return;
     // Belt-and-suspenders: Player::removeDeadMonsters() already erases a
-    // Card the same frame isGone() becomes true (see there), so draw()
-    // should never actually see one - this stays only as a cheap safety net
-    // for the narrow one-frame window before that runs.
+    // gone Card the same frame, so this should never actually trigger.
 	if (isGone())
 		return;
 
@@ -81,7 +71,6 @@ void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected
 
     window.draw(sprite);
 
-    // 3. ציור הטקסט המתאים (עלות או סטטוס)
     if (!isPlayed())
     {
         drawCostText(window, drawPos, font, enoughKeys);

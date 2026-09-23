@@ -8,11 +8,7 @@
 
 namespace
 {
-    // The one place this project's turn-action stream and any future
-    // message both agree the length prefix is 4 bytes, big-endian ("network
-    // byte order" - htonl/ntohl) - the conventional choice so two machines
-    // with different native byte order (not a real concern between two
-    // Windows PCs, but cheap to do correctly) still agree on it.
+    // Length prefix size, big-endian (network byte order).
     constexpr std::size_t LENGTH_PREFIX_SIZE = 4;
 
     SOCKET toSocket(std::uintptr_t handle) { return static_cast<SOCKET>(handle); }
@@ -82,8 +78,7 @@ bool NetworkConnection::acceptConnection()
     setNonBlocking(m_socket);
     m_connected = true;
 
-    // The listening socket's only job was accepting this one connection -
-    // this game never accepts a second peer.
+    // The listening socket's only job was accepting this one connection.
     closesocket(toSocket(m_listenSocket));
     m_listenSocket = 0;
     return true;
@@ -113,9 +108,8 @@ bool NetworkConnection::connectToHost(const std::string& hostAddress, unsigned s
     m_socket = static_cast<std::uintptr_t>(sock);
 
     // Non-blocking connect() returns immediately with WSAEWOULDBLOCK - the
-    // attempt continues in the background; isConnected() only turns true
-    // once update() below observes the socket has actually become writable
-    // (the standard non-blocking-connect completion signal).
+    // attempt continues in the background; update() detects completion once
+    // the socket becomes writable.
     int result = connect(sock, reinterpret_cast<sockaddr*>(&address), sizeof(address));
     if (result == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK)
     {
@@ -173,9 +167,7 @@ void NetworkConnection::update()
 
     if (!m_connected)
     {
-        // A non-blocking connect() has finished (successfully or not) once
-        // the socket becomes writable - the standard way to detect this
-        // without blocking.
+        // A non-blocking connect() has finished once the socket becomes writable.
         fd_set writeSet;
         FD_ZERO(&writeSet);
         FD_SET(toSocket(m_socket), &writeSet);
@@ -237,9 +229,8 @@ void NetworkConnection::update()
             }
         }
     }
-    // received == 0 -> peer closed the connection cleanly; a negative
-    // result with WSAEWOULDBLOCK just means nothing's arrived this frame -
-    // neither needs anything different done here right now.
+    // received == 0 -> peer closed cleanly; a negative result with
+    // WSAEWOULDBLOCK just means nothing arrived this frame - neither needs anything done here.
 }
 
 bool NetworkConnection::hasMessage() const

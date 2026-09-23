@@ -7,90 +7,51 @@
 
 class Monster; // Forward declaration - Tile.h already pulls in the full type, but this documents the actual dependency directly.
 
-// Owns Board's reachability/pathfinding BFS - "given a monster, which tiles
-// can it move to or attack, and what's the tile-by-tile path to a specific
-// one." Extracted out of Board so Board itself doesn't also have to BE a
-// graph-search algorithm on top of everything else it does.
-//
-// Only ever constructed and owned by Board (see Board::m_pathfinder) - not
-// part of Board's own public API. Board keeps its existing public
-// getReachableTiles/getPathTo methods (and, commented out for now, its
-// getExtendedAttackOnlyTiles - see below) and simply forwards to this
-// internally, so no other caller (GameplayState, AIPlayer, Board's own
-// performMove/highlightNeighbors) needs to know this class exists or
-// change how it talks to Board at all.
-//
-// Reads Board's own tile grid (given by reference at construction - the
-// exact same grid object Board owns and populates/mutates over its
-// lifetime, never copied) but never modifies it, and knows nothing about
-// concrete Monster or Tile subtypes - only the Monster/Tile base-class
-// interface (getRange/getAttackRange/isPassableFor/isOccupiedByEnemy/
-// hasEntity), so it stays exactly as polymorphic as the code it was moved
-// from.
+// Owns Board's reachability/pathfinding BFS: given an entity, which tiles
+// can it move to or attack, and what's the tile-by-tile path to one of them.
+// Extracted out of Board so Board isn't also a graph-search algorithm.
+// Only ever constructed and owned by Board (m_pathfinder); reads Board's
+// grid by reference but never modifies it.
 class BoardPathfinder
 {
 public:
     explicit BoardPathfinder(const std::map<std::pair<int, int>, std::unique_ptr<Tile>>& grid);
 
-    // שכבה 1: לוגיקה טהורה - "אילו tiles המפלצת יכולה להגיע/לתקוף אליהם", בלי לצייר כלום.
-    // `includeAllies` (default false - unchanged behavior for every existing
-    // caller, e.g. Board::performMove/highlightNeighbors) also records
-    // ally-occupied tiles that are otherwise impassable purely because
-    // they're occupied (see Tile::setEntity) - exactly the same exception
-    // already made for an enemy standing there, just for the other side.
-    // Needed for Special-ability target search (see Board::highlightValidSpecialTargets/
-    // getReachableOccupiedTiles), which must see allies too, not just enemies.
-    //std::vector<Tile*> getReachableTiles(Monster* monster) const;
+    // includeAllies (default false) also records ally-occupied tiles that
+    // are otherwise impassable purely because they're occupied - needed for
+    // Special-ability target search.
     std::vector<const Tile*> getReachableTiles(const BoardEntity* entity, bool includeAllies = false) const;
 
-    // Enemy tiles reachable ONLY because of a monster's extended attack
-    // range (Monster::getAttackRange() > getRange()) - i.e. beyond normal
-    // move/attack reach but still within the extended reach. Empty for
-    // every monster whose getAttackRange() == getRange() (the default) -
-    // which as of Barzilla's Empowered Attack becoming ally-targeted
-    // (see Barzilla.h) is now every monster in the game, so this is
-    // currently never anything but empty. Kept commented (not deleted) -
-    // the underlying attackRange/outExtendedAttackOnly plumbing inside
-    // computeReachability below is left in place either way, since it's
-    // shared with getReachableTiles/getPathTo and harmless while unused.
+    // Enemy tiles reachable ONLY via an extended attack range
+    // (getAttackRange() > getRange()) - currently always empty since no
+    // monster's attack range differs from its move range any more. Kept
+    // commented (not deleted): the underlying plumbing stays in
+    // computeReachability either way, shared with the two methods above/below.
     //std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;
     //std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
 
-    // שלב ב': אותה שאילתה, אבל מחזירה את המסלול המדורג (לפי סדר) מהמפלצת ל-target
-    // הספציפי, לא רק "מה אפשר". target חייב להיות tile שכבר יצא מ-getReachableTiles
-    // (כלומר תנועה, לא תקיפה) - אחרת מוחזרת רשימה ריקה.
-   // std::vector<Tile*> getPathTo(Monster* monster, Tile* target) const;
+    // Same reachability, but returns the ordered tile-by-tile path to
+    // target. target must be a tile already returned by getReachableTiles
+    // (movement, not attack) or an empty list is returned.
     std::vector<const Tile*> getPathTo(const BoardEntity* entity, const Tile* target) const;
 private:
-    // ה-BFS המשותף (מעבר יחיד) שגם getReachableTiles וגם getPathTo נשענים עליו.
-    /*void computeReachability(Monster* monster,
-        std::vector<Tile*>& outReachable,
-        std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
-        std::vector<Tile*>* outExtendedAttackOnly = nullptr) const;*/
+    // The single-pass BFS both getReachableTiles and getPathTo build on.
     void computeReachability(const BoardEntity* entity,
         std::vector<Tile*>& outReachable,
         std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
         bool includeAllies = false,
         std::vector<Tile*>* outExtendedAttackOnly = nullptr) const;
 
-    // The one place that answers "can this entity enter/traverse this
-    // neighboring Tile" for the BFS above.
-    /*bool visitNeighbor(Monster* monster, Tile* tile,
-        const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
-        int neighborDist, int range, int attackRange,
-        std::vector<Tile*>& outReachable,
-        std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
-        std::vector<Tile*>* outExtendedAttackOnly) const;*/
-    bool visitNeighbor(const BoardEntity* entity, Tile* tile, //למה לא עשינו CONST גם למשבצת??????
+    // Decides whether this entity can enter/traverse one neighboring Tile during the BFS.
+    bool visitNeighbor(const BoardEntity* entity, Tile* tile,
         const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
         int neighborDist, int range, int attackRange, bool includeAllies,
         std::vector<Tile*>& outReachable,
         std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
         std::vector<Tile*>* outExtendedAttackOnly) const;
 
-    // Records `tile` into outReachable (+ outParent) when within `range`, or
-    // into outExtendedAttackOnly when beyond `range` but still within
-    // `attackRange`.
+    // Records tile into outReachable (+ outParent) when within range, or
+    // into outExtendedAttackOnly when beyond range but still within attackRange.
     static void recordReachability(Tile* tile,
         const std::pair<int, int>& neighbor, const std::pair<int, int>& parent,
         int neighborDist, int range, int attackRange,

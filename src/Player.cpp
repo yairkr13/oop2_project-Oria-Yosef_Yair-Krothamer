@@ -5,7 +5,7 @@
 #include "AssetsManager.h"
 
 Player::Player(PlayerSide side)
-	: m_heart(std::make_unique<Heart>(side, -1, -1, sf::Vector2f(0.f, 0.f))), // יוצרים את הלב עם מיקום זמני
+	: m_heart(std::make_unique<Heart>(side, -1, -1, sf::Vector2f(0.f, 0.f))), // temporary position until placed on the board
     /*m_heart(std::make_unique<Heart>()),*/ m_keys(3),m_maxKeys(12), m_side(side)
 {
     m_hand = MonsterFactory::createStandardHand(side);
@@ -43,7 +43,6 @@ void Player::draw(sf::RenderWindow& window, bool alignRight, const Card* selecte
 {
     drawHand(window, alignRight, selectedFromHand);
 	drawKeys(window, alignRight);
-	//למה הוא לא קורא לdrawKeys? כי הוא לא קורא לdrawKeys, צריך להוסיף את זה פה
 }
 
 //void Player::draw(sf::RenderWindow& window, bool alignRight, std::shared_ptr<Monster> selectedFromHand) const
@@ -63,15 +62,12 @@ void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
     keysText.setCharacterSize(24);
     keysText.setFillColor(sf::Color::White);
 
-    // שומרים את ה-bounds של הטקסט
     auto bounds = keysText.getLocalBounds();
 
-    // --- חישוב מיקום בציר X (ימין או שמאל) ---
-    // SFML 3: משתמשים ב-bounds.size.x במקום ב-width
+    // SFML 3: bounds.size.x instead of width.
     float xPos = alignRight ? static_cast<float>(Config::WINDOW_WIDTH) - 20.f - bounds.size.x : 20.f;
 
-    // --- חישוב מיקום בציר Y (מרכז אנכי מושלם) ---
-    // SFML 3: משתמשים ב-bounds.size.y וב-bounds.position.y
+    // SFML 3: bounds.size.y / bounds.position.y for exact vertical centering.
     float yPos = 20.f - bounds.position.y;
 
     keysText.setPosition({ xPos, yPos });
@@ -81,7 +77,6 @@ void Player::drawKeys(sf::RenderWindow& window, bool alignRight) const
 
 void Player::drawHand(sf::RenderWindow& window, bool alignRight, const Card* selectedFromHand) const
 {
-    //למה זה בשחקן?
     /*sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
     bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
     bottomPanel.setFillColor(sf::Color(40, 40, 40));
@@ -98,29 +93,25 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, const Card* sel
 
         bool isSelected = (selectedFromHand && m_hand[i].get() == selectedFromHand);
 
-        // תיקון: <= בודק אם יש מספיק מפתחות
         bool enoughKeys = (m_hand[i]->getCost() <= m_keys);
 
         m_hand[i]->draw(window, getCardPosition(i, alignRight), isSelected, enoughKeys);
     }
 }
 
-// Player.cpp
 std::string Player::getCardTooltipAt(const sf::Vector2f& pos) const
 {
     Card* card = getCardAtPosition(pos, m_side == PlayerSide::Right);
     if (!card)
         return "";
 
-    // 3. הגנה: בדיקה אם לקלף יש מפלצת מקושרת (m_linkedMonster != nullptr)
-    const Monster* monster = card->getLinkedMonster(); // רק קריאה - getSpecialAbilityDescription() למטה הוא const
-    // אותו שורש כמו canUseSpecialAbilityNow: הקלף נשאר מקושר גם אחרי מוות
-    // (removeDeadMonsters אף פעם לא נקראת) - בלי isAlive() כאן, הטולטיפ
-    // ממשיך להופיע על קלף של מפלצת מתה.
+    const Monster* monster = card->getLinkedMonster(); // read-only - getSpecialAbilityDescription() below is const
+    // A card stays linked even after its monster dies (removeDeadMonsters
+    // never runs) - no isAlive() check here, so the tooltip keeps showing
+    // on a dead monster's card.
     if (!monster || !monster->isAlive())
         return "";
 
-    // 4. החזרת התיאור בבטחה
     return monster->getSpecialAbilityDescription();
     //Card* card = getCardAtPosition(pos, m_side == PlayerSide::Right); // Determine alignment based on player side
     //Monster* monster = card->getLinkedMonster();
@@ -214,10 +205,8 @@ Monster* Player::playCard(Card* card)
     if (!card || card->isPlayed() || card->getCost() > m_keys)
         return nullptr;
 
-	//crate the monster and get a unique_ptr to it
     std::unique_ptr<Monster> monster = card->spawnMonster();
 
-	//if the monster is nullptr, don't proceed
     if (!monster) return nullptr;
 
     reduceKeys(card->getCost());
@@ -228,8 +217,6 @@ Monster* Player::playCard(Card* card)
     return raw;
 }
 
-//למה אנחנו צריכים את הפונקציה הזאת? אם נעשה בהמשך משהו שמוחק מפלצת בקלף שהיא מתה. לא עדיף שזה ימחק מזה? יעילות
-//האם צריך את הפונקציה הזאת בשביל להקטין את הקלפים שמישהו מת? שלא ישאר מקום ריק?????
 void Player::removeDeadMonsters()
 {
     // Old two-step version (unlink now, erase later), kept as a comment -
@@ -249,14 +236,12 @@ void Player::removeDeadMonsters()
         return !card || card->isGone();
     });
 
-	//unlink dead monsters from their tiles
     /*for (auto& monster : m_monsters)
     {
         if (monster && !monster->isAlive() && monster->getCurrentTile())
             monster->getCurrentTile()->clearEntity();
     }*/
 
-	//delete the dead monsters from the vector
     /*m_monsters.erase(
         std::remove_if(m_monsters.begin(), m_monsters.end(),
             [](const std::unique_ptr<Monster>& m) {
@@ -295,10 +280,8 @@ sf::Vector2f Player::getCardPosition(size_t index, bool alignRight) const
     return { xPos, BOTTOM_PANEL_TOP_Y + CARD_TOP_MARGIN };
 }
 
-//לבדוק שהלוח לא עושה את הפעולות האלה. 
 void Player::endTurn()
 {
-    // בדיקת תקינות המצביע לפני קריאה ל-isOnBoard()
     for (auto& monster : m_monsters)
     {
         if (monster && monster->isOnBoard())
@@ -316,7 +299,7 @@ void Player::reduceKeys(int cost)
 	m_keys -= cost;
 }
 
-Heart* Player::getHeart() 
+Heart* Player::getHeart()
 {
     return m_heart.get();
 }

@@ -5,12 +5,8 @@
 
 namespace
 {
-    // Large enough to always outrank any possible non-lethal score (which
-    // never exceeds -1 - see scoreAsAttackTarget()) while still preserving
-    // the underlying health-based ordering *among* lethal candidates (added
-    // on top of, not instead of, the candidate's own score) - and small
-    // enough to never approach Heart's own infinity score, so Heart still
-    // always wins regardless of this bonus.
+    // Large enough to always outrank a non-lethal score (never exceeds -1),
+    // small enough to never approach Heart's own infinity score.
     constexpr float LETHAL_HIT_BONUS = 100000.f;
 }
 
@@ -23,7 +19,6 @@ const Tile* AIPlayer::findBestTarget(const Board& board, const Monster* monster)
 {
     if (!monster || !monster->isAlive()) return nullptr;
 
-	//ask the board what tiles are reachable for this monster, and then the AI will decide what to do with them
     std::vector<const Tile*> reachable = board.getReachableTiles(monster);
 
     const Tile* bestAttackTarget = nullptr;
@@ -31,27 +26,20 @@ const Tile* AIPlayer::findBestTarget(const Board& board, const Monster* monster)
     const Tile* bestMoveTarget = nullptr;
     int bestMoveDistance = std::numeric_limits<int>::max();
 
-    // Where this monster advances toward when it has nothing to attack -
-    // the enemy's own back row. Board::initPlayerHearts always places each
-    // side's Heart at the extreme tile of the board's middle row - this
-    // asks for that same tile purely by geometry (middle row + which side's
-    // extreme), never by asking Board "where is the enemy's Heart".
+    // Where this monster advances when it has nothing to attack - the
+    // enemy's back row, found by pure geometry (middle row + extreme tile),
+    // never by asking Board where the enemy's Heart is.
     bool enemyIsLeft = (getSide() == PlayerSide::Right);
     const Tile* goalTile = board.getExtremeTileInRow(board.getMiddleRow(), enemyIsLeft);
 
     for (const Tile* tile : reachable)
     {
-		//first priority: if there's an enemy in range, attack the best-scoring one
+        // First priority: attack the best-scoring enemy in range.
         if (tile->hasEntity() && tile->isOccupiedByEnemy(getSide()))
         {
-            // Purely arithmetic on the existing score - no new virtual hook
-            // needed. scoreAsAttackTarget() is -health for an ordinary
-            // monster, so score + incomingDamage >= 0 exactly when this
-            // attack would kill it (incomingDamage >= health). A lethal hit
-            // gets a large flat bonus added on top of its own score - so it
-            // always outranks any non-lethal one, while still preferring
-            // the lowest-health kill among several lethal candidates (same
-            // as it already preferred lowest-health among non-lethal ones).
+            // A lethal hit gets a large flat bonus on top of its own score,
+            // so it always outranks a non-lethal one while still preferring
+            // the lowest-health kill among lethal candidates.
             float score = tile->scoreAsAttackTarget();
             bool wouldKill = (score + monster->getAttackDamage() >= 0.f);
             float finalScore = wouldKill ? (score + LETHAL_HIT_BONUS) : score;
@@ -64,7 +52,7 @@ const Tile* AIPlayer::findBestTarget(const Board& board, const Monster* monster)
             continue; // still need to check the remaining enemies' scores
         }
 
-		//second priority: if there's an empty tile, move to whichever gets closest to goalTile
+        // Otherwise: move to whichever empty tile gets closest to goalTile.
         if (!tile->hasEntity() && tile->isPassableFor(monster))
         {
             int dist = goalTile
@@ -79,7 +67,6 @@ const Tile* AIPlayer::findBestTarget(const Board& board, const Monster* monster)
         }
     }
 
-	// return the best attack target if it exists, otherwise return the best move target
     return bestAttackTarget ? bestAttackTarget : bestMoveTarget;
 }
 
@@ -87,12 +74,8 @@ const Tile* AIPlayer::findBestSpecialTarget(const Board& board, const Monster* m
 {
     if (!monster || !monster->canUseSpecialAbilityNow()) return nullptr;
 
-    // Only ever occupied tiles - a Special never targets an empty tile, so
-    // there's no reason to look at getReachableTiles' full range here (that
-    // one matters for findBestTarget above, where an empty tile IS a valid
-    // move destination). includeAllies=true - Muffintop/Henrietta/Barzilla's
-    // Specials target allies, who'd otherwise never appear at all (see
-    // Board::getReachableTiles).
+    // Only occupied tiles - a Special never targets an empty one.
+    // includeAllies=true: ally-targeted Specials need allies visible too.
     const Tile* best = nullptr;
     float bestScore = -std::numeric_limits<float>::infinity();
     for (const Tile* tile : board.getReachableOccupiedTiles(monster, /*includeAllies=*/true))
@@ -113,11 +96,11 @@ const Tile* AIPlayer::findBestSpecialTarget(const Board& board, const Monster* m
 
 void AIPlayer::onTurnStart(Board& board)
 {
-    // Phase 1: Spawn all affordable monsters immediately (spawning is instant, no animation)
+    // Phase 1: spawn every affordable monster immediately (spawning has no animation).
     for (auto& cardPtr : m_hand)
     {
         Card* card = cardPtr.get();
-        
+
         if (!card || card->isPlayed() || card->getCost() > m_keys)
             continue;
 
@@ -128,16 +111,13 @@ void AIPlayer::onTurnStart(Board& board)
 
         const Tile* chosenTile = board.pickRandomTile(candidates);
 
-        // playCard מוריד מפתחות, מייצר Monster ומכניס ל-m_monsters
-        
         if (monster)
         {
-            //board.spawnMonsterOnTile(monster, chosenTile);
             board.spawnEntityOnTile(monster, chosenTile);
         }
     }
 
-    // שלב 2: הכנה לשלב הפעולה - נתחיל מהמפלצת הראשונה
+    // Phase 2: start the acting phase, from the first monster.
     m_phase = AITurnPhase::Acting;
     m_currentMonsterIdx = 0;
     m_safetyCounter = 0;
@@ -172,17 +152,13 @@ void AIPlayer::updateTurn(Board& board)
             continue;
         }
 
-        // Try the Special before a normal move/attack - mirrors the priority
-        // GameplayState leaves to the human player's own choice, but the AI
-        // has to decide it itself: use the Special this action if it can and
-        // there's something worth using it on.
+        // Try the Special before a normal move/attack - the AI has to
+        // decide this itself, mirroring the choice a human player would make.
         if (monster->canUseSpecialAbilityNow())
         {
             if (!monster->specialAbilityNeedsTarget())
             {
-                // Self/no-target Special (none currently exist, but the hook
-                // stays generic - see Monster::specialAbilityNeedsTarget) -
-                // no target search needed at all, just commit it.
+                // Self/no-target Special - no target search needed, just commit it.
                 m_safetyCounter++;
                 monster->useSpecialAbility(board);
                 return;
@@ -195,8 +171,7 @@ void AIPlayer::updateTurn(Board& board)
                 monster->useSpecialAbility(board, specialTarget->getMutableEntity());
                 return;
             }
-            // No valid target in range right now - fall through to a normal
-            // move/attack instead of wasting this action doing nothing.
+            // No valid target in range - fall through to a normal move/attack instead.
         }
 
         // Find best target for this monster
@@ -226,4 +201,3 @@ bool AIPlayer::isBusy() const
 {
     return m_phase != AITurnPhase::Done;
 }
-
