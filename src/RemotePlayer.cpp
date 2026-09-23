@@ -54,6 +54,14 @@ void RemotePlayer::sendRecordedActions()
 
     m_connection.sendMessage(serializeActions(m_recordedActions));
     m_recordedActions.clear();
+
+    // sendMessage() above only queues the bytes (see NetworkConnection) -
+    // update() is what actually hands them to the OS socket. Normally the
+    // next frame's pollIncoming() would do this anyway, but the one call
+    // site that matters most (GameplayState::update()'s isDead() check)
+    // transitions away and destroys this connection immediately afterward,
+    // with no "next frame" left to flush on - so this can't wait.
+    m_connection.update();
 }
 
 void RemotePlayer::pollIncoming()

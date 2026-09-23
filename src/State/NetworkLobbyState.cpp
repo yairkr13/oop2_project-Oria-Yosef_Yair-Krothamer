@@ -2,10 +2,7 @@
 #include "State/GameplayState.h"
 #include "AssetsManager.h"
 #include "SpriteUtils.h"
-#include "Board.h"
 #include "Constants.h"
-#include <random>
-#include <cstring>
 
 namespace
 {
@@ -34,21 +31,6 @@ namespace
     float statusTextY() { return static_cast<float>(Config::WINDOW_HEIGHT) / 2.f + STATUS_TEXT_OFFSET_FROM_CENTER; }
     float addressTextY() { return static_cast<float>(Config::WINDOW_HEIGHT) / 2.f + ADDRESS_TEXT_OFFSET_FROM_CENTER; }
     float menuTopY() { return static_cast<float>(Config::WINDOW_HEIGHT) / 2.f + MENU_TOP_OFFSET_FROM_CENTER; }
-
-    std::vector<std::uint8_t> seedToBytes(unsigned int seed)
-    {
-        std::vector<std::uint8_t> bytes(4);
-        std::memcpy(bytes.data(), &seed, 4);
-        return bytes;
-    }
-
-    unsigned int bytesToSeed(const std::vector<std::uint8_t>& bytes)
-    {
-        unsigned int seed = 0;
-        if (bytes.size() >= 4)
-            std::memcpy(&seed, bytes.data(), 4);
-        return seed;
-    }
 
     // Centers `text` horizontally on the window, keeping its top edge at
     // its current position - so a message growing from one line to two
@@ -110,8 +92,7 @@ void NetworkLobbyState::buildMenuForPhase(Phase phase)
 
     case Phase::Hosting:
     case Phase::Connecting:
-    case Phase::ExchangingSeed:
-        break; // no buttons - just the status text, until the handshake finishes on its own
+        break; // no buttons - just the status text, until the connection finishes on its own
     }
 }
 
@@ -134,9 +115,6 @@ void NetworkLobbyState::setPhase(Phase phase)
         break;
     case Phase::Connecting:
         m_statusText.setString("Connecting to " + m_addressInput + "...");
-        break;
-    case Phase::ExchangingSeed:
-        m_statusText.setString("Connected - waiting for the host to start the match...");
         break;
     }
 
@@ -202,28 +180,13 @@ void NetworkLobbyState::update(sf::Time /*deltaTime*/)
     switch (m_phase)
     {
     case Phase::Hosting:
-        if (m_connection->isConnected() && !m_seedSent)
-        {
-            unsigned int seed = std::random_device{}();
-            Board::seedRng(seed); // this machine's own Board (built once GameplayState exists) uses this same seed
-            m_connection->sendMessage(seedToBytes(seed));
-            m_seedSent = true;
+        if (m_connection->isConnected())
             enterGame(PlayerSide::Left); // host is always Left, by convention
-        }
         break;
 
     case Phase::Connecting:
         if (m_connection->isConnected())
-            setPhase(Phase::ExchangingSeed);
-        break;
-
-    case Phase::ExchangingSeed:
-        if (m_connection->hasMessage())
-        {
-            unsigned int seed = bytesToSeed(m_connection->popMessage());
-            Board::seedRng(seed);
             enterGame(PlayerSide::Right); // joiner is always Right
-        }
         break;
 
     default:

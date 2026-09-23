@@ -23,11 +23,11 @@ class GameplayState : public State
 public:
     GameplayState(sf::RenderWindow& window, GameMode mode);
 
-    // PlayerVsRemote only - `connection` must already be connected AND
-    // seeded (see NetworkLobbyState, the only caller of this constructor):
-    // by the time this runs, both peers already agreed on the board's own
-    // random seed, so m_board below generates identically on both
-    // computers with no further network traffic needed for that part.
+    // PlayerVsRemote only - `connection` must already be connected (see
+    // NetworkLobbyState, the only caller of this constructor). m_board
+    // below uses BoardGenerator's fixed PlayerVsRemote special-tile layout
+    // (see GameplayState.cpp), so both computers land on an identical board
+    // with no need to agree on anything about it over the network first.
     // `localSide` is which side THIS computer's own human player is
     // playing (host is always Left, joiner always Right).
     GameplayState(sf::RenderWindow& window, std::unique_ptr<NetworkConnection> connection, PlayerSide localSide);
