@@ -25,25 +25,20 @@ public:
     virtual void draw(sf::RenderWindow& window) const = 0;
 
     // True once this animation is done and Board can discard it.
-    bool isFinished() const { return m_finished; }
+    bool isFinished() const;
 
     // Set by the caller (Board) before the animation starts updating -
     // called exactly once, at impact.
-    void setOnImpact(std::function<void()> onImpact) { m_onImpact = std::move(onImpact); }
+    void setOnImpact(std::function<void()> onImpact);
 
 protected:
     // Concrete animations call this exactly once, at the moment their
     // effect reaches the target - fires the caller's damage callback.
-    void fireImpact()
-    {
-        if (m_impactFired) return;
-        m_impactFired = true;
-        if (m_onImpact) m_onImpact();
-    }
+    void fireImpact();
 
     // Concrete animations call this once their visual is done playing
     // (typically right after fireImpact()).
-    void finish() { m_finished = true; }
+    void finish();
 
 private:
     std::function<void()> m_onImpact;

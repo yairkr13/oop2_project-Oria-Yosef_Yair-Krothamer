@@ -64,3 +64,8 @@ void SpriteSheet::applyCurrentFrame(sf::Sprite& sprite) const
     sprite.setTextureRect(getCurrentFrameRect());
     sprite.setOrigin(m_frameOrigin);
 }
+
+float SpriteSheet::getBaseScale() const
+{
+    return m_baseScale;
+}

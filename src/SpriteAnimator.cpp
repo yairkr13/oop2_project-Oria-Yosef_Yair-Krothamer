@@ -41,6 +41,16 @@ void SpriteAnimator::update(float dt)
     m_activeIndex = newActive;
 }
 
+bool SpriteAnimator::hasActiveState() const
+{
+    return m_activeIndex != npos;
+}
+
+bool SpriteAnimator::hasAnyState() const
+{
+    return !m_states.empty();
+}
+
 void SpriteAnimator::applyCurrentFrame(sf::Sprite& sprite) const
 {
     if (!hasActiveState()) return;

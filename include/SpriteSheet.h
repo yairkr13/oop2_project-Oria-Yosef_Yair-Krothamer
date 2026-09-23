@@ -42,7 +42,7 @@ public:
     // size against `displaySize`, not the sheet's native resolution) - a
     // caller combines this with whatever else it needs (e.g. Monster's
     // side-based horizontal flip) to arrive at the sprite's final scale.
-    float getBaseScale() const { return m_baseScale; }
+    float getBaseScale() const;
 
 private:
     sf::IntRect getCurrentFrameRect() const;

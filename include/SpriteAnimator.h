@@ -60,14 +60,14 @@ public:
     // no registered state's predicate is currently true - callers use this
     // to fall back to their own default appearance (e.g. a static sprite),
     // exactly as if this class weren't involved at all.
-    bool hasActiveState() const { return m_activeIndex != npos; }
+    bool hasActiveState() const;
 
     // Whether at least one state has ever been registered via addState(),
     // regardless of whether one is active right now. Lets an owner
     // distinguish "I opted into this system at all" from "nothing of mine
     // happens to be active this frame" - the two need different fallback
     // behavior (see Monster::draw).
-    bool hasAnyState() const { return !m_states.empty(); }
+    bool hasAnyState() const;
 
     // Applies the active state's current frame onto `sprite` (texture,
     // texture rect, origin - see SpriteSheet::applyCurrentFrame). No-op
