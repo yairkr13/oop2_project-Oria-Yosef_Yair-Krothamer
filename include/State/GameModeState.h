@@ -2,12 +2,9 @@
 #include "State/State.h"
 #include "Menu.h"
 
-// Game-mode selection screen pushed by MenuState's Start Game button. Same
-// background as the main menu; lets the player pick Friend (local 2-player),
-// AI, or Remote (LAN, via NetworkLobbyState), or go Back to whichever state
-// pushed this one. Retrieves its assets from AssetsManager and contains no
-// game logic - Friend/AI are wired to their own handlers so hooking up the
-// real gameplay state later is a one-line change inside those handlers.
+// Game-mode selection screen pushed by MenuState's Start Game button: pick
+// Friend (local 2-player), AI, or Remote (LAN, via NetworkLobbyState), or
+// go Back. Contains no game logic itself.
 class GameModeState : public State
 {
 public:

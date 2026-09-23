@@ -5,7 +5,6 @@
 #include "Constants.h"
 
 namespace
-    //בכל הפרויקט יש יותר מדי const שהם עם מספרים. בא לי בהמשך לעשות את הכל לפי הגודל של החלון או הלוח!!!!!! - כן
 {
     constexpr unsigned int POPUP_WIDTH = 640;
     constexpr unsigned int MENU_BUTTON_WIDTH = 140;
@@ -13,20 +12,10 @@ namespace
     constexpr unsigned int AUDIO_BUTTON_WIDTH = 60;
     constexpr int BUTTON_GAP_Y = 12;
 
-    // Offset from the window's own vertical center - same convention as
-    // MUSIC_BUTTON_OFFSET_FROM_CENTER below (a compile-time Config value,
-    // not a live window size), so the menu moves correctly with the popup
-    // on a Config size change instead of staying pinned to one size.
+    // Offset from the window's own vertical center, Config-based instead of a fixed pixel value.
     constexpr float MENU_Y_OFFSET_FROM_CENTER = -117.f;
 
-    // Offset from the window's own center (a compile-time Config value, not
-    // a live window size - see Controller::Controller, the window never
-    // resizes). m_menu below and m_background (scaleAndCenter) already
-    // center themselves the same way - these two buttons, drawn on top of
-    // the same popup, need to move with the popup on a Config size change
-    // instead of staying at a screen position tuned only for the original
-    // 1280x720 build. Same offset the original absolute {497, 228} worked
-    // out to at that original size (497-640, 228-360).
+    // Offset from the window's own center, matching these buttons' old absolute position at 1280x720.
     constexpr sf::Vector2i MUSIC_BUTTON_OFFSET_FROM_CENTER = { -143, -132 };
     constexpr sf::Vector2i MUSIC_BUTTON_POSITION = {
         static_cast<int>(Config::WINDOW_WIDTH) / 2 + MUSIC_BUTTON_OFFSET_FROM_CENTER.x,
@@ -42,8 +31,8 @@ MiniMenuState::MiniMenuState(sf::RenderWindow& window, std::function<void()> onE
     : m_window(window)
     , m_background(AssetsManager::getInstance().getTexture("mini_menu_bg"))
     , m_menu({ static_cast<float>(Config::WINDOW_WIDTH) / 2.f, static_cast<float>(Config::WINDOW_HEIGHT) / 2.f - 117.f }, MENU_BUTTON_WIDTH, MENU_GAP)
-    , m_volumeButton(MUSIC_BUTTON_POSITION, AUDIO_BUTTON_WIDTH) // כפתור מוזיקה (עליון)
-    , m_soundOnButton(SOUND_BUTTON_POSITION, AUDIO_BUTTON_WIDTH)  // כפתור סאונד (תחתון)
+    , m_volumeButton(MUSIC_BUTTON_POSITION, AUDIO_BUTTON_WIDTH) // top
+    , m_soundOnButton(SOUND_BUTTON_POSITION, AUDIO_BUTTON_WIDTH) // bottom
     , m_onExitGame(std::move(onExitGame))
     , m_onRestartGame(std::move(onRestartGame))
 {
@@ -83,20 +72,14 @@ void MiniMenuState::onInstructionsClicked()
 
 void MiniMenuState::onRestartClicked()
 {
-    // Marks the paused GameplayState beneath this one as finished (with a
-    // fresh replacement already queued), then pops this state. Controller
-    // picks up the already-finished GameplayState the next time it becomes
-    // top-of-stack, using its normal per-frame isFinished() check - no
-    // special multi-level stack operation involved.
+    // Marks the paused GameplayState as finished (with a replacement queued), then pops this state.
     m_onRestartGame();
     transitionTo();
 }
 
 void MiniMenuState::onExitClicked()
 {
-    // Same mechanism as Restart, just without a replacement queued, so the
-    // still-alive MenuState beneath GameplayState ends up on top once both
-    // finish.
+    // Same mechanism as Restart, just without a replacement queued.
     m_onExitGame();
     transitionTo();
 }
@@ -124,5 +107,3 @@ void MiniMenuState::handleEvent(const sf::Event& event)
     m_volumeButton.handleEvent(event);
     m_soundOnButton.handleEvent(event);
 }
-//
-//

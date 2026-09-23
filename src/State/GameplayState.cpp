@@ -13,18 +13,11 @@ namespace
 {
     constexpr unsigned int MINI_MENU_BUTTON_WIDTH = 90;
 
-    // Anchored to the top-left corner, not the window's center - same
-    // reasoning InstructionsState's own left-anchored nav button margin
-    // uses: a corner-relative position stays correct regardless of
-    // Config::WINDOW_WIDTH/HEIGHT, unlike a center-relative one, so it
-    // doesn't need a Config-derived offset the way those do.
+    // Anchored to the top-left corner, so it stays correct regardless of window size.
     const sf::Vector2i MINI_MENU_BUTTON_POSITION = { 170, 10 };
 
-    // Picks "game_bg_1" or "game_bg_2" with equal odds - a fresh
-    // std::mt19937 each call (not a shared static one, unlike Board::rng())
-    // since this only ever runs once per GameplayState, at construction -
-    // no reason for it to share state across games the way Board's own
-    // board-generation randomness does.
+    // Picks "game_bg_1" or "game_bg_2" with equal odds; a fresh RNG per
+    // call, since this only ever runs once per GameplayState.
     const char* randomGameBackgroundKey()
     {
         std::mt19937 gen(std::random_device{}());
@@ -33,6 +26,8 @@ namespace
     }
 }
 
+// AIPlayer for PlayerVsAI, otherwise a plain Player - a helper since the two
+// unique_ptr types don't share a common type in an inline ternary.
 std::unique_ptr<Player> GameplayState::makePlayer2(GameMode mode)
 {
     if (mode == GameMode::PlayerVsAI)
@@ -41,6 +36,7 @@ std::unique_ptr<Player> GameplayState::makePlayer2(GameMode mode)
     return std::make_unique<Player>(PlayerSide::Right);
 }
 
+// A local Player if `side` matches localSide, else a RemotePlayer wired to `connection`.
 std::unique_ptr<Player> GameplayState::makeLocalOrRemotePlayer(PlayerSide side, PlayerSide localSide, NetworkConnection& connection)
 {
     if (side == localSide)
@@ -67,6 +63,9 @@ GameplayState::GameplayState(sf::RenderWindow& window, GameMode mode)
     m_turnManager.setOnPlayerSwitched([this]() { clearSelectionState(); });
 }
 
+// PlayerVsRemote only - `connection` must already be connected (see
+// NetworkLobbyState). `localSide` is which side this computer's human
+// plays (host is always Left, joiner always Right).
 GameplayState::GameplayState(sf::RenderWindow& window, std::unique_ptr<NetworkConnection> connection, PlayerSide localSide)
     : m_window(window)
     , m_background(AssetsManager::getInstance().getTexture(randomGameBackgroundKey()))
@@ -79,8 +78,7 @@ GameplayState::GameplayState(sf::RenderWindow& window, std::unique_ptr<NetworkCo
     , m_tooltip(AssetsManager::getInstance().getFont("Lilita"))
     , m_connection(std::move(connection))
 {
-    // Known directly from which side was built as which above - not a cast
-    // guessing at m_player1/m_player2's actual concrete type.
+    // Known directly from which side was built as which above, not a cast.
     m_remotePlayer = (localSide == PlayerSide::Left)
         ? static_cast<RemotePlayer*>(m_player2.get())
         : static_cast<RemotePlayer*>(m_player1.get());
@@ -92,9 +90,7 @@ GameplayState::GameplayState(sf::RenderWindow& window, std::unique_ptr<NetworkCo
     m_turnManager.setOnPlayerSwitched([this]() {
         clearSelectionState();
 
-        // We just switched TO the remote player - meaning the local
-        // human's own turn just ended - so send everything recorded
-        // during it now, exactly once per turn.
+        // Switched to the remote player - the local human's turn just ended, so flush it now.
         if (m_remotePlayer && &m_turnManager.getCurrentPlayer() == static_cast<Player*>(m_remotePlayer))
             m_remotePlayer->sendRecordedActions();
     });
@@ -112,6 +108,8 @@ void GameplayState::buildMiniMenuButton()
         [this]() { openMiniMenu(); });
 }
 
+// Pushes MiniMenuState, wiring Restart/Exit to finish this paused state -
+// shared by Escape and the on-board button so they can't drift apart.
 void GameplayState::openMiniMenu()
 {
     // No restart mid-match over the network - see MiniMenuState.
@@ -132,15 +130,10 @@ void GameplayState::draw(sf::RenderWindow& window) const
     m_board.draw(window, current.getSide());
 
     m_bottomPanel.draw(window);
-    // Card already knows how to render its own "selected" border
-    // (see Card::draw's isSelected parameter) - we just need to feed it
-    // whichever Card the player currently has chosen. A not-yet-placed hand
-    // card (m_selectedFromHand) and a played card whose targeted Special is
-    // pending a target (m_pendingSpecialCard) are mutually exclusive by
-    // construction (selecting either one always clears the other), so
-    // there's always at most one to show here.
+    // The not-yet-placed hand card and a pending-target special card are
+    // mutually exclusive by construction - at most one to show here.
     Card* visuallySelectedCard = m_selectedFromHand ? m_selectedFromHand : m_pendingSpecialCard;
-    current.draw(window, &current == m_player2.get(), visuallySelectedCard); //למה הוא מעביר את זה לשחקן. השחקן צריך לדעת את זה בעצמו????
+    current.draw(window, &current == m_player2.get(), visuallySelectedCard);
 
     //m_player1->drawKeys(window, false);
     //m_player2->drawKeys(window, true);
@@ -153,20 +146,14 @@ void GameplayState::draw(sf::RenderWindow& window) const
 
 void GameplayState::update(sf::Time deltaTime)
 {
-    // Services the connection every frame regardless of whose turn it
-    // locally is - sends anything still queued, and buffers anything
-    // arriving, so a message is never sitting unread in the OS socket
-    // buffer just because it happened to arrive mid-animation.
+    // Services the connection every frame regardless of whose turn it locally is.
     if (m_remotePlayer)
         m_remotePlayer->pollIncoming();
 
     m_board.update(deltaTime.asSeconds());
 
-    // GameplayState is the only thing that ever holds a raw Card* into
-    // either player's hand (m_selectedFromHand/m_pendingSpecialCard) - drop
-    // both here, first, whenever they point at a Card whose monster just
-    // died (Card::isGone()), so removeDeadMonsters() below can safely erase
-    // that Card outright without leaving either pointer dangling.
+    // Drop any raw Card* pointer into a hand whose monster just died, before
+    // removeDeadMonsters() below erases that Card and leaves it dangling.
     if (m_selectedFromHand && m_selectedFromHand->isGone())
         m_selectedFromHand = nullptr;
     if (m_pendingSpecialCard && m_pendingSpecialCard->isGone())
@@ -175,12 +162,8 @@ void GameplayState::update(sf::Time deltaTime)
         m_board.clearHighlights();
     }
 
-    // Erases each player's Cards whose monster just became isGone() - same
-    // per-frame granularity Board::update() itself already cleans up
-    // entities at, so a Card never lingers (visible or clickable) past the
-    // very frame its monster actually died (see
-    // Monster::canUseSpecialAbilityNow()/Player::getCardTooltipAt, both of
-    // which depend on a dead monster's Card being gone promptly).
+    // Erases each player's Cards whose monster just died, same per-frame
+    // granularity Board::update() cleans up entities at.
     m_player1->removeDeadMonsters();
     m_player2->removeDeadMonsters();
 
@@ -208,19 +191,13 @@ void GameplayState::update(sf::Time deltaTime)
     {
         PlayerSide winner = (m_player1->isDead()) ? PlayerSide::Right : PlayerSide::Left;
 
-        // The killing action usually lands mid-turn, before the local human
-        // ever ends their own turn - so without this, it (and anything else
-        // recorded this turn) would sit unsent in m_recordedActions forever,
-        // since sendRecordedActions() otherwise only fires from
-        // setOnPlayerSwitched, which this transition preempts. Flushing here
-        // guarantees the peer receives it, replays it, and its own Board
-        // reaches this same dead state - so its own isDead() check above
-        // fires independently right after, with no separate "you lost"
-        // message needed at all.
+        // The kill usually lands mid-turn, before setOnPlayerSwitched would
+        // otherwise flush it - flush explicitly so the peer reaches the same
+        // dead state and its own isDead() check fires independently.
         if (m_remotePlayer)
             m_remotePlayer->sendRecordedActions();
 
-        // ������� �� m_mode �-m_window ���� ��� ����� this
+        // Captured by value, not `this` - this GameplayState is about to transition away.
         GameMode currentMode = m_mode;
         sf::RenderWindow& window = m_window;
 
@@ -255,9 +232,9 @@ void GameplayState::handle(const sf::Event::MouseMoved& event)
 
     Player& current = m_turnManager.getCurrentPlayer();
 
+    // Only show hand-card tooltips while hovering the bottom panel.
     if (mousePos.y > static_cast<float>(Config::WINDOW_HEIGHT) - Config::BOTTOM_PANEL_HEIGHT)
     {
-        // Player מחזיר רק טקסט - הקפסולציה נשמרה לחלוטין!
         std::string tooltipText = current.getCardTooltipAt(mousePos);
 
         if (!tooltipText.empty())
@@ -288,27 +265,25 @@ void GameplayState::handle(const sf::Event::MouseMoved& event)
 //        m_board.clearHighlights();
 //    }
 //}
+// Handles a tile click while a hand card is selected for placement -
+// validates the target before paying cost and spawning.
 void GameplayState::handleSpawnAttempt(const sf::Vector2f& pos, Player& current)
 {
     if (!m_selectedFromHand)
         return;
 
-    // 1. משיגים את המשבצת שעליה לחצו
     const Tile* tile = m_board.getTileAtScreenPosition(pos);
-
-    // 2. בודקים שהיא קיימת ומודגשת (כלומר חוקית לזימון)
     if (!tile || !tile->isHighlighted())
         return;
 
-    // 3. משלמים את העלות ויוצרים את המפלצת
     int cardIndex = current.indexOfCard(m_selectedFromHand); // before playCard - still in hand right now
     Monster* monster = current.playCard(m_selectedFromHand);
     if (!monster)
         return;
 
-    // 4. מזמנים אותה ישירות על המשבצת
     if (m_board.spawnEntityOnTile(monster, tile))
     {
+        // Recorded so the peer replays this action on their own board.
         if (m_remotePlayer)
         {
             GameAction action;
@@ -325,14 +300,14 @@ void GameplayState::handleSpawnAttempt(const sf::Vector2f& pos, Player& current)
     }
 }
 
+// Handles a click on an already-played card (showing "READY"/"CD: X") -
+// arms its special ability's target-selection mode.
 void GameplayState::handleSpecialAbilityClick(Card* card)
 {
     if (!card->isPlayed())
         return;
 
-    // Toggle: clicking the Card that's already pending cancels the
-    // selection instead of re-entering it - see clearPendingSpecial() for
-    // why this is always safe to call even when nothing was actually armed.
+    // Clicking the already-pending card cancels it instead of re-arming.
     if (card == m_pendingSpecialCard)
     {
         clearPendingSpecial();
@@ -343,22 +318,16 @@ void GameplayState::handleSpecialAbilityClick(Card* card)
     // getMutableLinkedMonster() (not getLinkedMonster()) - useSpecialAbility below actually mutates monster.
     Monster* monster = card->getMutableLinkedMonster();
 
-    // Purely a readiness check - does not commit/reset anything. Asks the
-    // same single predicate useSpecialAbility() re-checks internally at
-    // commit time, rather than reconstructing the rule here too.
+    // Readiness check only - mirrors the same predicate useSpecialAbility() re-checks at commit time.
     if (!monster || !monster->canUseSpecialAbilityNow())
         return;
 
-    // Switching selection away from whatever was pending before (if
-    // anything) must not leave it silently armed in the background.
+    // Don't leave whatever was pending before silently armed.
     clearPendingSpecial();
 
     if (monster->specialAbilityNeedsTarget())
     {
-        // Enter target-selection mode only - the Special is not activated
-        // and the cooldown is not touched until a valid target is actually
-        // clicked (see handleSpecialTargetClick). GameplayState never asks
-        // which monster this is, only whether it needs a target at all.
+        // Enter target-selection mode - not activated/cooled down until a target is actually clicked.
         m_pendingSpecialCard = card;
         m_selectedFromHand = nullptr;
         m_board.clearHighlights();
@@ -366,6 +335,7 @@ void GameplayState::handleSpecialAbilityClick(Card* card)
     }
     else if (monster->useSpecialAbility(m_board))
     {
+        // Recorded so the peer replays this action on their own board.
         if (m_remotePlayer)
         {
             GameAction action;
@@ -375,46 +345,29 @@ void GameplayState::handleSpecialAbilityClick(Card* card)
             m_remotePlayer->recordLocalAction(action);
         }
 
-        // Committed immediately (the common case) unless this monster's
-        // Special is armed now and actually used at a later, separate event
-        // (Barzilla) - specialAbilityCommitsOnSelect() already told
-        // useSpecialAbility() whether to do that bookkeeping yet or not.
-        // Either way, the Card stays visibly selected/cancelable until that
-        // event happens - update() clears it reactively once it does.
+        // Stays selected until its own later commit event (e.g. Barzilla)
+        // instead of committing here; update() clears it once that happens.
         if (!monster->specialAbilityCommitsOnSelect())
         {
             m_pendingSpecialCard = card;
             m_selectedFromHand = nullptr;
         }
 
-        // Immediately reflect whatever the Special just changed about this
-        // monster's own move/attack options (e.g. Barzilla's Empowered
-        // Attack extending his attack range) - equivalent to the player
-        // clicking the monster on the board right after activating the
-        // Special, without requiring that extra click. Board::selectEntity
-        // is the exact same select-and-highlight flow a direct board click
-        // already uses, so nothing about range/highlighting is re-derived
-        // here. Only when there's still an action left to use it with -
-        // otherwise there's nothing this monster could still do this turn.
+        // Reflects the Special's effect on this monster's move/attack
+        // options immediately, as if it were just clicked on the board.
         if (monster->getActionsLeft() > 0)
         {
-            // A pending hand-spawn selection would otherwise be left
-            // dangling: selectEntity() below repaints the whole board's
-            // highlights, which would silently wipe the spawn-tile
-            // highlighting out from under it without this.
+            // Avoids selectEntity() below silently wiping a pending spawn-tile highlight.
             m_selectedFromHand = nullptr;
 
-            // Equivalent to the player clicking this monster on the board
-            // right after activating the Special - remember it as the
-            // current board selection ourselves (Board no longer tracks
-            // this), so the next board click acts on it exactly like a
-            // direct click-then-click would.
+            // Remember this as the current board selection, same as a direct click would.
             if (m_board.selectEntity(monster, monster->getSide()))
                 m_selectedEntity = monster;
         }
     }
 }
 
+// Handles a tile click while a special ability is awaiting its target.
 void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
 {
     if (!m_pendingSpecialCard) return;
@@ -423,10 +376,7 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
     Monster* monster = m_pendingSpecialCard->getMutableLinkedMonster();
     if (!monster) { clearPendingSpecial(); m_board.clearHighlights(); return; }
 
-    // Reuses the same tile lookup Board already uses for board clicks -
-    // no parallel targeting system. A click that doesn't land on a valid
-    // target simply does nothing and stays in targeting mode, exactly like
-    // an invalid spawn-position click already behaves in handleSpawnAttempt.
+    // Same tile lookup as a normal board click; an invalid target just stays in targeting mode.
     const Tile* targetTile = m_board.getTileAtScreenPosition(pos);
     // getMutableEntity() (not getEntity()) - useSpecialAbility below actually mutates candidate.
     BoardEntity* candidate = targetTile ? targetTile->getMutableEntity() : nullptr;
@@ -435,6 +385,7 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
     {
         if (monster->useSpecialAbility(m_board, candidate))
         {
+            // Recorded so the peer replays this action on their own board.
             if (m_remotePlayer)
             {
                 GameAction action;
@@ -452,6 +403,8 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
     }
 }
 
+// Interprets a plain board click: select an entity, then click a highlighted
+// tile to move/attack with it, or click elsewhere to deselect.
 void GameplayState::handleBoardClick(const sf::Vector2f& pos, const Player& current)
 {
     const Tile* clickedTile = m_board.getTileAtScreenPosition(pos);
@@ -459,9 +412,10 @@ void GameplayState::handleBoardClick(const sf::Vector2f& pos, const Player& curr
 
     if (m_selectedEntity)
     {
-        // אם לחצנו על משבצת חוקית (מוארת) - Board כבר תדע אם לזוז או לתקוף
+        // Board decides move vs attack based on the highlighted tile.
         if (clickedTile->isHighlighted())
         {
+            // Recorded so the peer replays this action on their own board.
             if (m_remotePlayer)
             {
                 GameAction action;
@@ -477,13 +431,11 @@ void GameplayState::handleBoardClick(const sf::Vector2f& pos, const Player& curr
             m_board.performAction(m_selectedEntity, clickedTile);
         }
 
-        // ניקוי וביטול בחירה
         m_selectedEntity = nullptr;
         m_board.clearHighlights();
     }
     else if (BoardEntity* entity = clickedTile->getMutableEntity()) // m_selectedEntity below is later handed to Board::performAction, which mutates it
     {
-        // השורה שלך! בדיקה פולימורפית נקייה - ללא asMonster() וללא Casting
         /*if (entity->canBeSelectedBy(current.getSide()))
         {*/
             /*m_selectedEntity = entity;
@@ -500,6 +452,7 @@ void GameplayState::handleBoardClick(const sf::Vector2f& pos, const Player& curr
     //}
 }
 
+// Un-arms whatever the pending Card's monster may have armed, before it's abandoned.
 void GameplayState::clearPendingSpecial()
 {
     if (m_pendingSpecialCard)
@@ -558,8 +511,7 @@ void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
 
                 m_selectedFromHand = clickedCard;
                 clearPendingSpecial();
-                //למה הוא אחראי לזה??????
-                m_board.highlightSpawnTiles(current.getSide());//למה מעבירים מפלצת?????? מיותר קצת
+                m_board.highlightSpawnTiles(current.getSide());
             }
         }
         /*auto clickedMonster = current.handleHandClick(pos, isPlayer2);
@@ -579,12 +531,8 @@ void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
     }
     else
     {
-        // A pending Special only intercepts board clicks as target-selection
-        // if it actually needs a target - an armed-but-not-target-based
-        // Special (Barzilla) leaves board clicks to behave completely
-        // normally (move/attack), since arming it isn't a targeting
-        // decision and the board is exactly where its commit event (a
-        // normal attack) has to be able to happen.
+        // A pending special only intercepts clicks if it needs a target -
+        // an armed-but-untargeted special (Barzilla) leaves clicks as normal move/attack.
         if (m_pendingSpecialCard && m_pendingSpecialCard->getLinkedMonster()->specialAbilityNeedsTarget())
         {
             handleSpecialTargetClick(pos);

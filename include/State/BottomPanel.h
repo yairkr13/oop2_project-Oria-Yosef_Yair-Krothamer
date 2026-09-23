@@ -1,12 +1,9 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 
-// The gameplay screen's bottom HUD strip: the dark background panel behind
-// each player's hand of cards, plus the "PRESS SPACE TO END TURN" hint
-// centered along its bottom edge. Pure presentation - owns no gameplay
-// state, knows nothing about Board/Player/Card/turns, just draws itself.
-// GameplayState still draws each player's hand of cards on top of this
-// separately (see Player::draw) - this only owns the panel/hint behind it.
+// The gameplay screen's bottom HUD strip: dark panel plus the "PRESS SPACE
+// TO END TURN" hint. Pure presentation - owns no gameplay state; Player
+// draws each hand of cards on top of this separately.
 class BottomPanel
 {
 public:

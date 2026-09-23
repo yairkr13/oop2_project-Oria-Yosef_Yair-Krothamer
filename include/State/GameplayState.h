@@ -23,13 +23,6 @@ class GameplayState : public State
 public:
     GameplayState(sf::RenderWindow& window, GameMode mode);
 
-    // PlayerVsRemote only - `connection` must already be connected (see
-    // NetworkLobbyState, the only caller of this constructor). m_board
-    // below uses BoardGenerator's fixed PlayerVsRemote special-tile layout
-    // (see GameplayState.cpp), so both computers land on an identical board
-    // with no need to agree on anything about it over the network first.
-    // `localSide` is which side THIS computer's own human player is
-    // playing (host is always Left, joiner always Right).
     GameplayState(sf::RenderWindow& window, std::unique_ptr<NetworkConnection> connection, PlayerSide localSide);
 
     void draw(sf::RenderWindow& window) const override;
@@ -42,55 +35,33 @@ private:
 
     void scaleBackgroundToWindow();
 
-    // Builds player 2 as an AIPlayer or a plain Player depending on mode.
-    // A helper function rather than a ternary in the member-initializer
-    // list, since unique_ptr<AIPlayer>/unique_ptr<Player> don't resolve to
-    // a common type there.
     static std::unique_ptr<Player> makePlayer2(GameMode mode);
 
-    // PlayerVsRemote's own equivalent of makePlayer2 above - same reasoning
-    // (a helper, not an inline ternary: unique_ptr<Player>/unique_ptr<RemotePlayer>
-    // don't resolve to a common type there). `side` is the side THIS
-    // particular Player object represents; it's a plain local Player if
-    // that matches localSide (the human at this keyboard), a RemotePlayer
-    // wired to `connection` otherwise.
     static std::unique_ptr<Player> makeLocalOrRemotePlayer(PlayerSide side, PlayerSide localSide, NetworkConnection& connection);
 
     void buildMiniMenuButton();
 
-    // Pushes MiniMenuState, wiring its Restart/Exit callbacks to finish this
-    // (paused) state - see MiniMenuState for why those need a callback
-    // rather than a stack operation. Shared by Escape and the on-board
-    // button so the two triggers can't drift apart.
     void openMiniMenu();
 
     void handle(const sf::Event::MouseButtonPressed& event);
     void handle(const sf::Event::KeyPressed& event);
     void handle(const sf::Event::MouseMoved& event);
+    // Catch-all for event types this state doesn't care about.
     void handle(const auto& event) {}
 
     sf::RenderWindow& m_window;
     sf::Sprite m_background;
 
-    // Remembered only for Restart (see openMiniMenu) - nothing else in this
-    // class ever branches on it.
-    GameMode m_mode;
+    GameMode m_mode; // remembered only for Restart
 
-    // Declaration order matters here: m_board/m_player1/m_player2 must be
-    // constructed before m_turnManager, since its constructor binds
-    // references to them.
+    // Declared before m_turnManager: its constructor binds references to these.
     Board m_board;
     std::unique_ptr<Player> m_player1;
     std::unique_ptr<Player> m_player2;
     TurnManager m_turnManager;
 
-    // PlayerVsRemote only - null for Friend/AI. Owns the connection for
-    // this match's whole lifetime (RemotePlayer below only ever holds a
-    // reference into it); m_remotePlayer is a non-owning pointer at
-    // whichever of m_player1/m_player2 is actually the RemotePlayer - set
-    // once, in the PlayerVsRemote constructor, known directly from which
-    // side was built as which (see makeLocalOrRemotePlayer), never a cast
-    // guessing at it.
+    // PlayerVsRemote only - null for Friend/AI. m_remotePlayer is a
+    // non-owning pointer at whichever of m_player1/m_player2 is the RemotePlayer.
     std::unique_ptr<NetworkConnection> m_connection;
     RemotePlayer* m_remotePlayer = nullptr;
 
@@ -101,45 +72,17 @@ private:
     // not board state.
     //Monster* m_selectedFromHand = nullptr;
 
-    Card* m_selectedFromHand = nullptr;   // קלף שנבחר ליד, טרם שוחק - ממתין ל-tile להנחה
-    Card* m_pendingSpecialCard = nullptr; // קלף ששוחק, יכולת מיוחדת שלו ממתינה לבחירת מטרה
+    Card* m_selectedFromHand = nullptr;   // hand card selected, not yet placed
+    Card* m_pendingSpecialCard = nullptr; // played card whose special is awaiting a target
 
-    // The on-board Monster/Heart currently selected, awaiting a second
-    // click to move/attack with - the same kind of interaction/input state
-    // m_selectedFromHand above already is, and owned the same way: a
-    // non-owning pointer into whatever Player actually owns the Monster
-    // (see Player::m_monsters). GameplayState never takes ownership here,
-    // exactly like it never takes ownership of a selected Card.
     //BoardEntity* m_selectedEntity = nullptr;
-	BoardEntity* m_selectedEntity = nullptr; // subset of m_selectedEntity - nullptr if the selected entity is a Heart
+	BoardEntity* m_selectedEntity = nullptr; // non-owning; owned by whichever Player has the entity
 
     std::optional<Button> m_miniMenuButton;
 
-    // מטפל בלחיצה על קלף ששוחק כבר (מציג "READY"/"CD: X") - מפעיל מצב בחירת מטרה ליכולת
     void handleSpecialAbilityClick(Card* card);
-
-    // מטפל בלחיצה על tile כשיש קלף נבחר להנחה - בודק תקינות לפני שקוראים ל-playCard
     void handleSpawnAttempt(const sf::Vector2f& pos, Player& current);
-
-    // מטפל בלחיצה על tile כשיש יכולת מיוחדת ממתינה למטרה
     void handleSpecialTargetClick(const sf::Vector2f& pos);
-
-    // Interprets a plain board click - the sequence "select an entity, then
-    // click a highlighted tile to move/attack with it, or click elsewhere
-    // to deselect." Formerly Board::handleClick(); moved here so all four
-    // click-interpretation flows (this one, handleSpawnAttempt,
-    // handleSpecialTargetClick, handleSpecialAbilityClick) live in one
-    // place and share the same shape - Board now only exposes the
-    // primitives (getTileAtScreenPosition/selectEntity/performAction/
-    // clearHighlights) this calls, never the interaction decision itself.
     void handleBoardClick(const sf::Vector2f& pos, const Player& current);
-
-    // The one place m_pendingSpecialCard is abandoned before it reached its
-    // own commit event (toggled off, superseded by a different selection,
-    // or the turn ended). Un-arms whatever the pending Card's monster may
-    // have armed (see Monster::cancelSpecialAbility - a no-op for any
-    // Special that hadn't armed anything yet) before clearing the pointer,
-    // so a Special can never stay silently armed once its Card stops
-    // showing as selected.
     void clearPendingSpecial();
 };

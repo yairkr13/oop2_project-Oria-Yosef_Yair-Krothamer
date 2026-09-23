@@ -16,9 +16,7 @@ namespace
         NAV_BUTTON_Y
     };
 
-    // Instructions1/2/3.png's own AssetsManager keys, indexed by page - the
-    // single place that maps a page index to its texture (see
-    // InstructionsState::setPage).
+    // AssetsManager texture key per page index.
     constexpr const char* PAGE_TEXTURE_KEYS[3] = { "instructions_bg_1", "instructions_bg_2", "instructions_bg_3" };
 }
 
@@ -99,7 +97,7 @@ void InstructionsState::handleEvent(const sf::Event& event)
     {
         if (keyPressed->code == sf::Keyboard::Key::Escape)
         {
-            onBackClicked(); // חזרה למסך הקודם
+            onBackClicked();
         }
     }
 }
