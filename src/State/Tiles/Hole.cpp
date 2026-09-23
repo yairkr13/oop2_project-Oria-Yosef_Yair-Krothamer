@@ -1,9 +1,8 @@
 #include "Tiles/Hole.h"
 
 Hole::Hole(int q, int row, const sf::Vector2f& position)
-    : Tile(q, row, position, sf::Color(30, 30, 30, 200)) // ��� ��� ����, ���� ��� ����
+    : Tile(q, row, position, sf::Color(30, 30, 30, 200))
 {
-    // �� �� ����! ���� ������ �-Pathfinding ����� ����� ����
     m_isPassable = false;
 }
 

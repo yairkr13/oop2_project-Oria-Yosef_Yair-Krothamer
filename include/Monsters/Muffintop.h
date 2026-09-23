@@ -1,6 +1,7 @@
 #pragma once
 #include "Monsters/Monster.h"
 
+// A monster whose Special (Heal) restores HP to a targeted ally.
 class Muffintop : public Monster
 {
 public:
@@ -16,17 +17,9 @@ public:
     std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
 
     bool specialAbilityNeedsTarget() const override;
-    // בתוך class Muffintop (תחת public):
     virtual std::string getSpecialAbilityDescription() const override;
-    // Heal Ally targets a friendly Monster - flips the base (enemy)
-    // default, but keeps its isAlive() requirement (see Monster's own
-    // isValidSpecialTarget): a dying ally is still Tile-linked and must not
-    // be targetable (e.g. healed) while its death animation plays.
     bool isValidSpecialTarget(const BoardEntity& candidate) const override;
 
-    // AI preference: whoever is missing the most HP benefits most from a
-    // heal - a full-health ally scores 0 (never preferred over someone
-    // actually hurt).
     float scoreAsSpecialTarget(const BoardEntity& candidate) const override;
 
     sf::Color getSpecialTargetHighlightColor() const override;

@@ -1,6 +1,8 @@
 #pragma once
 #include "Tiles/Tile.h"
 
+// A hex tile that damages whatever occupies it each turn, unless the
+// occupant can fly.
 class LavaTile : public Tile
 {
 public:

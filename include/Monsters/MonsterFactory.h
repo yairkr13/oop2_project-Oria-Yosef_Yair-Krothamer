@@ -5,27 +5,24 @@
 #include <functional>
 #include "Monsters/Monster.h"
 
-// �-Factory ��� ����� ����� ���� ����� �� �� ������ ������� ����������.
-// �� ����� ���� (Player, Board, Game...) ����� �� �� Monster (����� ������).
+// Builds concrete Monster instances (and their Card counterparts) by name,
+// so callers (Player, Board, Game...) never need to know about each
+// concrete Monster subclass directly.
 
 class Card; // forward declaration
 class MonsterFactory
 {
 public:
-    using Creator = std::function<std::unique_ptr<Monster>(PlayerSide)>; // + PlayerSide
+    using Creator = std::function<std::unique_ptr<Monster>(PlayerSide)>;
 
-    static std::unique_ptr<Monster> create(const std::string& monsterName, PlayerSide side); // + side
+    static std::unique_ptr<Monster> create(const std::string& monsterName, PlayerSide side);
 
-    // ���: createStandardDeck -> vector<unique_ptr<Monster>>
-    static std::vector<std::unique_ptr<Card>> createStandardHand(PlayerSide side); // ����� Card, �� Monster
+    static std::vector<std::unique_ptr<Card>> createStandardHand(PlayerSide side);
 
 private:
-    // One entry per known monster - name, how to build it, and its Card's
-    // own cost/texture. The single source of truth both create() (looks
-    // one up by name) and createStandardHand() (builds a Card for every
-    // one, in this same order) read from, so there's exactly one place
-    // that knows "which monsters exist" - not two separately-maintained
-    // lists that could silently drift apart.
+    // One entry per known monster: name, how to build it, and its Card's
+    // cost/texture. Single source of truth for both create() and
+    // createStandardHand().
     struct MonsterDefinition
     {
         std::string name;
@@ -34,10 +31,7 @@ private:
         std::string cardTextureKey;
     };
 
-    // A std::vector (not the old std::map) deliberately - createStandardHand()'s
-    // resulting hand order (Muffintop, Blue, Barzilla, Henrietta, Mozzy) is a
-    // chosen gameplay order, not alphabetical; a map would silently
-    // re-sort it by key. Only 5 entries, so create()'s linear search here
-    // costs nothing worth optimizing.
+    // A vector, not a map: createStandardHand()'s hand order is a chosen
+    // gameplay order, not alphabetical - a map would silently re-sort it.
     static const std::vector<MonsterDefinition>& getCatalog();
 };

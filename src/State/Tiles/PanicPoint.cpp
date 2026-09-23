@@ -13,7 +13,7 @@ void PanicPoint::applyTileEffect()
     {
         auto entity = getEntity();
 
-        // ������� �������� ������ ����:
+        // Damages the OPPOSING player's Heart, not the occupant's own side's.
         if (entity->getSide() == PlayerSide::Left && m_p2Heart)
             m_p2Heart->takeDamage(10);
         else if (entity->getSide() == PlayerSide::Right && m_p1Heart)

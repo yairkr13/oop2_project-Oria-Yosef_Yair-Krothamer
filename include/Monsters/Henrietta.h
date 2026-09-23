@@ -1,6 +1,8 @@
 #pragma once
 #include "Monsters/Monster.h"
 
+// A monster whose Special (Protection) shields a targeted ally from all
+// damage until the next turn.
 class Henrietta : public Monster
 {
 public:
@@ -16,20 +18,9 @@ public:
 
     bool specialAbilityNeedsTarget() const override;
 
-    // Protection targets a friendly Monster - flips the base (enemy)
-    // default, but keeps its isAlive() requirement (see Monster's own
-    // isValidSpecialTarget): a dying ally is still Tile-linked and must not
-    // be targetable while its death animation plays. Also keeps the base's
-    // canBeTargetedBySpecial() check - Heart doesn't override that (stays
-    // false), so Protection can't target it either, same as every other
-    // Special.
     bool isValidSpecialTarget(const BoardEntity& candidate) const override;
 
-    // AI preference: whoever has the least HP is the most vulnerable, so
-    // the most worth shielding - same formula as Muffintop's Heal, just
-    // repurposed for "who needs protecting" instead of "who needs healing."
     float scoreAsSpecialTarget(const BoardEntity& candidate) const override;
-    // בתוך class Henrietta (תחת public):
     virtual std::string getSpecialAbilityDescription() const override;
     sf::Color getSpecialTargetHighlightColor() const override;
 private:

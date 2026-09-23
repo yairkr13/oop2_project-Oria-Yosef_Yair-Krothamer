@@ -9,13 +9,9 @@ void LavaTile::applyTileEffect()
 {
     if (hasEntity())
     {
-        // canFly() is read-only - the const getEntity() is enough for it.
-        // Actually dealing damage goes through damageEntity() (Tile's
-        // own method, same shape as tickTurnBoundary/updateEntity) -
-        // getMutableEntity() is never needed here at all.
         if (getEntity()->canFly())
-            return; // מעופפים לא נפגעים מלבה
-        damageEntity(20); // ���� ������ 20 ���� ������ ������ ����
+            return; // flying entities are unaffected
+        damageEntity(20);
     }
 }
 
