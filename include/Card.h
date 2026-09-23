@@ -6,14 +6,12 @@
 
 class Monster;
 
+// One hand card: spawns a Monster onto the board when played, and stays
+// linked to it afterward so its cooldown/status can be shown on the card.
 class Card
 {
 public:
-    // Moved here from Config (Constants.h) - a card's own on-screen size is
-    // Card's own business, not something every unrelated file including
-    // Constants.h needs visibility into. Public so Player (which lays out a
-    // row of cards, and needs to know how wide/tall one is to space them)
-    // can reference Card::WIDTH/HEIGHT directly instead of a separate copy.
+    // A card's own on-screen size. Public so Player can reference it when spacing a row of cards.
     static constexpr float WIDTH = 80.f;
     static constexpr float HEIGHT = 100.f;
 
@@ -25,37 +23,26 @@ public:
     int getCost() const { return m_cost; }
     PlayerSide getSide() const { return m_side; }
 
-    // האם הקלף כבר "שוחק" - יש לו מפלצת חיה מקושרת על הלוח
+    // True once this card has a live monster linked to it on the board.
     bool isPlayed() const { return m_linkedMonster != nullptr; }
 
-    // Whether this card should be treated as gone entirely - not drawn (see
-    // draw()), not clickable (see Player::getCardAtPosition), and the
-    // condition Player::removeDeadMonsters() erases this Card on. True the
-    // instant this card's linked monster dies - no separate "remember it
-    // died after unlinking" state needed, because removeDeadMonsters() now
-    // erases the Card outright as soon as this becomes true, in the same
-    // step, instead of unlinking now and erasing later.
-    // (Defined out-of-line in Card.cpp: Monster is only forward-declared
-    // here, and ->isAlive() needs the complete type.)
+    // Whether this card should be treated as gone entirely (not drawn, not
+    // clickable). True the instant its linked monster dies - Player::removeDeadMonsters()
+    // erases the Card outright as soon as this becomes true.
+    // (Defined out-of-line: Monster is only forward-declared here.)
     bool isGone() const;
 
-    // Safe default: read-only access, for callers that only ask the linked
-    // monster something (getSpecialAbilityDescription, isReadyForRemoval,
-    // specialAbilityNeedsTarget...).
+    // Read-only access, for callers that only ask the linked monster something.
     const Monster* getLinkedMonster() const { return m_linkedMonster; }
 
-    // Mutable access - only for the few callers that actually need to
-    // change the monster itself (useSpecialAbility, cancelSpecialAbility).
-    // Same reasoning/naming as Tile::getMutableEntity().
+    // Mutable access - only for callers that change the monster itself (useSpecialAbility, cancelSpecialAbility).
     Monster* getMutableLinkedMonster() const { return m_linkedMonster; }
 
-    // יוצר Monster חדש, מעביר בעלות החוצה, אבל שומר observer pointer לעצמו
+    // Creates a new Monster, transfers ownership out, keeps an observer pointer to it.
     std::unique_ptr<Monster> spawnMonster();
 
-    // Player קורא לזה כשהמפלצת מתה/יורדת מהלוח - מנתק את הקישור לפני שהיא נהרסת
     // No longer called anywhere (kept, not deleted): Player::removeDeadMonsters()
-    // now erases the whole Card via isGone() directly instead of unlinking
-    // first and erasing later - see there.
+    // now erases the whole Card via isGone() directly instead of unlinking first.
     // void clearLink() { m_linkedMonster = nullptr; }
 
 private:
@@ -69,6 +56,5 @@ private:
     int m_cost;
     std::string m_textureKey;
     PlayerSide m_side;
-    Monster* m_linkedMonster = nullptr; //only observer, player is the owner
-    // bool m_monsterDied = false; - removed, see isGone()/clearLink() above
+    Monster* m_linkedMonster = nullptr; // only observer, Player is the owner
 };

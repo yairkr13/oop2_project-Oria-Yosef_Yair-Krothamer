@@ -19,9 +19,8 @@ void RemotePlayer::updateTurn(Board& board)
     if (m_turnFinished) return;
     if (board.isAnimating()) return; // let the previous action's animation resolve first
 
-    // The remote peer's own turn hasn't finished (or hasn't even arrived
-    // yet, on a slow connection) - nothing to replay this frame. Not an
-    // error: isBusy() below just keeps reporting busy until more arrives.
+    // Nothing has arrived yet (or the remote peer hasn't finished its turn) -
+    // not an error, isBusy() just keeps reporting busy until more arrives.
     if (m_pendingActions.empty()) return;
 
     GameAction action = m_pendingActions.front();
@@ -55,12 +54,8 @@ void RemotePlayer::sendRecordedActions()
     m_connection.sendMessage(serializeActions(m_recordedActions));
     m_recordedActions.clear();
 
-    // sendMessage() above only queues the bytes (see NetworkConnection) -
-    // update() is what actually hands them to the OS socket. Normally the
-    // next frame's pollIncoming() would do this anyway, but the one call
-    // site that matters most (GameplayState::update()'s isDead() check)
-    // transitions away and destroys this connection immediately afterward,
-    // with no "next frame" left to flush on - so this can't wait.
+    // sendMessage() only queues the bytes - update() actually sends them.
+    // Called explicitly here since the caller destroys this connection right after, with no next frame to flush on.
     m_connection.update();
 }
 

@@ -13,7 +13,6 @@ bool Card::isGone() const
     return m_linkedMonster && !m_linkedMonster->isAlive();
 }
 
-//למה פה ולא בmonster factory?
 std::unique_ptr<Monster> Card::spawnMonster()
 {
     std::unique_ptr<Monster> monster = MonsterFactory::create(m_monsterId, m_side);
@@ -21,14 +20,10 @@ std::unique_ptr<Monster> Card::spawnMonster()
     return monster;
 }
 
-void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const //chege enough keys
+void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const
 {
-    //if (!m_linkedMonster) //אמור לעבוד לא? כי המפלצת שהיא מתה אז מוחקים אותה מהשחקן???????
-		//return;
     // Belt-and-suspenders: Player::removeDeadMonsters() already erases a
-    // Card the same frame isGone() becomes true (see there), so draw()
-    // should never actually see one - this stays only as a cheap safety net
-    // for the narrow one-frame window before that runs.
+    // gone Card the same frame, so this should never actually trigger.
 	if (isGone())
 		return;
 
@@ -66,7 +61,6 @@ void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected
 
     window.draw(sprite);
 
-    // 3. ציור הטקסט המתאים (עלות או סטטוס)
     if (!isPlayed())
     {
         drawCostText(window, drawPos, font, enoughKeys);

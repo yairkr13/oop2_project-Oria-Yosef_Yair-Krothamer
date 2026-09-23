@@ -18,15 +18,12 @@ void BoardPathfinder::recordReachability(Tile* tile,
     if (neighborDist <= range)
     {
         outReachable.push_back(tile);
-        outParent[neighbor] = parent; // an entry here means "movement can
-        // legally end here" (see getPathTo) - an extended-only tile below
-        // must never get one.
+        outParent[neighbor] = parent; // an entry here means movement can legally end here (see getPathTo)
     }
     else if (outExtendedAttackOnly && neighborDist <= attackRange)
     {
-        // Beyond normal range, still within the extended attack range -
-        // attackable, but deliberately never given an outParent entry:
-        // never path-able-to, never movement-legal.
+        // Beyond normal range but within extended attack range - attackable,
+        // but never given an outParent entry (never path-able-to).
         outExtendedAttackOnly->push_back(tile);
     }
 }
@@ -38,18 +35,17 @@ bool BoardPathfinder::visitNeighbor(const BoardEntity* entity, Tile* tile,
     std::map<std::pair<int, int>, std::pair<int, int>>& outParent,
     std::vector<Tile*>* outExtendedAttackOnly) const
 {
-    // בדיקת עבירות פולימורפית: המשבצת מחליטה בעצמה אם הישות יכולה לעבור
+    // The tile itself decides polymorphically whether the entity may pass through it.
     if (!tile->isPassableFor(entity))
     {
-        // אם המשבצת לא עבירה לתנועה (כולל בגלל שהיא תפוסה - ראו Tile::setEntity),
-        // עדיין נבדוק אם יש עליה אויב שניתן לתקוף מרחוק/באוויר - ואם includeAllies
-        // ביקש זאת, גם אם יש עליה בן-ברית (למטרות Special, לא תנועה/תקיפה).
+        // Impassable (including just "occupied") still counts as attackable
+        // if it holds an enemy, or an ally when includeAllies was requested.
         if (tile->isOccupiedByEnemy(entity->getSide()) ||
             (includeAllies && tile->isOccupiedByAlly(entity->getSide())))
             recordReachability(tile, neighbor, parent, neighborDist, range, attackRange,
                 outReachable, outParent, outExtendedAttackOnly);
 
-        return false; // הישות לא יכולה להמשיך לנוע דרך המשבצת הזו
+        return false; // can't continue moving through this tile
     }
 
     recordReachability(tile, neighbor, parent, neighborDist, range, attackRange,
@@ -71,10 +67,10 @@ void BoardPathfinder::computeReachability(const BoardEntity* entity,
     int q = entity->getQ();
     int row = entity->getRow();
     int range = entity->getRange();
-    int attackRange = entity->getAttackRange(); // == range for every monster currently in the game (see Board.h's now-commented-out getExtendedAttackOnlyTiles)
+    int attackRange = entity->getAttackRange(); // == range for every monster currently in the game
     int bfsLimit = std::max(range, attackRange); // walk far enough to find extended-only enemies too
 
-    std::map<std::pair<int, int>, int> visited; // מרחק בלבד - פנימי לחישוב, לא מוחזר
+    std::map<std::pair<int, int>, int> visited; // distance only - internal to this BFS
     std::vector<std::pair<int, int>> frontier;
     visited[{q, row}] = 0;
     frontier.push_back({ q, row });
@@ -100,8 +96,6 @@ void BoardPathfinder::computeReachability(const BoardEntity* entity,
                 Tile* tile = it->second.get();
                 int neighborDist = dist + 1;
 
-                // The one place "can this entity enter/traverse this
-                // neighboring tile" is decided - see visitNeighbor above.
                 bool canContinueThrough = visitNeighbor(entity, tile, neighbor, { cq, cr },
                     neighborDist, range, attackRange, includeAllies,
                     outReachable, outParent, outExtendedAttackOnly);
@@ -109,9 +103,8 @@ void BoardPathfinder::computeReachability(const BoardEntity* entity,
                 if (!canContinueThrough)
                     continue;
 
-                visited[neighbor] = neighborDist; // needed so the BFS keeps
-                // walking through this tile (e.g. to find an extended-range
-                // enemy farther out) even when it's beyond `range` itself.
+                visited[neighbor] = neighborDist; // keep walking through this tile even beyond range,
+                // to find an extended-range enemy farther out
 
                 if (!tile->hasEntity())
                     nextFrontier.push_back(neighbor);
@@ -131,17 +124,14 @@ void BoardPathfinder::computeReachability(const BoardEntity* entity,
 std::vector<const Tile*> BoardPathfinder::getReachableTiles(const BoardEntity* entity, bool includeAllies) const
 {
     std::vector<Tile*> reachable;
-    std::map<std::pair<int, int>, std::pair<int, int>> parent; // לא בשימוש כאן, רק כי computeReachability דורש אותו
+    std::map<std::pair<int, int>, std::pair<int, int>> parent; // unused here, just required by computeReachability
     computeReachability(entity, reachable, parent, includeAllies);
     //return reachable;
-    return { reachable.begin(), reachable.end() };//to be a const
+    return { reachable.begin(), reachable.end() };
 }
 //
-// Commented out (not deleted) - its only caller was Board::getExtendedAttackOnlyTiles,
-// itself commented out for the same reason (see Board.cpp/BoardPathfinder.h):
-// currently always empty, since no monster overrides getAttackRange() to
-// differ from getRange() any more now that Barzilla's Empowered Attack is
-// ally-targeted instead of self-extending its own reach.
+// Commented out (not deleted) - currently always empty, since no monster
+// overrides getAttackRange() to differ from getRange() any more.
 //
 //std::vector<Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(Monster* monster) const
 //{
@@ -158,9 +148,8 @@ std::vector<const Tile*> BoardPathfinder::getReachableTiles(const BoardEntity* e
 //    return { extended.begin(), extended.end() };
 //}
 
-// שחזור המסלול: הולכים אחורה מה-target דרך outParent עד שמגיעים למקור, ואז
-// הופכים את הסדר (כי בנינו אותו מהסוף להתחלה). אם target לא הופיע ב-parent
-// בכלל - זה אומר שהוא לא נגיש (או שהוא עצמו נקודת המוצא), ומוחזרת רשימה ריקה.
+// Walks backward from target through outParent to the source, then reverses.
+// No outParent entry means unreachable, so an empty path is returned.
 //std::vector<Tile*> BoardPathfinder::getPathTo(Monster* monster, Tile* target) const
 //{
 //    std::vector<Tile*> path;

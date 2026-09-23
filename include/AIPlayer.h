@@ -1,43 +1,29 @@
 #pragma once
 #include "Player.h"
 #include "Board.h"
-//CHECK
+
 enum class AITurnPhase { Spawning, Acting, Done };
 
+// Player driven by a simple heuristic AI: spawns whatever it can afford,
+// then for each on-board monster uses its Special if a target is in range,
+// otherwise attacks the best enemy in range or advances toward the enemy's Heart.
 class AIPlayer : public Player
 {
 public:
-
-    // ���������� ����� �� ��� (���� ��� Right) ���
     AIPlayer(PlayerSide side);
 
-    // ����� ����� �� ����� - ���� ��� ��� ����� �� �-AI �����
-    // Called once at start of AI turn to begin the animated turn sequence
-    //void beginTurn(Board& board);
-
-    // Called each frame by the game loop. Returns true when the AI turn is complete.
-    // Only advances to the next action when no animation is playing.
-    //bool advanceTurn(Board& board);
-
-    // Behavioral turn hooks (see Player) - delegate straight to the
-    // beginTurn/advanceTurn machinery above so callers never need to know
-    // they're dealing with an AIPlayer specifically.
+    // Behavioral turn hooks (see Player) - delegate to the phase machine below.
     void onTurnStart(Board& board) override;
     void updateTurn(Board& board) override;
     bool isBusy() const override;
 
 private:
-
-    // ההיוריסטיקה של ה-AI: מתוך כל ה-tiles הנגישים למפלצת (Board::getReachableTiles
-    // שהיא שאילתה עובדתית בלבד), *AIPlayer עצמו* בוחר מה עדיף - תקיפה קודמת לתנועה,
-    // ובין תנועות - זו שמתקדמת הכי שמאלה. Board לא מעורב בהחלטה בכלל, רק מספק עובדות.
+    // Picks the best reachable tile for this monster: attack outranks
+    // movement, and among moves the one advancing closest to the enemy's back row.
     const Tile* findBestTarget(const Board& board, const Monster* monster) const;
 
-    // Same shape as findBestTarget above - Board only ever answers factual
-    // queries (getReachableOccupiedTiles), AIPlayer decides. Returns nullptr
-    // if the monster's Special isn't usable right now, or no valid target is
-    // currently in range (specialAbilityNeedsTarget() must still be checked
-    // by the caller first - a no-target Special never needs this at all).
+    // Same shape as findBestTarget - Board only answers factual queries,
+    // AIPlayer decides. Returns nullptr if no valid Special target is in range.
     const Tile* findBestSpecialTarget(const Board& board, const Monster* monster) const;
 
     AITurnPhase m_phase = AITurnPhase::Done;
