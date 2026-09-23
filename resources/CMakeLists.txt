@@ -39,6 +39,8 @@ configure_file("Heart/Heart25.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart25.p
 configure_file("Heart/Heart50.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart50.png COPYONLY)
 configure_file("Heart/Heart75.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart75.png COPYONLY)
 configure_file("Heart/Heart100.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart100.png COPYONLY)
+configure_file("Heart/OrangeHeart.png" ${CMAKE_BINARY_DIR}/resources/Heart/OrangeHeart.png COPYONLY)
+configure_file("Heart/BlueHeart.png" ${CMAKE_BINARY_DIR}/resources/Heart/BlueHeart.png COPYONLY)
 
 configure_file("Monster/Barzilla/Barzilla.png" ${CMAKE_BINARY_DIR}/resources/Monster/Barzilla/Barzilla.png COPYONLY)
 configure_file("Monster/Barzilla/Barzilla_Card.png" ${CMAKE_BINARY_DIR}/resources/Monster/Barzilla/Barzilla_Card.png COPYONLY)

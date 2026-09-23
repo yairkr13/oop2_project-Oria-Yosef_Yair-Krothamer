@@ -46,7 +46,8 @@ void AssetsManager::queueRemainingAssets() //ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½? ï¿½ï¿½ï
     { Kind::Texture, "NextMenuButton", "resources/Button/NextMenuButton.png" },
     { Kind::Texture, "BackMenuButton", "resources/Button/BackMenuButton.png" },
 
-    { Kind::Texture, "heart100", "resources/Heart/Heart100.png" },
+    { Kind::Texture, "heart_blue", "resources/Heart/BlueHeart.png" },
+    { Kind::Texture, "heart_orange", "resources/Heart/OrangeHeart.png" },
     // Both loaded up front (GameplayState picks one at random per new game
     // - see GameplayState::randomGameBackgroundKey) rather than just the
     // one "game_bg" this used to be - loadNext() drains the whole queue
