@@ -623,3 +623,8 @@ void GameplayState::clearSelectionState()
     m_selectedEntity = nullptr;
     m_board.clearHighlights();
 }
+
+MusicTrack GameplayState::desiredMusicTrack() const
+{
+    return MusicTrack::Gameplay;
+}
