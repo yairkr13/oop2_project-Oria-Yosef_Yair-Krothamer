@@ -16,6 +16,8 @@ void FrameAnimation::reset()
     m_elapsed = 0.f;
 }
 
+// True once a non-looping animation has played through and is holding on
+// its last frame. Always false while looping.
 bool FrameAnimation::isFinished() const
 {
     if (m_looping || m_frameDuration <= 0.f || m_frameCount <= 0) return false;
@@ -27,10 +29,7 @@ int FrameAnimation::getCurrentFrameIndex() const
     if (m_frameDuration <= 0.f || m_frameCount <= 0) return 0;
 
     int rawIndex = static_cast<int>(m_elapsed / m_frameDuration);
-    // Looping wraps forever; non-looping clamps at the last frame instead
-    // of wrapping back to the first once done, so it visibly holds there
-    // rather than restarting - isFinished() above is what reports that
-    // this happened.
+    // Looping wraps forever; non-looping clamps at the last frame instead.
     return m_looping ? (rawIndex % m_frameCount)
                       : std::min(rawIndex, m_frameCount - 1);
 }

@@ -4,8 +4,7 @@
 
 namespace
 {
-    // One frame's real pixel size - not the whole sheet's - is what
-    // origin/scale need to be based on (see the constructor below).
+    // One frame's real pixel size - not the whole sheet's.
     sf::Vector2f computeFrameSize(const sf::Texture& texture, int columns, int rows)
     {
         sf::Vector2u sheetSize = texture.getSize();
@@ -57,10 +56,12 @@ sf::IntRect SpriteSheet::getCurrentFrameRect() const
 
 void SpriteSheet::applyCurrentFrame(sf::Sprite& sprite) const
 {
-    // Same texture, different visible rect each call - only which pixels
-    // of which texture the sprite shows changes here, so switching frames
-    // can't make it jump around on its own.
     sprite.setTexture(*m_texture, false);
     sprite.setTextureRect(getCurrentFrameRect());
     sprite.setOrigin(m_frameOrigin);
+}
+
+float SpriteSheet::getBaseScale() const
+{
+    return m_baseScale;
 }

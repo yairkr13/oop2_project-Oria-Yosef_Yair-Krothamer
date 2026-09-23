@@ -52,8 +52,7 @@ void StaggeredInstancesAnimation::update(float dt)
         }
     }
 
-    // Every instance has completed - fire the shared impact callback exactly
-    // once, regardless of how many instances were launched.
+    // All instances landed - fire the shared callback exactly once.
     if (m_finishedCount >= static_cast<int>(m_instances.size()))
     {
         fireImpact();

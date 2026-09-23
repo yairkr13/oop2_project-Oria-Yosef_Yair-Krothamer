@@ -10,11 +10,10 @@ GrowingEffectAnimation::GrowingEffectAnimation(const sf::Texture& texture, sf::V
     sf::Vector2u textureSize = texture.getSize();
     m_fullScale = SpriteUtils::maxDimensionScale(textureSize, size);
 
-    // Centered origin so growth expands symmetrically around `position` -
-    // never from a corner/edge.
+    // Centered origin so growth expands symmetrically around `position`.
     m_sprite.setOrigin({ static_cast<float>(textureSize.x) / 2.f, static_cast<float>(textureSize.y) / 2.f });
     m_sprite.setPosition(position);
-    m_sprite.setScale({ 0.f, 0.f }); // starts at zero size - grows from nothing
+    m_sprite.setScale({ 0.f, 0.f }); // starts at zero size
 }
 
 void GrowingEffectAnimation::update(float dt)
@@ -33,7 +32,7 @@ void GrowingEffectAnimation::update(float dt)
 
         if (progress >= 1.f)
         {
-            fireImpact(); // the barrier is "up" exactly when it reaches full size
+            fireImpact(); // "up" exactly when it reaches full size
             m_phase = Phase::Holding;
             m_elapsed = 0.f;
         }
