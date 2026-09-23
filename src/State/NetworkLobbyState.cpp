@@ -6,6 +6,7 @@
 #include "Constants.h"
 #include <random>
 #include <cstring>
+#include <iostream>
 
 namespace
 {
@@ -205,6 +206,7 @@ void NetworkLobbyState::update(sf::Time /*deltaTime*/)
         if (m_connection->isConnected() && !m_seedSent)
         {
             unsigned int seed = std::random_device{}();
+            std::cout << "[NetworkLobbyState] HOST seeding with " << seed << std::endl; // TEMP DEBUG
             Board::seedRng(seed); // this machine's own Board (built once GameplayState exists) uses this same seed
             m_connection->sendMessage(seedToBytes(seed));
             m_seedSent = true;
@@ -221,6 +223,7 @@ void NetworkLobbyState::update(sf::Time /*deltaTime*/)
         if (m_connection->hasMessage())
         {
             unsigned int seed = bytesToSeed(m_connection->popMessage());
+            std::cout << "[NetworkLobbyState] JOIN seeding with " << seed << std::endl; // TEMP DEBUG
             Board::seedRng(seed);
             enterGame(PlayerSide::Right); // joiner is always Right
         }

@@ -4,6 +4,7 @@
 #include "Tiles/PanicPoint.h"
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 namespace
 {
@@ -77,14 +78,27 @@ namespace BoardGenerator
 
         std::shuffle(allCoords.begin(), allCoords.end(), rng);
 
+        // TEMP DEBUG (see conversation) - remove once the desync is found.
+        std::cout << "[BoardGenerator] allCoords.size()=" << allCoords.size() << " chosen coords:";
+
         int next = 0;
         for (int i = 0; i < layout.lavaTileCount; ++i, ++next)
+        {
+            std::cout << " Lava(" << allCoords[next].first << "," << allCoords[next].second << ")";
             placeSpecialTile<LavaTile>(grid, allCoords[next], anchorToScreen);
+        }
 
         for (int i = 0; i < layout.holeTileCount; ++i, ++next)
+        {
+            std::cout << " Hole(" << allCoords[next].first << "," << allCoords[next].second << ")";
             placeSpecialTile<Hole>(grid, allCoords[next], anchorToScreen);
+        }
 
         for (int i = 0; i < layout.panicPointCount; ++i, ++next)
+        {
+            std::cout << " Panic(" << allCoords[next].first << "," << allCoords[next].second << ")";
             placeSpecialTile<PanicPoint>(grid, allCoords[next], anchorToScreen, p1Heart, p2Heart);
+        }
+        std::cout << std::endl;
     }
 }
