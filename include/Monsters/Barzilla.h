@@ -6,7 +6,6 @@
 class Barzilla : public Monster
 {
 public:
-    //static constexpr int COST = 4;
     static constexpr int BASE_HEALTH = 150;
     static constexpr int BASE_ATTACK = 30;
     static constexpr int BASE_RANGE = 2;
@@ -14,14 +13,7 @@ public:
 
     Barzilla(PlayerSide side);
 
-    // Empowered Attack is ally-targeted now, so Barzilla no longer buffs
-    // its own attack - old removed members kept below as comments.
-    //
-    // void attack(BoardEntity* target) override;
-    // int getAttackRange() const override { return m_empoweredAttack ? m_range * 2 : m_range; }
-    // bool specialAbilityCommitsOnSelect() const override { return false; }
-    // void cancelSpecialAbility() override { m_empoweredAttack = false; }
-
+    // Empowered Attack is ally-targeted, so Barzilla no longer buffs its own attack.
     std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
 
     bool specialAbilityNeedsTarget() const override;
@@ -34,6 +26,4 @@ public:
 private:
     void onSpecialAbility(const Board& board, BoardEntity* target) override;
 
-    // No longer needed - the buff now lives on the empowered ally, not Barzilla.
-    // void onTurnBoundary() override;
 };

@@ -5,12 +5,11 @@
 #include "Constants.h"
 #include <memory>
 #include <optional>
-//#include "StaticObject.h"
 
 // A single hex cell on the board. Owns its shape/highlight state and at
 // most one occupying BoardEntity, and forwards per-frame/per-turn updates
 // and tile effects to it.
-class Tile //: public StaticObject
+class Tile
 {
 public:
 	Tile(int q, int row, const sf::Vector2f& position, const sf::Color& color= sf::Color(80, 80, 80, 180)); // default: gray
@@ -28,22 +27,11 @@ public:
 
 	void setHighlighted(bool highlighted, const sf::Color& highlightColor= sf::Color(150, 220, 150, 180)); // default: light green
 
-	//void setMonster(std::shared_ptr<Monster> monster) { m_monsterRef = monster; };
-	//std::shared_ptr<Monster> getMonster() const { return m_monsterRef.lock(); }
-	//bool hasMonster() const { return !m_monsterRef.expired(); }
     void clearEntity();
 
     const BoardEntity* getEntity() const;
 
     BoardEntity* getMutableEntity() const;
-
-    // ������� ������� - ������ ������ ���� (������ ���� �����)
-    //Monster* getMonster() const {
-    //    if (m_entity && m_entity->getType() == EntityType::Monster) {
-    //        return static_cast<Monster*>(m_entity); // Downcasting ����
-    //    }
-    //    return nullptr;
-    //}
 
     void setEntity(BoardEntity* entity);
     bool hasEntity() const;
@@ -65,20 +53,6 @@ public:
 
     float scoreAsAttackTarget() const;
 
-    // ��� ����� ���� - "�� ��� ���� ��� ����� �����?" (���� �-updateTileEffects)
-    //bool hasDeadEntity() const { return m_entity != nullptr && !m_entity->isAlive(); }
-
-    /*virtual bool isPassableFor(Monster* monster) const {
-        return m_isPassable;
-    }*/
-
-    //void setMonster(Monster* monster) { setEntity(monster); }
-
-    /*bool hasMonster() const {
-        return m_entity != nullptr && m_entity->getType() == EntityType::Monster;
-    }*/
-    //virtual bool isHole() const { return false; }
-
     virtual void applyTileEffect();
 protected:
     bool m_isPassable; // set directly by Hole's constructor
@@ -93,6 +67,4 @@ private:
 	int m_q;
 	bool m_isHighlighted = false;
 	BoardEntity* m_entity = nullptr;
-
-	//std::weak_ptr<BoardEntity> m_entityRef;
 };

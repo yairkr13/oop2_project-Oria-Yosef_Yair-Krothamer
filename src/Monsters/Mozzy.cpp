@@ -32,11 +32,6 @@ Mozzy::Mozzy(PlayerSide side)
     setStandardSpriteAnimations("mozzy", "mozzy_fly", ATTACK_FRAME_DURATION);
 }
 
-//void Mozzy::attack(Monster& target)
-//{
-//    target.takeDamage(m_attackDamage);
-//}
-
 std::unique_ptr<AttackAnimation> Mozzy::createAttackAnimation(sf::Vector2f targetPosition) const
 {
     const sf::Texture& acidSplashTexture = AssetsManager::getInstance().getTexture("acid_splash");
@@ -48,8 +43,6 @@ std::unique_ptr<AttackAnimation> Mozzy::createAttackAnimation(sf::Vector2f targe
 // below is purely visual, owned by the target.
 void Mozzy::onSpecialAbility(const Board& board, BoardEntity* target)
 {
-    /*Monster* targetMonster = target ? target->asMonster() : nullptr;
-    if (!targetMonster) return;*/
 	if (!target->canBeTargetedBySpecial()) return;
 
     target->applyFreeze();

@@ -12,14 +12,6 @@ namespace
     // Proportional to Config::MONSTER_BOARD_SIZE, like Mozzy's ACID_SPLASH_THICKNESS.
     constexpr float FIRE_BLAST_THICKNESS = Config::MONSTER_BOARD_SIZE * 0.5f;
 
-    // Old empowered-projectile constants, kept as a comment - Barzilla's
-    // own attack no longer varies visually by m_empoweredAttack:
-    //
-    // constexpr int EMPOWERED_FIRE_BLAST_COUNT = 3;
-    // constexpr float EMPOWERED_FIRE_BLAST_LAUNCH_INTERVAL = 0.04f;
-    // constexpr float EMPOWERED_FIRE_BLAST_TRAVEL_DURATION = 0.4f;
-    // constexpr float EMPOWERED_FIRE_BLAST_SIZE = Config::MONSTER_BOARD_SIZE * 0.55f;
-
     // Grant visual, played on the ally the instant Barzilla empowers them -
     // a quick grow-and-fade glow.
     constexpr float EMPOWERED_IMPACT_SIZE = Config::MONSTER_BOARD_SIZE * 1.3f;
@@ -40,26 +32,6 @@ Barzilla::Barzilla(PlayerSide side)
     setStandardSpriteAnimations("barzilla", "barzilla_walk", ATTACK_FRAME_DURATION);
 }
 
-// Old self-buff version, kept as a comment (not deleted) per request:
-//
-// void Barzilla::attack(BoardEntity* target)
-// {
-//     bool empowered = m_empoweredAttack;
-//     int damage = empowered ? m_attackDamage * 2 : m_attackDamage;
-//     if (empowered)
-//     {
-//         m_empoweredAttack = false;
-//         m_specialCooldown = m_baseCooldown;
-//         const sf::Texture& impactTexture = AssetsManager::getInstance().getTexture("fire_blast");
-//         auto impactFlash = std::make_unique<GrowingEffectAnimation>(
-//             impactTexture, target->getScreenPosition(), EMPOWERED_IMPACT_SIZE,
-//             EMPOWERED_IMPACT_GROW_DURATION, EMPOWERED_IMPACT_HOLD_DURATION, EMPOWERED_IMPACT_FADE_DURATION);
-//         target->playSpecialAbilityAnimation(std::move(impactFlash));
-//     }
-//     target->takeDamage(damage);
-//     useAction();
-// }
-
 // Grants the target's next attack double damage (consumed in
 // Monster::attack()); the grow effect plays on the target as the buff lands.
 void Barzilla::onSpecialAbility(const Board& board, BoardEntity* target)
@@ -75,29 +47,9 @@ void Barzilla::onSpecialAbility(const Board& board, BoardEntity* target)
     target->playSpecialAbilityAnimation(std::move(empowerEffect));
 }
 
-// Old onTurnBoundary override, kept as a comment - no longer needed since
-// the buff now lives on the ally, not on Barzilla:
-//
-// void Barzilla::onTurnBoundary()
-// {
-//     BoardEntity::onTurnBoundary();
-//     m_empoweredAttack = false;
-// }
-
 std::unique_ptr<AttackAnimation> Barzilla::createAttackAnimation(sf::Vector2f targetPosition) const
 {
     const sf::Texture& fireBlastTexture = AssetsManager::getInstance().getTexture("fire_blast");
-
-    // Old empowered-burst branch, kept as a comment - Barzilla's own
-    // attack no longer varies by m_empoweredAttack:
-    //
-    // if (m_empoweredAttack)
-    // {
-    //     return std::make_unique<BurstProjectileAnimation>(
-    //         fireBlastTexture, m_screenPos, target->getScreenPosition(),
-    //         EMPOWERED_FIRE_BLAST_COUNT, EMPOWERED_FIRE_BLAST_LAUNCH_INTERVAL,
-    //         EMPOWERED_FIRE_BLAST_TRAVEL_DURATION, EMPOWERED_FIRE_BLAST_SIZE);
-    // }
 
     // Grows/reveals from attacker to target, same mechanism as Mozzy's acid splash.
     return std::make_unique<SplashAttackAnimation>(

@@ -14,10 +14,7 @@ Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)
     m_shape.setOutlineThickness(2.f);
     m_shape.setOutlineColor(sf::Color(80, 80, 80, 180)); // gray
 
-    //m_shape.setRotation(sf::degrees(30.f));
     m_shape.setPosition(position);
-    //m_shape.setOrigin({ Config::TILE_RADIUS, Config::TILE_RADIUS });
-    // m_shape.setOrigin(radius, radius);
 }
 
 void Tile::draw(sf::RenderWindow& window) const
@@ -55,29 +52,17 @@ void Tile::setEntity(BoardEntity* entity)
 {
     m_entity = entity;
     m_isPassable = false;
-
-   /* if (m_entity != nullptr)
-    {
-        m_entity->setCurrentTile(this);
-    }*/
-    // Removed along with BoardEntity::m_currentTile - m_q/m_row already track position.
-    // if (m_entity != nullptr)
-    //     m_entity->setCurrentTile(this);
 }
 
 void Tile::clearEntity()
 {
-    // Old guard removed: it only protected m_currentTile, which no longer exists.
-    // if (m_entity != nullptr && m_entity->getCurrentTile() == this)
-    // {
-    //     m_entity->setCurrentTile(nullptr);
-    // }
     m_entity = nullptr;
     m_isPassable = true;
 }
 
 void Tile::receiveAttackFrom(BoardEntity* attacker)
 {
+    // No attacker, or nothing on this tile to hit.
     if (!attacker || m_entity == nullptr) return;
 
     BoardEntity* defender = m_entity;
@@ -87,8 +72,6 @@ void Tile::receiveAttackFrom(BoardEntity* attacker)
     // stays linked to this tile until that animation finishes.
     if (defender->isReadyForRemoval())
     {
-        //attacker->onKill(defender);
-        //defender->onDeath();
         clearEntity();
     }
 }
@@ -109,6 +92,7 @@ void Tile::updateEntity(float dt)
     if (!m_entity) return;
 
     m_entity->update(dt);
+    // Re-check m_entity: update() could indirectly clear this tile (e.g. via a callback).
     if (m_entity && m_entity->isReadyForRemoval())
     {
         clearEntity();

@@ -51,13 +51,8 @@ std::unique_ptr<AttackAnimation> Blue::createAttackAnimation(sf::Vector2f target
 // passability/occupancy rules.
 void Blue::onSpecialAbility(const Board& board, BoardEntity* target)
 {
-    //Monster* targetMonster = target ? target->asMonster() : nullptr;
-    //if (!targetMonster) return;
+    // No target, or a target that's no longer a legal Special target (e.g. mid-death-animation).
 	if (!target || !target->canBeTargetedBySpecial()) return;
-
-    // Old guard removed: currentTile was only ever used for this null-check.
-    // Tile* currentTile = target->getCurrentTile();
-    // if (!currentTile) return;
 
     auto [dq, dr] = HexGrid::stepToward(m_q, m_row, target->getQ(), target->getRow());
 
@@ -77,22 +72,6 @@ void Blue::onSpecialAbility(const Board& board, BoardEntity* target)
     // Deferred to the wind's impact, so the target visually flies back
     // only once the wind "hits".
     windEffect->setOnImpact([&board, target, dq, dr]() {
-        //Tile* sourceTile = target->getCurrentTile();
-        //if (!sourceTile) return;
-
-        //const Tile* step1 = board.getTileAt(target->getQ() + dq, target->getRow() + dr);
-        //bool step1Valid = step1 && !step1->hasEntity() && step1->isPassableFor(target);
-        //if (!step1Valid) return; // first tile blocked/off-board -> no movement at all
-
-        //const Tile* step2 = board.getTileAt(step1->getQ() + dq, step1->getRow() + dr);
-        //bool step2Valid = step2 && !step2->hasEntity() && step2->isPassableFor(target);
-
-        //const Tile* destination = step2Valid ? step2 : step1; // push 2 if both clear, otherwise exactly 1
-
-        //sourceTile->clearEntity();
-        //destination->setEntity(target);
-        //target->spawnOnBoard(destination->getQ(), destination->getRow(),
-        //    board.tileToScreen(destination->getQ(), destination->getRow()));
         board.applyKnockback(target, dq, dr, KNOCKBACK_DISTANCE_TILES);
     });
 

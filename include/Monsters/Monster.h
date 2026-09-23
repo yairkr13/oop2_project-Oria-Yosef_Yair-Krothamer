@@ -16,43 +16,30 @@ class Board; // Forward declaration - only ever used by reference in Special Abi
 class Monster :public BoardEntity
 {
 public:
-    Monster(PlayerSide side, int health, int attackPower, int range, int baseCooldown/*, int cost,*/, int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
+    Monster(PlayerSide side, int health, int attackPower, int range, int baseCooldown, int q, int row, sf::Color color, const std::string& textureKey, bool m_flying = false);
+    // Declared here, defined "= default" out-of-line in Monster.cpp: m_attackAnimation
+    // below is a unique_ptr<AttackAnimation>, and AttackAnimation is only
+    // forward-declared in this header (via BoardEntity.h) - same reason
+    // BoardEntity::createAttackAnimation's body had to move out-of-line.
     virtual ~Monster();
     void draw(sf::RenderWindow& window, PlayerSide CurrentTurnSide) const override;
-    //void drawAsCard(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const;
-    //
-    //void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos);
-   /* void takeDamage(int damage) override;
-    bool isAlive() const;*/
-    // bool contains(sf::Vector2f point, sf::Vector2f screenPos) const;
-     //void attack(std::shared_ptr<Monster> target);
     void attack(BoardEntity* target);
-    //void setSelected(bool selected) { m_selected = selected; }
-    //bool isSelected() const override { return m_selected; }
-    //virtual bool isSelectable() const override { return true; } // ����� ���� �����!
+    // isAlive() is checked explicitly (not just implied): a dead monster
+    // stays linked to its Tile for as long as its death animation is
+    // playing (see isDying()/isReadyForRemoval() below), so without this
+    // check it would otherwise still satisfy "not an enemy, has actions
+    // left" and be selectable/movable/attackable-with while visibly dying.
     bool canBeSelectedBy(PlayerSide side) const override;
-    //virtual Monster* asMonster() override { return this; }
     virtual bool canBeTargetedBySpecial() const override;
 
-    //virtual EntityType getType() const override { return EntityType::Monster; }
     bool isOnBoard() const;
-    /*bool isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPosition) const;*/
 
-    //int getCost() const { return m_cost; }
     int getRange() const override;
 
     int getAttackDamage() const;
 
-    // Unused: would let a Special extend attack range without also
-    // extending movement range. No monster currently needs this.
-    //virtual int getAttackRange() const { return getRange(); }
-
     int getActionsLeft() const;
     void resetActions();
-    //std::string getTextureKey() const { return m_textureKey ; }
-    //std::string getCardTextureKey() const { return m_textureKey + "_card" ; }
-    //void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }
-    //void setSide(PlayerSide side) { m_side = side; }
     PlayerSide getSide() const override;
 
     void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) override;
@@ -101,9 +88,7 @@ public:
     bool isReadyForRemoval() const override;
 
     bool canMove() const override;
-    //void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) override;
 protected:
-    //virtual void onAttackHook(BoardEntity* target) {}
     virtual void onSpecialAbility(const Board& board, BoardEntity* target) = 0;
 
     void setWalkAnimation(const std::string& walkTextureKey, int columns, int rows, float frameDuration);
@@ -120,19 +105,19 @@ protected:
     const PlayerSide m_side; // reached directly by some subclasses (e.g. Henrietta's isValidSpecialTarget)
 
 private:
+    // None of the 5 concrete monster .cpp files touch any of these
+    // directly - each only ever goes through Monster's own public
+    // accessors/methods. Only BoardEntity's own m_q/m_row/m_screenPos
+    // (inherited, still protected there) and Monster's own m_side above are
+    // genuinely reached directly by a subclass.
     int m_attackDamage;
     int m_range;
-    //int m_cost;
-    //int m_q;
-    //int m_row;
-    //bool m_selected = false;
     sf::Color m_color;
     bool m_flying;
     bool m_frozen = false;
 
     float m_attackMultiplier = 1.f; // 1.f = no effect; set by an ally's Empowered Attack, consumed on next attack
     std::string m_textureKey;
-    //sf::Vector2f m_targetPos;//private od protected??????????????????????????????
     std::deque<sf::Vector2f> m_pathQueue; // screen positions this monster is walking through, one per step
     bool m_isMoving = false;
 
@@ -151,8 +136,6 @@ private:
 
     void useAction();
     void drawActionsLeft(sf::RenderWindow& window) const;
-    //void drawHealthBar(sf::RenderWindow& window) const;
-    //std::string getCardTextureKey() const { return m_textureKey + "_card"; }
 
     std::unique_ptr<SpriteSheet> configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration, bool looping = true) const;
 
