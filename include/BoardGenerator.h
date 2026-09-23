@@ -51,7 +51,7 @@ struct BoardLayout
 namespace BoardGenerator
 {
     // Today's one standard layout - the exact shape/tile counts Board has
-    // always used (7 rows, 14 columns, 2 lava, 2 holes, 1 panic point, a
+    // always used (7 rows, 20 columns, 2 lava, 2 holes, 1 panic point, a
     // 2-column spawn margin on each side).
     BoardLayout standardLayout();
 

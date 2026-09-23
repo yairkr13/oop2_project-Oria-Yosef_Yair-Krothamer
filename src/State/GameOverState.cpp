@@ -11,6 +11,12 @@ namespace
     // size (260 - 360 center = -100.f), expressed as a compile-time Config
     // value now instead of staying pinned to that original size.
     constexpr float MENU_Y_OFFSET_FROM_CENTER = -100.f;
+
+    // Same convention as MENU_Y_OFFSET_FROM_CENTER above - the ratio the
+    // old windowHeight/4.5f divisor worked out to at the original 720-tall
+    // size (160 - 360 center = -200.f), expressed as a Config-derived
+    // offset instead of a live-window-size divisor.
+    constexpr float WINNER_TEXT_Y_OFFSET_FROM_CENTER = -200.f;
 }
 
 GameOverState::GameOverState(sf::RenderWindow& window,const PlayerSide& winner,
@@ -80,7 +86,7 @@ void GameOverState::handleEvent(const sf::Event& event)
 
 void GameOverState::setupWinnerText(const PlayerSide& winner)
 {
-    std::string text = (winner == PlayerSide::Left) ? "Player 1 Wins!" : "Player 2 Wins!";
+    std::string text = (winner == PlayerSide::Left) ? "LEFT PLAYER WINS" : "RIGHT PLAYER WINS";
 
     m_winnerText.setString(text);
     m_winnerText.setCharacterSize(48);
@@ -89,5 +95,6 @@ void GameOverState::setupWinnerText(const PlayerSide& winner)
 
     sf::FloatRect textRect = m_winnerText.getLocalBounds();
     m_winnerText.setOrigin({ textRect.position.x + textRect.size.x / 2.f, textRect.position.y + textRect.size.y / 2.f });
-    m_winnerText.setPosition({ static_cast<float>(m_window.getSize().x) / 2.f, static_cast<float>(m_window.getSize().y) / 4.5f });
+    m_winnerText.setPosition({ static_cast<float>(m_window.getSize().x) / 2.f,
+        static_cast<float>(Config::WINDOW_HEIGHT) / 2.f + WINNER_TEXT_Y_OFFSET_FROM_CENTER });
 }

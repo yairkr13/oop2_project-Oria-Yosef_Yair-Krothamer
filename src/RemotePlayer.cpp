@@ -3,7 +3,6 @@
 #include "Card.h"
 #include "Monsters/Monster.h"
 #include "Tiles/Tile.h"
-#include <iostream>
 
 RemotePlayer::RemotePlayer(PlayerSide side, NetworkConnection& connection)
     : Player(side), m_connection(connection)
@@ -30,7 +29,6 @@ void RemotePlayer::updateTurn(Board& board)
 
     if (action.type == GameAction::Type::EndTurn)
     {
-        std::cout << "[RemotePlayer] updateTurn - EndTurn popped, m_turnFinished=true" << std::endl; // TEMP DEBUG
         m_turnFinished = true;
         return;
     }
@@ -45,13 +43,6 @@ bool RemotePlayer::isBusy() const
 
 void RemotePlayer::recordLocalAction(const GameAction& action)
 {
-    // TEMP DEBUG (see conversation) - remove once the desync is found.
-    std::cout << "[RemotePlayer] recordLocalAction type=" << static_cast<int>(action.type)
-        << " cardIndex=" << action.cardIndex
-        << " source=(" << action.sourceQ << "," << action.sourceRow << ")"
-        << " target=(" << action.targetQ << "," << action.targetRow << ")"
-        << " hasTarget=" << action.hasTarget << std::endl;
-
     m_recordedActions.push_back(action);
 }
 
@@ -60,9 +51,6 @@ void RemotePlayer::sendRecordedActions()
     GameAction endTurn;
     endTurn.type = GameAction::Type::EndTurn;
     m_recordedActions.push_back(endTurn);
-
-    // TEMP DEBUG (see conversation) - remove once the desync is found.
-    std::cout << "[RemotePlayer] sendRecordedActions - sending " << m_recordedActions.size() << " actions" << std::endl;
 
     m_connection.sendMessage(serializeActions(m_recordedActions));
     m_recordedActions.clear();
@@ -85,21 +73,11 @@ void RemotePlayer::pollIncoming()
 
 void RemotePlayer::receiveTurnActions(std::vector<GameAction> actions)
 {
-    // TEMP DEBUG (see conversation) - remove once the desync is found.
-    std::cout << "[RemotePlayer] receiveTurnActions - got " << actions.size() << " actions" << std::endl;
-
     m_pendingActions.assign(actions.begin(), actions.end());
 }
 
 void RemotePlayer::applyAction(const GameAction& action, Board& board)
 {
-    // TEMP DEBUG (see conversation) - remove once the desync is found.
-    std::cout << "[RemotePlayer] applyAction type=" << static_cast<int>(action.type)
-        << " cardIndex=" << action.cardIndex
-        << " source=(" << action.sourceQ << "," << action.sourceRow << ")"
-        << " target=(" << action.targetQ << "," << action.targetRow << ")"
-        << " hasTarget=" << action.hasTarget << std::endl;
-
     switch (action.type)
     {
     case GameAction::Type::Spawn:
@@ -117,16 +95,9 @@ void RemotePlayer::applyAction(const GameAction& action, Board& board)
     {
         const Tile* sourceTile = board.getTileAt(action.sourceQ, action.sourceRow);
         const Tile* targetTile = board.getTileAt(action.targetQ, action.targetRow);
-        if (!sourceTile || !targetTile)
-        {
-            std::cout << "[RemotePlayer] MoveOrAttack ABORTED - sourceTile=" << (sourceTile != nullptr)
-                << " targetTile=" << (targetTile != nullptr) << std::endl; // TEMP DEBUG
-            return;
-        }
+        if (!sourceTile || !targetTile) return;
 
-        BoardEntity* entity = sourceTile->getMutableEntity();
-        std::cout << "[RemotePlayer] MoveOrAttack - entity on sourceTile=" << (entity != nullptr) << std::endl; // TEMP DEBUG
-        if (entity)
+        if (BoardEntity* entity = sourceTile->getMutableEntity())
             board.performAction(entity, targetTile);
         break;
     }

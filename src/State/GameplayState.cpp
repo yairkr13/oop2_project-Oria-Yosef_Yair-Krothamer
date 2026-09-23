@@ -12,6 +12,12 @@
 namespace
 {
     constexpr unsigned int MINI_MENU_BUTTON_WIDTH = 90;
+
+    // Anchored to the top-left corner, not the window's center - same
+    // reasoning InstructionsState's own left-anchored nav button margin
+    // uses: a corner-relative position stays correct regardless of
+    // Config::WINDOW_WIDTH/HEIGHT, unlike a center-relative one, so it
+    // doesn't need a Config-derived offset the way those do.
     const sf::Vector2i MINI_MENU_BUTTON_POSITION = { 170, 10 };
 
     // Picks "game_bg_1" or "game_bg_2" with equal odds - a fresh
@@ -201,10 +207,6 @@ void GameplayState::update(sf::Time deltaTime)
     if (m_player1->isDead() || m_player2->isDead())
     {
         PlayerSide winner = (m_player1->isDead()) ? PlayerSide::Right : PlayerSide::Left;
-
-        // TEMP DEBUG (see conversation) - remove once the desync is found.
-        std::cout << "[GameplayState] isDead fired - winner=" << (winner == PlayerSide::Left ? "Left" : "Right")
-            << " m_remotePlayer=" << (m_remotePlayer != nullptr) << std::endl;
 
         // The killing action usually lands mid-turn, before the local human
         // ever ends their own turn - so without this, it (and anything else

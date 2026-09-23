@@ -13,6 +13,12 @@ namespace
     constexpr unsigned int AUDIO_BUTTON_WIDTH = 60;
     constexpr int BUTTON_GAP_Y = 12;
 
+    // Offset from the window's own vertical center - same convention as
+    // MUSIC_BUTTON_OFFSET_FROM_CENTER below (a compile-time Config value,
+    // not a live window size), so the menu moves correctly with the popup
+    // on a Config size change instead of staying pinned to one size.
+    constexpr float MENU_Y_OFFSET_FROM_CENTER = -117.f;
+
     // Offset from the window's own center (a compile-time Config value, not
     // a live window size - see Controller::Controller, the window never
     // resizes). m_menu below and m_background (scaleAndCenter) already
