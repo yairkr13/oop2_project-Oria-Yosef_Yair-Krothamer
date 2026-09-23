@@ -5,9 +5,8 @@
 #include "SoundPlayer.h"
 #include "SpriteUtils.h"
 
-// Defined here (not "= default" inline in the header): destroying
-// m_attackAnimation (a unique_ptr<AttackAnimation>) requires the complete
-// AttackAnimation type, which is only forward-declared in Monster.h.
+// Out-of-line: destroying m_attackAnimation needs AttackAnimation's
+// complete type, only forward-declared in Monster.h.
 Monster::~Monster() = default;
 
 Monster::Monster(PlayerSide side, int health, int attackPower, int range, int baseCooldown/*, int cost*/, int q, int row, sf::Color color, const std::string& textureKey, bool flying)
@@ -38,6 +37,8 @@ Monster::Monster(PlayerSide side, int health, int attackPower, int range, int ba
     }
 }
 
+// Builds a SpriteSheet sized against Config::MONSTER_BOARD_SIZE - the same
+// reference the static sprite's own m_baseScale uses.
 std::unique_ptr<SpriteSheet> Monster::configureSpriteSheet(const std::string& textureKey, int columns, int rows, float frameDuration, bool looping) const
 {
     const sf::Texture& texture = AssetsManager::getInstance().getTexture(textureKey);
@@ -46,14 +47,8 @@ std::unique_ptr<SpriteSheet> Monster::configureSpriteSheet(const std::string& te
 
 namespace
 {
-    // Priority for each of Monster's four animation states, handed to
-    // SpriteAnimator::addState (lower wins when more than one state's own
-    // isActive() is simultaneously true) - this is the data-form of what
-    // used to be a hardcoded if/else chain in draw() (die beats attack
-    // beats walk beats idle). Registration order no longer matters at all
-    // (see addAnimationState/SpriteAnimator) - each concrete monster's
-    // constructor is free to call the four setters below in any order, as
-    // they already do inconsistently.
+    // Priority for each animation state (lower wins if more than one is
+    // active at once): die beats attack beats walk beats idle.
     constexpr int DIE_PRIORITY = 0;
     constexpr int ATTACK_PRIORITY = 1;
     constexpr int WALK_PRIORITY = 2;
@@ -66,30 +61,36 @@ void Monster::addAnimationState(AnimState id, std::unique_ptr<SpriteSheet> sheet
     m_animator.addState(static_cast<int>(id), std::move(sheet), std::move(isActive), priority);
 }
 
+// Looping sheet shown only while isMoving() is true.
 void Monster::setWalkAnimation(const std::string& walkTextureKey, int columns, int rows, float frameDuration)
 {
     addAnimationState(AnimState::Walk, configureSpriteSheet(walkTextureKey, columns, rows, frameDuration),
         [this]() { return m_isMoving; }, WALK_PRIORITY);
 }
 
+// Looping sheet shown only while isAttacking() is true.
 void Monster::setAttackSpriteAnimation(const std::string& attackTextureKey, int columns, int rows, float frameDuration)
 {
     addAnimationState(AnimState::Attack, configureSpriteSheet(attackTextureKey, columns, rows, frameDuration),
         [this]() { return isAttacking(); }, ATTACK_PRIORITY);
 }
 
+// Looping sheet shown only when neither moving nor attacking.
 void Monster::setIdleSpriteAnimation(const std::string& idleTextureKey, int columns, int rows, float frameDuration)
 {
     addAnimationState(AnimState::Idle, configureSpriteSheet(idleTextureKey, columns, rows, frameDuration),
         [this]() { return !m_isMoving && !isAttacking(); }, IDLE_PRIORITY);
 }
 
+// One-shot sheet (non-looping) shown once dead; holds its last frame.
 void Monster::setDieSpriteAnimation(const std::string& dieTextureKey, int columns, int rows, float frameDuration)
 {
     addAnimationState(AnimState::Die, configureSpriteSheet(dieTextureKey, columns, rows, frameDuration, /*looping=*/false),
         [this]() { return !isAlive(); }, DIE_PRIORITY);
 }
 
+// Registers all four states at once, using the shared 6x4 grid and frame
+// durations every monster uses.
 void Monster::setStandardSpriteAnimations(const std::string& texturePrefix, const std::string& walkTextureKey,
     float attackFrameDuration)
 {
@@ -105,11 +106,14 @@ void Monster::setStandardSpriteAnimations(const std::string& texturePrefix, cons
     setDieSpriteAnimation(texturePrefix + "_die", SHEET_COLUMNS, SHEET_ROWS, DIE_FRAME_DURATION);
 }
 
+// True while dead but the one-shot Die sheet hasn't finished playing yet.
 bool Monster::isDying() const
 {
     return !isAlive() && !m_animator.isStateFinished(static_cast<int>(AnimState::Die));
 }
 
+// A monster with a Die sheet configured must wait for it to finish before
+// Board clears it from its Tile.
 bool Monster::isReadyForRemoval() const
 {
     if (isAlive()) return false;
@@ -122,42 +126,23 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
 
     if (m_hasTexture)
     {
-        // Which of Monster's four registered states (if any) is currently
-        // showing was already decided once this frame, in update() below
-        // (see m_animator.update()) - draw() never re-derives that
-        // decision itself, it only ever reads it back via hasActiveState/
-        // applyCurrentFrame/getActiveBaseScale. That's the one behavioral
-        // difference from the old hardcoded if/else chain this replaced:
-        // previously "who's active" was computed independently here AND in
-        // update(), with nothing keeping the two in sync beyond careful
-        // hand-editing; now there is exactly one place that decides it.
+        // Which state is active was already decided this frame in update()
+        // - draw() only reads that decision back, never recomputes it.
         if (m_animator.hasActiveState())
         {
-            // Delegates texture/rect/origin entirely to SpriteSheet (via
-            // SpriteAnimator) - the sprite's own screen position/scale
-            // below never changes because of this, only which pixels of
-            // which texture it shows, so switching frames can't make it
-            // jump around.
             m_animator.applyCurrentFrame(m_sprite);
         }
         else if (m_animator.hasAnyState())
         {
-            // At least one state is configured but none applies right now
-            // (e.g. a monster with only a walk sheet, currently standing
-            // still with no idle sheet of its own) - fall back to the
-            // static sprite/origin explicitly, since the sprite's texture/
-            // rect/origin were left however the last active sheet set them.
+            // A state is configured but none applies right now - fall back
+            // to the static sprite/origin explicitly.
             const sf::Texture& idleTexture = AssetsManager::getInstance().getTexture(m_textureKey);
             m_sprite.setTexture(idleTexture, true); // reset rect back to the full static image
             m_sprite.setOrigin({ idleTexture.getSize().x / 2.f, idleTexture.getSize().y / 2.f });
         }
 
-        // A sheet in use draws with its own base scale (derived from one of
-        // its frames' real pixel size - see SpriteSheet::getBaseScale())
-        // rather than m_baseScale (derived from the static image's size),
-        // so a monster reads as the same on-board size whether idle or
-        // sheet-animated, even though the textures aren't the same native
-        // resolution.
+        // A sheet in use scales by its own base scale, not m_baseScale, so
+        // a monster reads as the same on-board size either way.
         float scale = m_animator.hasActiveState() ? m_animator.getActiveBaseScale() : m_baseScale;
         float currentScaleX = (m_side == PlayerSide::Right) ? -scale : scale;
         m_sprite.setPosition(m_screenPos);
@@ -179,23 +164,18 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
     //}
     if (isAlive())
     {
-        // Skipped while dying (see isDying()) - an actions-left count has
-        // no meaning floating over a monster that's already dead and
-        // playing its death animation.
+        // Skipped while dying - an actions-left count has no meaning over
+        // a monster that's already dead.
 		drawHealthBar(window);
         if (m_side ==currentTurnSide)
             drawActionsLeft(window);
     }
 
-    // This monster draws its own in-flight attack animation, if any -
-    // ownership mirrors movement (see m_pathQueue/m_isMoving): Board never
-    // draws this directly, it only draws entities, and this is part of how
-    // this entity draws itself.
+    // This monster draws its own in-flight attack animation, if any.
     if (m_attackAnimation)
         m_attackAnimation->draw(window);
 
-    // Same reasoning, separate slot: an incoming Special Ability effect
-    // (e.g. Muffintop's Heal effect playing on this monster).
+    // Same, for an incoming Special Ability effect.
     if (m_specialAnimation)
         m_specialAnimation->draw(window);
 }
@@ -211,20 +191,18 @@ void Monster::drawActionsLeft(sf::RenderWindow& window) const
     window.draw(actionText);
 }
 
-void Monster::resetActions() //הפונקציה הזאת יכולה להיות שימושית להרבה דברים. לא רק הקפאה
+void Monster::resetActions()
 {
-    // Whether or not this monster was frozen, its blocked turn (if any) has
-    // now concluded - clear the flag and restore normal actions. See
-    // applyFreeze()/isFrozen() for why this alone is sufficient: freeze
-    // itself already zeroed m_actionsLeft immediately at cast time, and
-    // resetActions() only ever runs again once per owner-turn-end, which is
-    // exactly when that one blocked turn is over.
+    // Clears any freeze in effect - resetActions() runs once per
+    // owner-turn-end, exactly when a freeze's blocked turn concludes.
     m_frozen = false;
     m_actionsLeft = 2;
 	if (m_specialCooldown > 0)
 		m_specialCooldown--;
 }
 
+// Zeroes actions immediately so the freeze blocks this monster's very next
+// turn; resetActions() clears the flag once that turn ends.
 void Monster::applyFreeze()
 {
     m_frozen = true;
@@ -240,8 +218,8 @@ void Monster::moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vect
 {
     if (m_actionsLeft <= 0 || pathScreenPositions.empty()) return;
 
-    // בדיוק כמו ב-moveTo: המיקום הלוגי מתעדכן מיידית ליעד הסופי. השינוי היחיד הוא
-    // שהציור לא "יטפס" בקו ישר אליו, אלא יעבור דרך כל צעד ברשימה, אחד אחרי השני.
+    // Logical position updates immediately; the path queue below drives
+    // the visual walk through each step in turn.
     m_q = finalQ;
     m_row = finalRow;
 
@@ -253,11 +231,8 @@ void Monster::moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vect
 
 void Monster::update(float dt)
 {
-    // Advance this monster's own attack animation (if any) independently of
-    // movement - it must keep progressing even while this monster itself
-    // isn't moving (the usual case: attacker stands still while its splash
-    // travels to the target), so this runs before the movement early-return
-    // below, not after it.
+    // Advances independently of movement - must progress even while this
+    // monster stands still (attacker stationary, projectile traveling).
     if (m_attackAnimation)
     {
         m_attackAnimation->update(dt);
@@ -265,10 +240,7 @@ void Monster::update(float dt)
             m_attackAnimation.reset();
     }
 
-    // Same independence as the attack animation above: an incoming Special
-    // effect must keep progressing regardless of this monster's own
-    // movement/attack state (e.g. Muffintop's Heal effect plays on an ally
-    // that is otherwise doing nothing at all).
+    // Same independence, for an incoming Special effect.
     if (m_specialAnimation)
     {
         m_specialAnimation->update(dt);
@@ -276,48 +248,35 @@ void Monster::update(float dt)
             m_specialAnimation.reset();
     }
 
-    // State-driven sprite-sheet animations (see setWalkAnimation/
-    // setAttackSpriteAnimation/setIdleSpriteAnimation/setDieSpriteAnimation):
-    // re-evaluates each registered state's own isActive() predicate, once,
-    // and decides which single one (if any) is showing this frame -
-    // advancing that one's clock and resetting every other back to frame 0
-    // so it starts fresh whenever it next becomes active. draw() (above,
-    // textually - runs after this each frame) only ever reads that decision
-    // back, never recomputes it. No-op for any monster that never called
-    // any of the four setters (m_animator.hasAnyState() stays false). Die's
-    // predicate (!isAlive()) is permanent once true - it keeps winning
-    // forever afterward regardless of what m_isMoving/isAttacking() do.
+    // Re-evaluates which registered state (if any) is active this frame -
+    // draw() only reads the result back, never recomputes it.
     m_animator.update(dt);
 
-    // אם לא זזים כרגע, אין מה לעדכן
     if (!m_isMoving || m_pathQueue.empty())
     {
         m_isMoving = false;
         return;
     }
 
-    // 1. וקטור הכיוון והמרחק ליעד הנוכחי - front() של התור, לא משתנה נפרד
     const sf::Vector2f& currentTarget = m_pathQueue.front();
     float dx = currentTarget.x - m_screenPos.x;
     float dy = currentTarget.y - m_screenPos.y;
     float distance = std::sqrt(dx * dx + dy * dy);
 
-    // 2. הגענו לצעד הנוכחי? (מספיק קרוב - פחות מ-5 פיקסלים)
+    // Close enough - snap to this waypoint and advance to the next.
     if (distance < 5.0f)
     {
-        m_screenPos = currentTarget; // מיישרים בדיוק לצעד הנוכחי
-        m_pathQueue.pop_front();     // סיימנו את הצעד הזה
+        m_screenPos = currentTarget;
+        m_pathQueue.pop_front();
 
         if (m_pathQueue.empty())
         {
-            // זה היה הצעד האחרון - האנימציה נגמרה
             m_isMoving = false;
         }
-        // אחרת: m_isMoving נשאר true, ו-front() הבא ישמש כיעד ב-frame הבא
     }
     else
     {
-        // 3. עוד לא הגענו - נזוז צעד קטן לכיוון היעד הנוכחי
+        // Not there yet - step toward the current waypoint.
         float moveX = (dx / distance) * m_speed * dt;
         float moveY = (dy / distance) * m_speed * dt;
 
@@ -325,7 +284,6 @@ void Monster::update(float dt)
         m_screenPos.y += moveY;
     }
 
-    // 4. עדכון גרפי: מעדכנים את ה-sprite כדי שה-SFML ידע איפה לצייר אותו עכשיו
     m_sprite.setPosition(m_screenPos);
 }
 
@@ -338,16 +296,16 @@ bool Monster::useSpecialAbility(const Board& board, BoardEntity* target)
     if (!canUseSpecialAbilityNow())
         return false;
 
-    onSpecialAbility(board, target); // הפעלת הבונוס הייחודי של המפלצת
+    onSpecialAbility(board, target);
 
     if (specialAbilityCommitsOnSelect())
     {
-        useAction();              // צריכת נקודת פעולה
-        m_specialCooldown = m_baseCooldown; // כל מפלצת מתאפסת ל-cooldown הבסיסי שלה
+        useAction();
+        m_specialCooldown = m_baseCooldown;
     }
-    // else: onSpecialAbility() only armed monster-specific state (see
-    // Barzilla) - the action/cooldown bookkeeping is deferred until that
-    // monster itself decides its Special has actually been used.
+    // else: onSpecialAbility() only armed monster-specific state - the
+    // action/cooldown bookkeeping is deferred until that monster decides
+    // its Special has actually been used.
 
     return true;
 }
@@ -358,22 +316,16 @@ void Monster::attack(BoardEntity* target)
     //attackSound.
     /*SoundPlayer::getInstance().play("attack_hit"); *///מאוחר מדי!!!! לחשוב על מקום אחר לפני שנשים את זה
 
-    // Empowered Attack (granted by an ally's Barzilla - see
-    // applyEmpoweredAttack) consumed here, at the moment THIS monster's own
-    // attack actually resolves - the one place every monster's attack
-    // already goes through, so no per-monster override is needed the way
-    // Barzilla::attack() used to need one for its own (now-removed) self-buff.
-    // No branch needed: m_attackMultiplier is 1.f (neutral) whenever nothing
-    // was granted, so multiplying and resetting are always safe unconditionally.
+    // Empowered Attack multiplier consumed here, the one place every
+    // attack resolves; 1.f (neutral) when nothing was granted.
     int damage = static_cast<int>(m_attackDamage * m_attackMultiplier);
     m_attackMultiplier = 1.f;
 
     target->takeDamage(damage);
     useAction();
-    if (target->isProtected()) //לגרום ללב בהמשך להיות מוגן!!!!!
+    if (target->isProtected()) // shield parry sound
         SoundPlayer::getInstance().play("parry_attack");
-        //make hit the shild sound
-    if (target->isAlive()) //make the attack sound only when the enemy attacks
+    if (target->isAlive()) // only play the hit sound if the target survived
         SoundPlayer::getInstance().play("attack_hit");
 }
 
@@ -386,4 +338,109 @@ void Monster::playAttackAnimation(std::unique_ptr<AttackAnimation> animation)
 void Monster::playSpecialAbilityAnimation(std::unique_ptr<AttackAnimation> animation)
 {
     m_specialAnimation = std::move(animation);
+}
+
+// isAlive() explicit: a dying monster is already Tile-linked but must not
+// be selectable while its death animation plays.
+bool Monster::canBeSelectedBy(PlayerSide side) const
+{
+    return isAlive() && !isEnemyOf(side) && m_actionsLeft > 0;
+}
+
+bool Monster::canBeTargetedBySpecial() const
+{
+    return true;
+}
+
+int Monster::getRange() const
+{
+    return m_range;
+}
+
+// Mirrors attack()'s own damage computation, empowerment included.
+int Monster::getAttackDamage() const
+{
+    return static_cast<int>(m_attackDamage * m_attackMultiplier);
+}
+
+int Monster::getActionsLeft() const
+{
+    return m_actionsLeft;
+}
+
+PlayerSide Monster::getSide() const
+{
+    return m_side;
+}
+
+bool Monster::canFly() const
+{
+    return m_flying;
+}
+
+bool Monster::isMoving() const
+{
+    return m_isMoving;
+}
+
+bool Monster::isAttacking() const
+{
+    return m_attackAnimation != nullptr;
+}
+
+bool Monster::isUsingSpecialAnimation() const
+{
+    return m_specialAnimation != nullptr;
+}
+
+int Monster::getSpecialCooldown() const
+{
+    return m_specialCooldown;
+}
+
+bool Monster::isSpecialReady() const
+{
+    return m_specialCooldown <= 0;
+}
+
+// isAlive() matters too: nothing currently clears a dead monster's Card
+// link, so without this a dead monster's stale Special could still fire.
+bool Monster::canUseSpecialAbilityNow() const
+{
+    return isAlive() && isSpecialReady() && getActionsLeft() > 0;
+}
+
+// Default: every Special currently commits the instant a target is chosen.
+bool Monster::specialAbilityCommitsOnSelect() const
+{
+    return true;
+}
+
+// Default no-op: only a Special that arms without committing needs this.
+void Monster::cancelSpecialAbility()
+{
+}
+
+// Default: any alive enemy Monster. Ally-targeted Specials (Heal,
+// Protection, Empowered Attack) override this.
+bool Monster::isValidSpecialTarget(const BoardEntity& candidate) const
+{
+    return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isEnemyOf(m_side);
+}
+
+// Default: neutral for every candidate; a monster preferring a specific
+// target type overrides this.
+float Monster::scoreAsSpecialTarget(const BoardEntity& candidate) const
+{
+    return 0.f;
+}
+
+bool Monster::canMove() const
+{
+    return isAlive() && m_actionsLeft > 0;
+}
+
+void Monster::useAction()
+{
+    if (m_actionsLeft > 0) m_actionsLeft--;
 }

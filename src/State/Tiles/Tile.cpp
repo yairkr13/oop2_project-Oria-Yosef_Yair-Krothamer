@@ -1,30 +1,22 @@
 #include "Tiles/Tile.h"
 #include <limits>
 
-Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)// <--- ��� ����� ������ ����� �� ����� ���!
+Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)
     :m_q(q),
     m_row(row),
     m_isPassable(true),
     m_color(color)
 {
-    // ������ ������ (m_shape)...
-
     m_shape.setRadius(Config::TILE_RADIUS);
-
-    // ���� ����� ���: ���� �� 6 ������ ��� �����!
     m_shape.setPointCount(6);
-
-    // ��� �����
-    m_shape.setFillColor(m_color); // light gray, semi-transparent
+    m_shape.setFillColor(m_color);
 
     m_shape.setOutlineThickness(2.f);
     m_shape.setOutlineColor(sf::Color(80, 80, 80, 180));
 
-    // ������ �� ������
     //m_shape.setRotation(sf::degrees(30.f));
     m_shape.setPosition(position);
     //m_shape.setOrigin({ Config::TILE_RADIUS, Config::TILE_RADIUS });
-    // ���������: ������ �� ����� ����� ����� ������
     // m_shape.setOrigin(radius, radius);
 }
 
@@ -33,11 +25,14 @@ void Tile::draw(sf::RenderWindow& window) const
     window.draw(m_shape);
 }
 
+// Draws only the occupant, not the hex - split from draw() so Board can
+// paint every tile's hex first, then every occupant, in two full passes
+// (keeps layering consistent regardless of m_grid's iteration order).
 void Tile::drawEntity(sf::RenderWindow& window, PlayerSide currentSide) const
 {
     if (m_entity != nullptr)
     {
-        m_entity->draw(window, currentSide); // קריאה וירטואלית (אפס RTTI, מהיר לחלוטין)
+        m_entity->draw(window, currentSide);
     }
 }
 
@@ -46,12 +41,12 @@ void Tile::setHighlighted(bool highlighted,const sf::Color& highlightColor)
     m_isHighlighted = highlighted;
     if (highlighted)
     {
-        m_shape.setFillColor(ownHighlightColor().value_or(highlightColor)); // light green, semi-transparent (or this tile type's own fixed color)
+        m_shape.setFillColor(ownHighlightColor().value_or(highlightColor));
         m_shape.setOutlineColor(sf::Color(200, 255, 200, 220));
     }
     else
     {
-        m_shape.setFillColor(m_color); // light gray, semi-transparent
+        m_shape.setFillColor(m_color);
         m_shape.setOutlineColor(sf::Color(80, 80, 80, 180));
     }
 }
@@ -61,27 +56,18 @@ void Tile::setEntity(BoardEntity* entity)
     m_entity = entity;
     m_isPassable = false;
 
-    // אם קיבלנו ישות אמיתית, נעדכן אותה שהיא עומדת עלינו
    /* if (m_entity != nullptr)
     {
         m_entity->setCurrentTile(this);
     }*/
-    // Removed (kept as comment, not deleted) along with BoardEntity::m_currentTile
-    // itself - see BoardEntity.h for why: this backlink duplicated m_q/m_row,
-    // which already track an entity's position authoritatively.
+    // Removed along with BoardEntity::m_currentTile - m_q/m_row already track position.
     // if (m_entity != nullptr)
     //     m_entity->setCurrentTile(this);
 }
 
 void Tile::clearEntity()
 {
-    // Old guard, kept as a comment - it existed only to avoid stomping a
-    // freshly-set m_currentTile after a move (Board::performMove calls
-    // targetTile->setEntity(entity) before sourceTile->clearEntity(), so by
-    // the time this ran, the entity's backlink already pointed at the NEW
-    // tile - this guard was what stopped clearing it out from under that).
-    // Now that there's no backlink to protect at all, clearEntity() no
-    // longer needs to ask the entity anything about itself.
+    // Old guard removed: it only protected m_currentTile, which no longer exists.
     // if (m_entity != nullptr && m_entity->getCurrentTile() == this)
     // {
     //     m_entity->setCurrentTile(nullptr);
@@ -97,14 +83,8 @@ void Tile::receiveAttackFrom(BoardEntity* attacker)
     BoardEntity* defender = m_entity;
     attacker->attack(defender);
 
-    // isReadyForRemoval(), not isAlive() directly - a defender with a
-    // configured death animation (see Monster::isReadyForRemoval) is
-    // already dead (isAlive() is already false, so it's already
-    // unselectable/untargetable/unable to act - see Tile::isOccupiedByEnemy/
-    // Monster::canBeSelectedBy) but stays linked to this Tile so that
-    // animation can keep playing; Board::update() clears it once it
-    // finishes. A defender with no death animation configured is ready
-    // immediately, same as before this distinction existed.
+    // isReadyForRemoval(), not isAlive(): a defender with a death animation
+    // stays linked to this tile until that animation finishes.
     if (defender->isReadyForRemoval())
     {
         //attacker->onKill(defender);
@@ -113,6 +93,7 @@ void Tile::receiveAttackFrom(BoardEntity* attacker)
     }
 }
 
+// No-op if this tile is empty.
 void Tile::tickTurnBoundary()
 {
     if (!m_entity) return;
@@ -122,6 +103,7 @@ void Tile::tickTurnBoundary()
         clearEntity();
 }
 
+// No-op if this tile is empty.
 void Tile::updateEntity(float dt)
 {
     if (!m_entity) return;
@@ -138,6 +120,7 @@ bool Tile::isEntityAnimating() const
     return m_entity && m_entity->isAnimating();
 }
 
+// Environmental damage source (e.g. LavaTile) - same cleanup as receiveAttackFrom.
 void Tile::damageEntity(int amount)
 {
     if (!m_entity) return;
@@ -150,4 +133,75 @@ void Tile::damageEntity(int amount)
 float Tile::scoreAsAttackTarget() const
 {
     return m_entity ? m_entity->scoreAsAttackTarget() : -std::numeric_limits<float>::infinity();
+}
+
+int Tile::getQ() const
+{
+    return m_q;
+}
+
+int Tile::getRow() const
+{
+    return m_row;
+}
+
+// m_shape's origin is its bounding-box corner, not its center - this
+// corrects for that to return the tile's true screen-space center.
+sf::Vector2f Tile::getScreenPosition() const
+{
+    return m_shape.getPosition() + sf::Vector2f(Config::TILE_RADIUS, Config::TILE_RADIUS);
+}
+
+bool Tile::isHighlighted() const
+{
+    return m_isHighlighted;
+}
+
+const BoardEntity* Tile::getEntity() const
+{
+    return m_entity;
+}
+
+// Mutable access, for the few callers (AIPlayer, GameplayState) that need
+// to change the occupant itself, not just query it.
+BoardEntity* Tile::getMutableEntity() const
+{
+    return m_entity;
+}
+
+bool Tile::hasEntity() const
+{
+    return m_entity != nullptr;
+}
+
+bool Tile::isPassableFor(const BoardEntity* entity) const
+{
+    return m_isPassable;
+}
+
+// Requires the occupant to be alive - a dying entity stays Tile-linked
+// (death animation) but must not be a valid attack/special target.
+bool Tile::isOccupiedByEnemy(PlayerSide mySide) const
+{
+    return isEntityAlive() && m_entity->isEnemyOf(mySide);
+}
+
+bool Tile::isOccupiedByAlly(PlayerSide mySide) const
+{
+    return isEntityAlive() && m_entity->isAllyOf(mySide);
+}
+
+void Tile::applyTileEffect()
+{
+}
+
+// nullopt means "use whatever color the caller passed to setHighlighted()".
+std::optional<sf::Color> Tile::ownHighlightColor() const
+{
+    return std::nullopt;
+}
+
+bool Tile::isEntityAlive() const
+{
+    return m_entity != nullptr && m_entity->isAlive();
 }

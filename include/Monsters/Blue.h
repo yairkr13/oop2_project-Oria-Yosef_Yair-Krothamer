@@ -1,6 +1,8 @@
 #pragma once
 #include "Monsters/Monster.h"
 
+// A flying monster whose Special (Knockback) pushes an enemy back along
+// the attacker-to-target direction.
 class Blue : public Monster
 {
 public:
@@ -14,14 +16,9 @@ public:
 
     std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
 
-    // Knockback targets an enemy Monster - the base Monster::isValidSpecialTarget
-    // default (enemy + Monster) already expresses exactly that.
-    bool specialAbilityNeedsTarget() const override { return true; }
-    // בתוך class Blue (תחת public):
-    virtual std::string getSpecialAbilityDescription() const override {
-        return "Knockback: Knocks back a targeted enemy monster on the grid.";
-    }
-    sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(60, 120, 255, 180); } // blue
+    bool specialAbilityNeedsTarget() const override;
+    virtual std::string getSpecialAbilityDescription() const override;
+    sf::Color getSpecialTargetHighlightColor() const override;
 private:
     void onSpecialAbility(const Board& board, BoardEntity* target) override;
 };

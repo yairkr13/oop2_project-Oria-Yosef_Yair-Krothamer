@@ -1,6 +1,8 @@
 #pragma once
 #include "Monsters/Monster.h"
 
+// A flying monster whose Special (Freeze) prevents an enemy from acting
+// on its next turn.
 class Mozzy : public Monster
 {
 public:
@@ -16,26 +18,12 @@ public:
     //void attack(Monster& target) override;
 
     std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
-    // בתוך class Mozzy (תחת public):
-    virtual std::string getSpecialAbilityDescription() const override {
-        return "Freeze: Freezes an enemy monster, preventing it from taking actions during its next turn.";
-    }
-    // Freeze targets an enemy Monster - the base Monster::isValidSpecialTarget
-    // default (enemy + Monster) already expresses exactly that, so no
-    // override is needed here.
-    bool specialAbilityNeedsTarget() const override { return true; }
+    virtual std::string getSpecialAbilityDescription() const override;
+    bool specialAbilityNeedsTarget() const override;
 
-    // AI preference: the enemy with the MOST HP is the biggest ongoing
-    // threat (takes longest to kill), so the most worth freezing out of a
-    // turn - the opposite direction from Heal/Protection's "least HP" above.
-    float scoreAsSpecialTarget(const BoardEntity& candidate) const override
-    {
-        return static_cast<float>(candidate.getHealth());
-    }
+    float scoreAsSpecialTarget(const BoardEntity& candidate) const override;
 
-    // White - matches the base default too, but declared explicitly so a
-    // reader never has to wonder whether that's deliberate or coincidental.
-    sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(255, 255, 255, 180); }
+    sf::Color getSpecialTargetHighlightColor() const override;
 private:
     void onSpecialAbility(const Board& board, BoardEntity* target) override;
 };
