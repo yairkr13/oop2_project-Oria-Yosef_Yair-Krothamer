@@ -9,6 +9,14 @@
 
 namespace
 {
+    // The smallest board this game supports - a floor, not derived from
+    // BoardGenerator::standardLayout() itself (checking a layout against
+    // its own source would be circular). A smaller board was never the one
+    // actually tuned/played, so this stops one from ever being constructed
+    // rather than silently accepting something untested.
+    constexpr int MIN_ROWS = 7;
+    constexpr int MIN_COLS = 14;
+
     // A board's total on-screen footprint, in pixels, for `count` tiles
     // along one axis, at the current Config::TILE_RADIUS - the same
     // hexWidth/1.5*TILE_RADIUS step tileAnchor() itself uses, plus one full
@@ -31,6 +39,13 @@ Board::Board(const BoardLayout& layout)
         throw std::invalid_argument(
             "BoardLayout rows/cols must be positive (got rows=" + std::to_string(m_layout.rows) +
             ", cols=" + std::to_string(m_layout.cols) + ")");
+    }
+
+    if (m_layout.rows < MIN_ROWS || m_layout.cols < MIN_COLS)
+    {
+        throw std::invalid_argument(
+            "BoardLayout " + std::to_string(m_layout.rows) + "x" + std::to_string(m_layout.cols) +
+            " is smaller than the minimum supported " + std::to_string(MIN_ROWS) + "x" + std::to_string(MIN_COLS));
     }
 
     // Left's spawn band is columns [0, spawnColumnWidth-1], Right's is

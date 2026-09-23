@@ -23,9 +23,9 @@ namespace Config
     // construction in a try/catch (see main.cpp) that prints a clean
     // message, instead of the wall of repeated compiler errors a
     // static_assert in a widely-included header like this one produces.
-    inline constexpr unsigned int MIN_WINDOW_WIDTH = 640;
+    inline constexpr unsigned int MIN_WINDOW_WIDTH = 1200;
     inline constexpr unsigned int MAX_WINDOW_WIDTH = 2560;
-    inline constexpr unsigned int MIN_WINDOW_HEIGHT = 360;
+    inline constexpr unsigned int MIN_WINDOW_HEIGHT = 700;
     inline constexpr unsigned int MAX_WINDOW_HEIGHT = 1440;
 
     // BOTTOM_PANEL_Y removed - it was a fixed Y (600.f) that only happened
