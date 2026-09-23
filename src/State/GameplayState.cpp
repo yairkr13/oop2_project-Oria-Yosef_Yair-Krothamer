@@ -202,6 +202,10 @@ void GameplayState::update(sf::Time deltaTime)
     {
         PlayerSide winner = (m_player1->isDead()) ? PlayerSide::Right : PlayerSide::Left;
 
+        // TEMP DEBUG (see conversation) - remove once the desync is found.
+        std::cout << "[GameplayState] isDead fired - winner=" << (winner == PlayerSide::Left ? "Left" : "Right")
+            << " m_remotePlayer=" << (m_remotePlayer != nullptr) << std::endl;
+
         // The killing action usually lands mid-turn, before the local human
         // ever ends their own turn - so without this, it (and anything else
         // recorded this turn) would sit unsent in m_recordedActions forever,
