@@ -286,6 +286,15 @@ Card* Player::getCardAtPosition(const sf::Vector2f& mousePos, bool alignRight) c
     return nullptr;
 }
 
+sf::Vector2f Player::getCardPosition(size_t index, bool alignRight) const
+{
+    float xPos = alignRight ?
+        (static_cast<float>(Config::WINDOW_WIDTH) - 20.f - Card::WIDTH - (index * CARD_SPACING)) :
+        (20.f + (index * CARD_SPACING));
+
+    return { xPos, BOTTOM_PANEL_TOP_Y + CARD_TOP_MARGIN };
+}
+
 //לבדוק שהלוח לא עושה את הפעולות האלה. 
 void Player::endTurn()
 {
@@ -316,3 +325,9 @@ bool Player::isDead() const
 {
     return !(m_heart->isAlive());
 }
+
+PlayerSide Player::getSide() const { return m_side; }
+
+void Player::onTurnStart(Board& board) {}
+void Player::updateTurn(Board& board) {}
+bool Player::isBusy() const { return false; }

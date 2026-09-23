@@ -177,6 +177,14 @@ void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart, bool useFixedSpecia
     generateSpecialTiles(p1Heart, p2Heart, useFixedSpecialTiles);
 }
 
+// מקור רנדומליות אחד ומשותף לכל הלוח (במקום std::mt19937 מקומי במקום אחד ו-rand() במקום אחר).
+// פונקציה סטטית מקומית: מחולל אחד למשך כל חיי התהליך, משותף לכל Board שנבנה בו.
+std::mt19937& Board::rng()
+{
+    static std::mt19937 gen(std::random_device{}());
+    return gen;
+}
+
 void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart, bool useFixedPlacement)
 {
     BoardGenerator::applySpecialTiles(m_grid, m_layout,
@@ -447,6 +455,11 @@ void Board::updateTileEffects() const
 //    }
 //    return rightmost;
 //}
+int Board::getMiddleRow() const
+{
+    return m_layout.middleRow();
+}
+
 const Tile* Board::getExtremeTileInRow(int row, bool findLeftmost) const {
     Tile* bestTile = nullptr;
     int bestQ = findLeftmost ? std::numeric_limits<int>::max() : std::numeric_limits<int>::min();

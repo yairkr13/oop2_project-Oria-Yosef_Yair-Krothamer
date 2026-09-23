@@ -32,7 +32,7 @@ struct BoardLayout
     // reaching into `rows` and dividing by hand (and risking a hardcoded
     // literal drifting out of sync with the actual layout - see
     // Board::initPlayerHearts, which used to hardcode this).
-    int middleRow() const { return rows / 2; }
+    int middleRow() const;
     int lavaTileCount;
     int holeTileCount;
     int panicPointCount; // expected to be 0 or 1 - kept as a count rather
