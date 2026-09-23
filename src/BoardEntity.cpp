@@ -4,11 +4,53 @@
 #include <algorithm>
 #include "SoundPlayer.h"
 
+BoardEntity::BoardEntity(int q, int row, const sf::Vector2f& position, int health)//למהה?????? לחשוב על למחוק את המשבצת מפה!!!!! - הוסר, ראו m_currentTile למטה
+    : m_q(q), m_row(row), m_screenPos(position), m_health(health), m_maxHealth(health) {
+}
+
+int BoardEntity::getMaxHealth() const { return m_maxHealth; }
+
+int BoardEntity::getHealth() const { return m_health; }
+
+bool BoardEntity::isEnemyOf(PlayerSide otherSide) const { return getSide() != otherSide; }
+bool BoardEntity::isAllyOf(PlayerSide otherSide) const { return getSide() == otherSide; }
+void BoardEntity::attack(BoardEntity* target) {}
+int BoardEntity::getAttackRange() const { return getRange(); }
+int BoardEntity::getRange() const { return 0; }
+
+bool BoardEntity::isProtected() const { return m_protected; }
+
+bool BoardEntity::canBeSelectedBy(PlayerSide side) const { return false; }
+
+//virtual bool isSelected() const { return false; }
+bool BoardEntity::isMoving() const { return false; }
+
+// True while this entity is playing its own attack animation (see
+// createAttackAnimation/playAttackAnimation below).
+bool BoardEntity::isAttacking() const { return false; }
+
+bool BoardEntity::isUsingSpecialAnimation() const { return false; }
+
+bool BoardEntity::isDying() const { return false; }
+
+bool BoardEntity::isAnimating() const { return isMoving() || isAttacking() || isUsingSpecialAnimation() || isDying(); }
+
+bool BoardEntity::isReadyForRemoval() const { return !isAlive(); }
+
+int BoardEntity::getQ() const { return m_q; }
+int BoardEntity::getRow() const { return m_row; }
+void BoardEntity::setCoords(int q, int row) { m_q = q; m_row = row; }
+
 void BoardEntity::spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) {
     m_q = q;
     m_row = row;
     m_screenPos = screenPos;
 }
+void BoardEntity::update(float dt) {}
+bool BoardEntity::canFly() const { return false; }
+sf::Vector2f BoardEntity::getScreenPosition() const { return m_screenPos; }
+//virtual Monster* asMonster() { return nullptr; }
+bool BoardEntity::canBeTargetedBySpecial() const { return false; }
 
 std::unique_ptr<AttackAnimation> BoardEntity::createAttackAnimation(sf::Vector2f targetPosition) const
 {
@@ -100,3 +142,11 @@ void BoardEntity::drawHealthBar(sf::RenderWindow& window) const
     window.draw(bgBar);
     window.draw(fgBar);
 }
+
+float BoardEntity::scoreAsAttackTarget() const { return -static_cast<float>(getHealth()); }
+
+bool BoardEntity::canMove() const { return false; }
+void BoardEntity::applyFreeze() {}
+
+void BoardEntity::applyEmpoweredAttack(float multiplier) {}
+void BoardEntity::moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) { /* No-op by default */ }

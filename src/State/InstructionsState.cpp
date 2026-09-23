@@ -103,3 +103,8 @@ void InstructionsState::handleEvent(const sf::Event& event)
         }
     }
 }
+
+MusicTrack InstructionsState::desiredMusicTrack() const
+{
+    return MusicTrack::Menu;
+}

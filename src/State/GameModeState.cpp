@@ -80,3 +80,8 @@ void GameModeState::handleEvent(const sf::Event& event)
 {
     m_menu.handleEvent(event);
 }
+
+MusicTrack GameModeState::desiredMusicTrack() const
+{
+    return MusicTrack::Menu;
+}

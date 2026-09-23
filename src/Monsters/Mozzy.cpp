@@ -95,3 +95,23 @@ void Mozzy::onSpecialAbility(const Board& board, BoardEntity* target)
 
     target->playSpecialAbilityAnimation(std::move(freezeEffect));
 }
+
+std::string Mozzy::getSpecialAbilityDescription() const
+{
+    return "Freeze: Freezes an enemy monster, preventing it from taking actions during its next turn.";
+}
+
+bool Mozzy::specialAbilityNeedsTarget() const
+{
+    return true;
+}
+
+float Mozzy::scoreAsSpecialTarget(const BoardEntity& candidate) const
+{
+    return static_cast<float>(candidate.getHealth());
+}
+
+sf::Color Mozzy::getSpecialTargetHighlightColor() const
+{
+    return sf::Color(255, 255, 255, 180);
+}

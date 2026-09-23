@@ -22,11 +22,11 @@ public:
     void draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected, bool enoughKeys) const;
     bool isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPosition) const;
 
-    int getCost() const { return m_cost; }
-    PlayerSide getSide() const { return m_side; }
+    int getCost() const;
+    PlayerSide getSide() const;
 
     // האם הקלף כבר "שוחק" - יש לו מפלצת חיה מקושרת על הלוח
-    bool isPlayed() const { return m_linkedMonster != nullptr; }
+    bool isPlayed() const;
 
     // Whether this card should be treated as gone entirely - not drawn (see
     // draw()), not clickable (see Player::getCardAtPosition), and the
@@ -42,12 +42,12 @@ public:
     // Safe default: read-only access, for callers that only ask the linked
     // monster something (getSpecialAbilityDescription, isReadyForRemoval,
     // specialAbilityNeedsTarget...).
-    const Monster* getLinkedMonster() const { return m_linkedMonster; }
+    const Monster* getLinkedMonster() const;
 
     // Mutable access - only for the few callers that actually need to
     // change the monster itself (useSpecialAbility, cancelSpecialAbility).
     // Same reasoning/naming as Tile::getMutableEntity().
-    Monster* getMutableLinkedMonster() const { return m_linkedMonster; }
+    Monster* getMutableLinkedMonster() const;
 
     // יוצר Monster חדש, מעביר בעלות החוצה, אבל שומר observer pointer לעצמו
     std::unique_ptr<Monster> spawnMonster();
@@ -63,7 +63,7 @@ private:
     void drawCostText(sf::RenderWindow& window, sf::Vector2f drawPos, const sf::Font& font, bool enoughKeys) const;
     void drawStatusText(sf::RenderWindow& window, sf::Vector2f drawPos, const sf::Font& font) const;
 
-    std::string getCardTextureKey() const { return m_textureKey + "_card"; }
+    std::string getCardTextureKey() const;
 
     std::string m_monsterId;
     int m_cost;

@@ -151,3 +151,67 @@ float Tile::scoreAsAttackTarget() const
 {
     return m_entity ? m_entity->scoreAsAttackTarget() : -std::numeric_limits<float>::infinity();
 }
+
+int Tile::getQ() const
+{
+    return m_q;
+}
+
+int Tile::getRow() const
+{
+    return m_row;
+}
+
+sf::Vector2f Tile::getScreenPosition() const
+{
+    return m_shape.getPosition() + sf::Vector2f(Config::TILE_RADIUS, Config::TILE_RADIUS);
+}
+
+bool Tile::isHighlighted() const
+{
+    return m_isHighlighted;
+}
+
+const BoardEntity* Tile::getEntity() const
+{
+    return m_entity;
+}
+
+BoardEntity* Tile::getMutableEntity() const
+{
+    return m_entity;
+}
+
+bool Tile::hasEntity() const
+{
+    return m_entity != nullptr;
+}
+
+bool Tile::isPassableFor(const BoardEntity* entity) const
+{
+    return m_isPassable;
+}
+
+bool Tile::isOccupiedByEnemy(PlayerSide mySide) const
+{
+    return isEntityAlive() && m_entity->isEnemyOf(mySide);
+}
+
+bool Tile::isOccupiedByAlly(PlayerSide mySide) const
+{
+    return isEntityAlive() && m_entity->isAllyOf(mySide);
+}
+
+void Tile::applyTileEffect()
+{
+}
+
+std::optional<sf::Color> Tile::ownHighlightColor() const
+{
+    return std::nullopt;
+}
+
+bool Tile::isEntityAlive() const
+{
+    return m_entity != nullptr && m_entity->isAlive();
+}

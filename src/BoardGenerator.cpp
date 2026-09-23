@@ -40,6 +40,11 @@ namespace
     }
 }
 
+int BoardLayout::middleRow() const
+{
+    return rows / 2;
+}
+
 namespace BoardGenerator
 {
     BoardLayout standardLayout()

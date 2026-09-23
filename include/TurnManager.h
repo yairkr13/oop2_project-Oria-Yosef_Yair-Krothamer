@@ -22,14 +22,14 @@ public:
     // No-op if the current player is busy (e.g. mid AI turn).
     void requestEndTurn();
 
-    Player& getCurrentPlayer() const { return *m_currentPlayer; }
+    Player& getCurrentPlayer() const;
 
     // The single place that answers whether gameplay input should currently
     // be accepted - callers never need to know the underlying rule.
     bool canAcceptInput() const;
 
     using PlayerSwitchedCallback = std::function<void()>;
-    void setOnPlayerSwitched(PlayerSwitchedCallback cb) { m_onPlayerSwitched = std::move(cb); }
+    void setOnPlayerSwitched(PlayerSwitchedCallback cb);
 
 private:
     void switchToNextPlayer();

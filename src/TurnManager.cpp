@@ -33,6 +33,10 @@ bool TurnManager::canAcceptInput() const
     return !m_currentPlayer->isBusy();
 }
 
+Player& TurnManager::getCurrentPlayer() const { return *m_currentPlayer; }
+
+void TurnManager::setOnPlayerSwitched(PlayerSwitchedCallback cb) { m_onPlayerSwitched = std::move(cb); }
+
 void TurnManager::switchToNextPlayer()
 {
     m_currentPlayer->endTurn();

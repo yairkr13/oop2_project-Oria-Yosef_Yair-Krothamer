@@ -236,3 +236,8 @@ void NetworkLobbyState::handleEvent(const sf::Event& event)
         }
     }
 }
+
+MusicTrack NetworkLobbyState::desiredMusicTrack() const
+{
+    return MusicTrack::Menu;
+}

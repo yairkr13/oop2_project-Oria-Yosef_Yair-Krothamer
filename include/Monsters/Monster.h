@@ -36,25 +36,23 @@ public:
     // playing (see isDying()/isReadyForRemoval() below), so without this
     // check it would otherwise still satisfy "not an enemy, has actions
     // left" and be selectable/movable/attackable-with while visibly dying.
-    bool canBeSelectedBy(PlayerSide side) const override {
-        return isAlive() && !isEnemyOf(side) && m_actionsLeft > 0;
-    }
+    bool canBeSelectedBy(PlayerSide side) const override;
     //virtual Monster* asMonster() override { return this; }
-    virtual bool canBeTargetedBySpecial() const override { return true; }
+    virtual bool canBeTargetedBySpecial() const override;
 
     //virtual EntityType getType() const override { return EntityType::Monster; }
     bool isOnBoard() const;
     /*bool isCardClicked(sf::Vector2f mousePos, sf::Vector2f cardPosition) const;*/
 
     //int getCost() const { return m_cost; }
-    int getRange() const override { return m_range; }
+    int getRange() const override;
 
     // How much damage this monster's next attack would actually deal right
     // now - mirrors the exact computation Monster::attack() itself uses
     // (m_attackDamage * m_attackMultiplier), so a caller predicting a kill
     // (see AIPlayer::findBestTarget) uses the same number attack() will
     // actually apply, empowerment included.
-    int getAttackDamage() const { return static_cast<int>(m_attackDamage * m_attackMultiplier); }
+    int getAttackDamage() const;
 
     // How far this monster can ATTACK - separate from getRange() (which
     // Board's reachability BFS also uses for movement), so a monster whose
@@ -65,13 +63,13 @@ public:
     // 
     //virtual int getAttackRange() const { return getRange(); }
 
-    int getActionsLeft() const { return m_actionsLeft; }
+    int getActionsLeft() const;
     void resetActions();
     //std::string getTextureKey() const { return m_textureKey ; }
     //std::string getCardTextureKey() const { return m_textureKey + "_card" ; }
     //void setScreenPosition(const sf::Vector2f& pos) { m_screenPos = pos; }
     //void setSide(PlayerSide side) { m_side = side; }
-    PlayerSide getSide() const override { return m_side; }
+    PlayerSide getSide() const override;
 
     // Animates this monster walking its whole path at once (a queue of
     // screen positions, one per step) - the only movement entry point now;
@@ -79,22 +77,22 @@ public:
     void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) override;
 
     void update(float dt) override;
-    virtual bool canFly() const override { return m_flying; } // ������ ���� ������ �� �������
-    bool isMoving() const override { return m_isMoving; }
+    virtual bool canFly() const override;
+    bool isMoving() const override;
 
     // True exactly while m_attackAnimation is set - no separate bool flag
     // needed (unlike m_isMoving/m_pathQueue): the pointer's presence already
     // is the state.
-    bool isAttacking() const override { return m_attackAnimation != nullptr; }
+    bool isAttacking() const override;
     void playAttackAnimation(std::unique_ptr<AttackAnimation> animation) override;
 
     // Same ownership model, separate slot - see BoardEntity::isUsingSpecialAnimation
     // for why this isn't just reusing m_attackAnimation.
-    bool isUsingSpecialAnimation() const override { return m_specialAnimation != nullptr; }
+    bool isUsingSpecialAnimation() const override;
     void playSpecialAbilityAnimation(std::unique_ptr<AttackAnimation> animation) override;
 
-    int getSpecialCooldown() const { return m_specialCooldown; }
-    bool isSpecialReady() const { return m_specialCooldown <= 0; }
+    int getSpecialCooldown() const;
+    bool isSpecialReady() const;
 
     // Single source of truth for "can this monster's Special actually be
     // used right now" - both useSpecialAbility()'s own internal guard and
@@ -107,7 +105,7 @@ public:
     // GameplayState::handleSpecialAbilityClick) - without this check that
     // would pass straight through to highlighting Special targets from a
     // dead monster's stale last board position.
-    bool canUseSpecialAbilityNow() const { return isAlive() && isSpecialReady() && getActionsLeft() > 0; }
+    bool canUseSpecialAbilityNow() const;
 
     // Applied by an external Freeze-style ability. Fits the existing turn
     // system rather than a new timer: it zeroes this monster's actions
@@ -140,14 +138,14 @@ public:
     // is currently every monster in the game. Kept as an extensibility
     // point (not removed) for a future Special that still needs to arm now
     // and commit later at some separate event.
-    virtual bool specialAbilityCommitsOnSelect() const { return true; }
+    virtual bool specialAbilityCommitsOnSelect() const;
 
     // Un-arms a Special that was armed (see specialAbilityCommitsOnSelect())
     // but never reached its own commit event - e.g. the player clicked the
     // Card again, picked a different Card, or ended the turn without
     // attacking. Default: no-op, correct for every Special that commits on
     // select (nothing was ever armed, so there is nothing to undo).
-    virtual void cancelSpecialAbility() {}
+    virtual void cancelSpecialAbility();
 
     virtual std::string getSpecialAbilityDescription() const = 0;
     // Whether `candidate` is a legal target for this monster's Special,
@@ -162,11 +160,7 @@ public:
     // isDying()/isReadyForRemoval()) and must not be targetable while its
     // death animation plays. Henrietta's and Muffintop's ally-targeted
     // overrides need the same check - see their own isValidSpecialTarget.
-    virtual bool isValidSpecialTarget(const BoardEntity& candidate) const
-    {
-        //האם אני יכולה למחוק את הפונקציה ??????למה
-        return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isEnemyOf(m_side);
-    }
+    virtual bool isValidSpecialTarget(const BoardEntity& candidate) const;
 
     // How valuable `candidate` is as a Special target - used only by
     // AIPlayer, to rank among several already-valid candidates
@@ -177,7 +171,7 @@ public:
     // no monster overrides this yet). A monster whose Special should prefer
     // a specific kind of target (e.g. Muffintop's Heal preferring low HP)
     // would override this - not done yet, kept for that later.
-    virtual float scoreAsSpecialTarget(const BoardEntity& candidate) const { return 0.f; }
+    virtual float scoreAsSpecialTarget(const BoardEntity& candidate) const;
 
     // The Tile-highlight color for this monster's valid Special targets,
     // shown while target-selection is pending (see GameplayState). Only
@@ -209,7 +203,7 @@ public:
     // the base behavior, unchanged.
     bool isReadyForRemoval() const override;
 
-    bool canMove() const override { return isAlive() && m_actionsLeft > 0; }
+    bool canMove() const override;
     //void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) override;
 protected:
     //virtual void onAttackHook(BoardEntity* target) {}
@@ -347,7 +341,7 @@ private:
     // but no monster overrides attack() (Monster::attack() already applies
     // the empowered-attack multiplier for every monster - see there), and
     // none of the 5 concrete .cpp files call this, so it's private too.
-    void useAction() { if (m_actionsLeft > 0) m_actionsLeft--; }
+    void useAction();
     void drawActionsLeft(sf::RenderWindow& window) const;
     //void drawHealthBar(sf::RenderWindow& window) const;
     //std::string getCardTextureKey() const { return m_textureKey + "_card"; }

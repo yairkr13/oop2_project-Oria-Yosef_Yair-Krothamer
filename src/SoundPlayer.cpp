@@ -2,6 +2,12 @@
 #include "AssetsManager.h"
 #include <algorithm>
 
+SoundPlayer& SoundPlayer::getInstance()
+{
+    static SoundPlayer instance;
+    return instance;
+}
+
 void SoundPlayer::play(const std::string& name)
 {
     if (m_muted) return;
@@ -15,4 +21,14 @@ void SoundPlayer::play(const std::string& name)
 	//create a new sf::Sound object and add it to the vector of active sounds
     m_activeSounds.emplace_back(buffer);
     m_activeSounds.back().play();
+}
+
+void SoundPlayer::toggleMute()
+{
+    m_muted = !m_muted;
+}
+
+bool SoundPlayer::isMuted() const
+{
+    return m_muted;
 }

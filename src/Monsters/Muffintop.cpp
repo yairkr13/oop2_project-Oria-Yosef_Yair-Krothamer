@@ -121,3 +121,28 @@ std::unique_ptr<AttackAnimation> Muffintop::createAttackAnimation(sf::Vector2f t
     return std::make_unique<SpinningProjectileAnimation>(
         muffinShotTexture, m_screenPos, targetPosition, MUFFIN_SHOT_DURATION, MUFFIN_SHOT_SIZE);
 }
+
+bool Muffintop::specialAbilityNeedsTarget() const
+{
+    return true;
+}
+
+std::string Muffintop::getSpecialAbilityDescription() const
+{
+    return "Heal: Restores health to a targeted friendly monster.";
+}
+
+bool Muffintop::isValidSpecialTarget(const BoardEntity& candidate) const
+{
+    return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(getSide());
+}
+
+float Muffintop::scoreAsSpecialTarget(const BoardEntity& candidate) const
+{
+    return static_cast<float>(candidate.getMaxHealth() - candidate.getHealth());
+}
+
+sf::Color Muffintop::getSpecialTargetHighlightColor() const
+{
+    return sf::Color(0, 100, 0, 180); // dark green
+}

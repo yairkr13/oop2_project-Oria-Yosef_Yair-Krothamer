@@ -2,66 +2,31 @@
 #include "BoardEntity.h"
 #include "AssetsManager.h"
 #include "SpriteSheet.h"
-#include <limits>
 #include <string>
 
 class Heart : public BoardEntity {
 public:
-    Heart(PlayerSide side, int q, int row, const sf::Vector2f& position)
-        : BoardEntity(q, row, position, 100), m_side(side),
-        m_sprite(AssetsManager::getInstance().getTexture(textureKeyFor(side))),
-        m_animation(AssetsManager::getInstance().getTexture(textureKeyFor(side)),
-            SHEET_COLUMNS, SHEET_ROWS, FRAME_DURATION, DISPLAY_SIZE)
-    {
-        // Sets m_sprite's texture rect/origin to frame 0 - SpriteSheet's own
-        // job (see SpriteSheet::applyCurrentFrame), not something this class
-        // computes itself. update()/draw() below keep this in sync every frame.
-        m_animation.applyCurrentFrame(m_sprite);
+    Heart(PlayerSide side, int q, int row, const sf::Vector2f& position);
 
-        // Scaled against ONE frame's real pixel size (see
-        // SpriteSheet::getBaseScale), not the whole sheet - the same on-board
-        // size (DISPLAY_SIZE) the old single-image heart used.
-        float scale = m_animation.getBaseScale();
-        m_sprite.setScale({ scale, scale });
-
-        m_sprite.setPosition(m_screenPos);
-    }
-
-    void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) override
-    {
-        BoardEntity::spawnOnBoard(q,row,screenPos);
-        m_sprite.setPosition(screenPos);
-    }
+    void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) override;
 
     // Advances the heartbeat loop - SpriteSheet defaults to looping, so this
     // never needs to check isFinished()/reset() itself.
-    void update(float dt) override
-    {
-        m_animation.update(dt);
-    }
+    void update(float dt) override;
 
-    void draw(sf::RenderWindow& window, PlayerSide currentSide) const override {
-        m_animation.applyCurrentFrame(m_sprite);
-        window.draw(m_sprite);
-        drawHealthBar(window);
-    }
+    void draw(sf::RenderWindow& window, PlayerSide currentSide) const override;
 
-    PlayerSide getSide() const override { return m_side; }
+    PlayerSide getSide() const override;
 
     // Always outranks any Monster's own scoreAsAttackTarget() (bounded,
     // since it's based on current HP) - the Heart is always the AI's top
     // attack priority once reachable, regardless of its own current HP.
-    float scoreAsAttackTarget() const override { return std::numeric_limits<float>::infinity(); }
+    float scoreAsAttackTarget() const override;
 
 private:
     // Left plays BlueHeart.png, Right plays OrangeHeart.png - the only
     // per-side difference a Heart has.
-    static const std::string& textureKeyFor(PlayerSide side)
-    {
-        static const std::string blue = "heart_blue";
-        static const std::string orange = "heart_orange";
-        return side == PlayerSide::Left ? blue : orange;
-    }
+    static const std::string& textureKeyFor(PlayerSide side);
 
     // BlueHeart.png/OrangeHeart.png's own grid - 6x2 (12 frames), distinct
     // from every monster sprite sheet's 6x4/24 frames (see

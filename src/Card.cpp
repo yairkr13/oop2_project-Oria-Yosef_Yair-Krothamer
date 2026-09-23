@@ -13,6 +13,21 @@ bool Card::isGone() const
     return m_linkedMonster && !m_linkedMonster->isAlive();
 }
 
+int Card::getCost() const { return m_cost; }
+PlayerSide Card::getSide() const { return m_side; }
+
+// האם הקלף כבר "שוחק" - יש לו מפלצת חיה מקושרת על הלוח
+bool Card::isPlayed() const { return m_linkedMonster != nullptr; }
+
+const Monster* Card::getLinkedMonster() const { return m_linkedMonster; }
+
+// Mutable access - only for the few callers that actually need to
+// change the monster itself (useSpecialAbility, cancelSpecialAbility).
+// Same reasoning/naming as Tile::getMutableEntity().
+Monster* Card::getMutableLinkedMonster() const { return m_linkedMonster; }
+
+std::string Card::getCardTextureKey() const { return m_textureKey + "_card"; }
+
 //למה פה ולא בmonster factory?
 std::unique_ptr<Monster> Card::spawnMonster()
 {

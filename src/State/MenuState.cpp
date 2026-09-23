@@ -103,3 +103,8 @@ void MenuState::handleEvent(const sf::Event& event)
     m_volumeButton.handleEvent(event);
     m_soundOnButton.handleEvent(event);
 }
+
+MusicTrack MenuState::desiredMusicTrack() const
+{
+    return MusicTrack::Menu;
+}

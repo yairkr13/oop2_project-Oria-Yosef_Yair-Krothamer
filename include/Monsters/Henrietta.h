@@ -14,7 +14,7 @@ public:
 
     std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
 
-    bool specialAbilityNeedsTarget() const override { return true; }
+    bool specialAbilityNeedsTarget() const override;
 
     // Protection targets a friendly Monster - flips the base (enemy)
     // default, but keeps its isAlive() requirement (see Monster's own
@@ -23,23 +23,15 @@ public:
     // canBeTargetedBySpecial() check - Heart doesn't override that (stays
     // false), so Protection can't target it either, same as every other
     // Special.
-    bool isValidSpecialTarget(const BoardEntity& candidate) const override
-    {
-        return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(m_side);
-    }
+    bool isValidSpecialTarget(const BoardEntity& candidate) const override;
 
     // AI preference: whoever has the least HP is the most vulnerable, so
     // the most worth shielding - same formula as Muffintop's Heal, just
     // repurposed for "who needs protecting" instead of "who needs healing."
-    float scoreAsSpecialTarget(const BoardEntity& candidate) const override
-    {
-        return static_cast<float>(candidate.getMaxHealth() - candidate.getHealth());
-    }
+    float scoreAsSpecialTarget(const BoardEntity& candidate) const override;
     // בתוך class Henrietta (תחת public):
-    virtual std::string getSpecialAbilityDescription() const override {
-        return "Protection: Grants a shield to an ally, blocking all damage until the next turn.";
-    }
-    sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(255, 165, 0, 180); } // orange
+    virtual std::string getSpecialAbilityDescription() const override;
+    sf::Color getSpecialTargetHighlightColor() const override;
 private:
     void onSpecialAbility(const Board& board, BoardEntity* target) override;
     //void attack(Monster& target) override;

@@ -32,7 +32,7 @@ public:
     //void draw(sf::RenderWindow& window) const;
     //const sf::Vector2f& getPosition() const;
 	void endTurn();
-    PlayerSide getSide() const { return m_side; }
+    PlayerSide getSide() const;
 
     Heart* getHeart();
 
@@ -40,9 +40,9 @@ public:
     // Base Player is purely reactive: it never acts on its own, so these are
     // no-ops and it's never busy - it just waits for external input (mouse
     // clicks / Space) to end its turn.
-    virtual void onTurnStart(Board& board) {}
-    virtual void updateTurn(Board& board) {}
-    virtual bool isBusy() const { return false; }
+    virtual void onTurnStart(Board& board);
+    virtual void updateTurn(Board& board);
+    virtual bool isBusy() const;
 
     Monster* playCard(Card* card); // כבר לא מוחק מ-m_hand!
     void removeDeadMonsters();
@@ -91,14 +91,7 @@ private:
 
     Card* getCardAtPosition(const sf::Vector2f& mousePos, bool alignRight) const;
 
-    sf::Vector2f getCardPosition(size_t index, bool alignRight) const
-    {
-        float xPos = alignRight ?
-            (static_cast<float>(Config::WINDOW_WIDTH) - 20.f - Card::WIDTH - (index * CARD_SPACING)) :
-            (20.f + (index * CARD_SPACING));
-
-        return { xPos, BOTTOM_PANEL_TOP_Y + CARD_TOP_MARGIN };
-    }
+    sf::Vector2f getCardPosition(size_t index, bool alignRight) const;
     void drawKeys(sf::RenderWindow& window, bool alignRight) const;
     void drawHand(sf::RenderWindow& window, bool alignRight, const Card* selectedFromHand = nullptr) const;
 

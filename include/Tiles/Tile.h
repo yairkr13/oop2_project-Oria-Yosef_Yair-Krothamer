@@ -27,8 +27,8 @@ public:
 	// (larger q) get painted after it.
 	void drawEntity(sf::RenderWindow& window, PlayerSide currentSide) const;
 
-	int getQ() const { return m_q; }
-	int getRow() const { return m_row; }
+	int getQ() const;
+	int getRow() const;
 
 	// This tile's own screen-space center, so callers that already hold a
 	// Tile* (Board, mainly) can ask this instead of re-deriving the same
@@ -42,12 +42,9 @@ public:
 	// correction when computing a center from raw coordinates; this must
 	// apply it too, or the two stop agreeing on what "a tile's screen
 	// position" means.
-	sf::Vector2f getScreenPosition() const
-	{
-		return m_shape.getPosition() + sf::Vector2f(Config::TILE_RADIUS, Config::TILE_RADIUS);
-	}
+	sf::Vector2f getScreenPosition() const;
 
-	bool isHighlighted() const { return m_isHighlighted; }
+	bool isHighlighted() const;
 
 	// No longer virtual: Hole/LavaTile/PanicPoint each used to override
 	// this with an identical body (call Tile::setHighlighted with their
@@ -68,7 +65,7 @@ public:
     // callers only ever need to ask the entity something (isValidSpecialTarget,
     // scoreAsAttackTarget, selectEntity's own validity check...) - none of
     // that needs a mutable pointer.
-    const BoardEntity* getEntity() const { return m_entity; }
+    const BoardEntity* getEntity() const;
 
     // Mutable access - only for the few callers that actually need to
     // change the entity itself (e.g. Monster::useSpecialAbility's target).
@@ -78,7 +75,7 @@ public:
     // own tile mutation is. Naming it separately from getEntity() at least
     // makes every such call site say, at the call site itself, "I intend to
     // mutate this" instead of leaving that ambiguous.
-    BoardEntity* getMutableEntity() const { return m_entity; }
+    BoardEntity* getMutableEntity() const;
 
     // ������� ������� - ������ ������ ���� (������ ���� �����)
     //Monster* getMonster() const {
@@ -89,11 +86,9 @@ public:
     //}
 
     void setEntity(BoardEntity* entity);
-    bool hasEntity() const { return m_entity != nullptr; }
+    bool hasEntity() const;
 
-    virtual bool isPassableFor(const BoardEntity* entity) const {
-        return m_isPassable;
-    }
+    virtual bool isPassableFor(const BoardEntity* entity) const;
 
     // Both require isEntityAlive() (private, below) - a dying entity (dead,
     // but still linked to its Tile so a death animation can finish - see
@@ -102,8 +97,8 @@ public:
     // disappeared yet. Every caller (attack-target highlighting/resolution,
     // AI targeting, ally-target highlighting) already goes through these
     // two, so this one change closes that gap everywhere at once.
-    bool isOccupiedByEnemy(PlayerSide mySide) const { return isEntityAlive() && m_entity->isEnemyOf(mySide); }
-    bool isOccupiedByAlly(PlayerSide mySide) const { return isEntityAlive() && m_entity->isAllyOf(mySide); }
+    bool isOccupiedByEnemy(PlayerSide mySide) const;
+    bool isOccupiedByAlly(PlayerSide mySide) const;
 
     void receiveAttackFrom(BoardEntity* attacker);
 
@@ -152,7 +147,7 @@ public:
     }*/
     //virtual bool isHole() const { return false; }
 
-    virtual void applyTileEffect() {}
+    virtual void applyTileEffect();
 protected:
     bool m_isPassable; // set directly by Hole's constructor
 
@@ -162,7 +157,7 @@ protected:
     // which color an ability/spawn/movement highlight elsewhere asked for.
     // std::nullopt (the default, plain Tile's own behavior) means "use
     // whatever color the caller passed in".
-    virtual std::optional<sf::Color> ownHighlightColor() const { return std::nullopt; }
+    virtual std::optional<sf::Color> ownHighlightColor() const;
 private:
     // Neither m_shape nor m_color is touched by Hole/LavaTile/PanicPoint -
     // only Tile.cpp itself draws/colors this tile.
@@ -170,7 +165,7 @@ private:
     sf::Color m_color;
 	// Only used internally, by isOccupiedByEnemy/isOccupiedByAlly above -
 	// no external caller needs "is my occupant alive" on its own.
-	bool isEntityAlive() const { return m_entity != nullptr && m_entity->isAlive(); }
+	bool isEntityAlive() const;
 
 	int m_row;
 	int m_q;

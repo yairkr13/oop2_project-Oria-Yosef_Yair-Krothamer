@@ -139,7 +139,7 @@ public:  // הפונקציות הציבוריות שיכלו להיות const - 
 	// need to know Hearts exist there at all (see getExtremeTileInRow below -
 	// that's the other half of the same fact: Board::initPlayerHearts places
 	// each side's Heart at the extreme tile of exactly this row).
-	int getMiddleRow() const { return m_layout.middleRow(); }
+	int getMiddleRow() const;
 
 	// The extreme (leftmost/rightmost) Tile in `row` - a plain board-shape
 	// fact, same spirit as getTileAt. Public (moved up from the private
@@ -193,11 +193,7 @@ private:
 	// random source directly. A function-local static: one generator for
 	// this whole process's lifetime, shared by every Board ever
 	// constructed in it.
-	static std::mt19937& rng()
-	{
-		static std::mt19937 gen(std::random_device{}());
-		return gen;
-	}
+	static std::mt19937& rng();
 
 	// Generic "paint these tiles this color" primitive - private (an
 	// internal implementation detail Board uses on itself), now actually

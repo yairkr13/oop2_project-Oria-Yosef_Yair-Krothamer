@@ -11,6 +11,12 @@ namespace
     const std::string GAMEPLAY_TRACK_NAME = "gameplay_music";
 }
 
+MusicManager& MusicManager::getInstance()
+{
+    static MusicManager instance;
+    return instance;
+}
+
 const std::string& MusicManager::assetNameFor(MusicTrack track)
 {
     switch (track)
@@ -46,4 +52,9 @@ void MusicManager::toggleMute()
 
     if (m_currentTrack != MusicTrack::None)
         AssetsManager::getInstance().getMusic(assetNameFor(m_currentTrack)).setVolume(m_muted ? MUTED_VOLUME : FULL_VOLUME);
+}
+
+bool MusicManager::isMuted() const
+{
+    return m_muted;
 }

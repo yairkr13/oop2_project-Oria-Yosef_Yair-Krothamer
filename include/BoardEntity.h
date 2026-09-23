@@ -14,9 +14,7 @@ class AttackAnimation; // Forward declaration
 
 class BoardEntity {
 public:
-    BoardEntity(int q, int row, const sf::Vector2f& position, int health)//למהה?????? לחשוב על למחוק את המשבצת מפה!!!!! - הוסר, ראו m_currentTile למטה
-        : m_q(q), m_row(row), m_screenPos(position), m_health(health), m_maxHealth(health) {
-    }
+    BoardEntity(int q, int row, const sf::Vector2f& position, int health);//למהה?????? לחשוב על למחוק את המשבצת מפה!!!!! - הוסר, ראו m_currentTile למטה
 
     // ����� �����: ���������� ����� �������� ��� �� default, ���� ���� �-cpp
     virtual ~BoardEntity() = default;
@@ -31,29 +29,29 @@ public:
     // Muffintop's heal ability) never manipulate another entity's health
     // fields directly.
     void heal(int amount);
-    int getMaxHealth() const { return m_maxHealth; }
+    int getMaxHealth() const;
 
     // Current HP - mirrors getMaxHealth(), added so AI scoring
     // (Monster::scoreAsSpecialTarget - Heal/Protection preferring whoever's
     // hurt most) has a public way to ask "how much health does this have
     // right now" without reaching into m_health directly.
-    int getHealth() const { return m_health; }
+    int getHealth() const;
 
     virtual bool isAlive() const;
     //virtual int getHealth() const = 0;
     virtual PlayerSide getSide() const = 0;
-    bool isEnemyOf(PlayerSide otherSide) const { return getSide() != otherSide; }
-    bool isAllyOf(PlayerSide otherSide) const { return getSide() == otherSide; }
-    virtual void attack(BoardEntity* target) {}
-    virtual int getAttackRange() const { return getRange(); }
-    virtual int getRange() const { return 0; }
+    bool isEnemyOf(PlayerSide otherSide) const;
+    bool isAllyOf(PlayerSide otherSide) const;
+    virtual void attack(BoardEntity* target);
+    virtual int getAttackRange() const;
+    virtual int getRange() const;
 
     // Encapsulated "cannot currently receive damage" state (see Henrietta's
     // Protection). Deliberately checked *inside* takeDamage() itself, not
     // by callers - Tile::receiveAttackFrom, tile effects, everything that
     // already just calls takeDamage() respects this automatically, with no
     // `if (isProtected())` anywhere else in the codebase.
-    bool isProtected() const { return m_protected; }
+    bool isProtected() const;
     void applyProtection();
 
     // Generic per-turn-boundary tick for turn-scoped status state (currently:
@@ -67,14 +65,14 @@ public:
     //virtual EntityType getType() const = 0;
     // 
     //virtual bool isSelectable() const { return false; } // ����� ����: �� �� ���� �����
-    virtual bool canBeSelectedBy(PlayerSide side) const { return false; }
+    virtual bool canBeSelectedBy(PlayerSide side) const;
 
     //virtual bool isSelected() const { return false; }
-    virtual bool isMoving() const { return false; }
+    virtual bool isMoving() const;
 
     // True while this entity is playing its own attack animation (see
     // createAttackAnimation/playAttackAnimation below).
-    virtual bool isAttacking() const { return false; }
+    virtual bool isAttacking() const;
 
     // True while this entity is playing an incoming Special Ability's visual
     // effect (see playSpecialAbilityAnimation below - e.g. Muffintop's Heal
@@ -82,7 +80,7 @@ public:
     // than folded into isAttacking(): an entity that's the passive subject
     // of a Special effect is not attacking or being attacked, and collapsing
     // the two would make isAttacking() lie about what's actually happening.
-    virtual bool isUsingSpecialAnimation() const { return false; }
+    virtual bool isUsingSpecialAnimation() const;
 
     // True while this entity is dead (see isAlive()) but still occupying
     // its Tile so a one-shot death animation can finish playing - see
@@ -90,7 +88,7 @@ public:
     // that either isn't dead or has no death animation to wait for, which
     // is exactly "removed from the board the instant it dies", the
     // behavior every entity already had before death animations existed.
-    virtual bool isDying() const { return false; }
+    virtual bool isDying() const;
 
     // The single aggregate query callers like Board should use: "is this
     // entity currently doing anything visual that should block the game."
@@ -103,7 +101,7 @@ public:
     // predicate here, defaulted to false, ORed into this one line - so only
     // this class (where the new state actually lives) needs editing, never
     // Board.
-    virtual bool isAnimating() const { return isMoving() || isAttacking() || isUsingSpecialAnimation() || isDying(); }
+    virtual bool isAnimating() const;
 
     // Whether this entity should be cleared from its Tile right now - i.e.
     // whether it's actually safe/appropriate to stop drawing/updating it as
@@ -115,7 +113,7 @@ public:
     // (Tile::receiveAttackFrom, Board::updateTileEffects, Board::update)
     // ask only this - never isAlive() directly - to decide whether to call
     // Tile::clearEntity().
-    virtual bool isReadyForRemoval() const { return !isAlive(); }
+    virtual bool isReadyForRemoval() const;
     //// --- �������� �����: ��� ��-������ �� ������ ---
     //void setCurrentTile(Tile* tile) { m_currentTile = tile; }
     //Tile* getCurrentTile() const { return m_currentTile; }
@@ -132,16 +130,16 @@ public:
 
 
     // --- �������� ��� ������ (����� ���� ���� ������� ����) ---
-    int getQ() const { return m_q; }
-    int getRow() const { return m_row; }
-    void setCoords(int q, int row) { m_q = q; m_row = row; }
+    int getQ() const;
+    int getRow() const;
+    void setCoords(int q, int row);
 
     virtual void spawnOnBoard(int q, int row, const sf::Vector2f& screenPos);
-    virtual void update(float dt) {}
-    virtual bool canFly() const { return false; }
-    sf::Vector2f getScreenPosition() const { return m_screenPos; }
+    virtual void update(float dt);
+    virtual bool canFly() const;
+    sf::Vector2f getScreenPosition() const;
     //virtual Monster* asMonster() { return nullptr; }
-    virtual bool canBeTargetedBySpecial() const { return false; }
+    virtual bool canBeTargetedBySpecial() const;
 
     // Optional visual for this entity's attack: nullptr (the default, used
     // by every entity that doesn't override this) means "no animation" -
@@ -186,10 +184,10 @@ public:
     // any Monster's own health-based score - the AI never checks "is this a
     // Heart" itself, it only ever asks this same question of every
     // candidate and follows the highest answer.
-    virtual float scoreAsAttackTarget() const { return -static_cast<float>(getHealth()); }
+    virtual float scoreAsAttackTarget() const;
 
-    virtual bool canMove() const { return false; }
-    virtual void applyFreeze() {}
+    virtual bool canMove() const;
+    virtual void applyFreeze();
 
     // Grants "next attack deals damage * multiplier" - see Monster::attack()
     // for where this is actually consumed. `multiplier` is the CALLER's own
@@ -201,8 +199,8 @@ public:
     // Barzilla's Empowered Attack, which targets an ALLY and grants them
     // this buff (mirrors Henrietta's Protection - the effect lives on the
     // recipient, not the caster).
-    virtual void applyEmpoweredAttack(float multiplier) {}
-    virtual void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions) { /* No-op by default */ }
+    virtual void applyEmpoweredAttack(float multiplier);
+    virtual void moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions);
 protected:
     void drawHealthBar(sf::RenderWindow& window) const;
     // ������� ������ ��� ��� ����� ��� �� ����� ���� ����� ������ ����� �����
