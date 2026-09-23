@@ -64,20 +64,24 @@ namespace BoardGenerator
         const BoardLayout& layout,
         const std::function<sf::Vector2f(int, int)>& anchorToScreen);
 
-    // Randomly swaps `layout.lavaTileCount` LavaTiles, `layout.holeTileCount`
+    // Swaps `layout.lavaTileCount` LavaTiles, `layout.holeTileCount`
     // Holes, and (if `layout.panicPointCount > 0`) that many PanicPoints into
     // `grid` in place, avoiding both spawn margins (see
     // BoardLayout::spawnColumnWidth). `p1Heart`/`p2Heart` are passed through
     // only because PanicPoint's own constructor needs them (see
     // PanicPoint::applyTileEffect) - this function has no opinion about what
     // a PanicPoint does with them. `rng` is the shared random source to
-    // shuffle with (Board passes its own Board::rng()) - taken as a plain
-    // parameter rather than reaching for Board's static accessor itself, so
-    // this stays fully standalone/testable independent of Board.
+    // shuffle with (Board passes its own Board::rng()) when `useFixedPlacement`
+    // is false - taken as a plain parameter rather than reaching for Board's
+    // static accessor itself, so this stays fully standalone/testable
+    // independent of Board. `useFixedPlacement` (PlayerVsRemote only - see
+    // Board::generateSpecialTiles) skips the RNG/shuffle entirely and uses a
+    // hardcoded coordinate list instead, so both peers always land on the
+    // exact same board with no shared-seed synchronization to get wrong.
     void applySpecialTiles(
         std::map<std::pair<int, int>, std::unique_ptr<Tile>>& grid,
         const BoardLayout& layout,
         const std::function<sf::Vector2f(int, int)>& anchorToScreen,
         Heart* p1Heart, Heart* p2Heart,
-        std::mt19937& rng);
+        std::mt19937& rng, bool useFixedPlacement = false);
 }

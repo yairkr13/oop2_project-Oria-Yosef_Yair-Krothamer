@@ -4,11 +4,25 @@
 #include "Tiles/PanicPoint.h"
 #include <algorithm>
 #include <vector>
-#include <iostream>
 
 namespace
 {
     using Grid = std::map<std::pair<int, int>, std::unique_ptr<Tile>>;
+
+    // PlayerVsRemote only (see Board::generateSpecialTiles) - both peers
+    // must end up with an IDENTICAL board, and relying on a shared random
+    // seed to guarantee that turned out not to hold up in practice across
+    // two separate machines. A hardcoded list sidesteps the whole question:
+    // there's no RNG left to possibly desync. Coordinates are valid tiles
+    // of BoardGenerator::standardLayout() specifically (7 rows, 20 cols,
+    // spawnColumnWidth 2 -> q in [2,17], and q's parity must match the
+    // row's - see buildBaseGrid) - the only layout PlayerVsRemote ever
+    // actually builds.
+    const std::vector<std::pair<int, int>> FIXED_SPECIAL_TILE_COORDS = {
+        { 4, 0 }, { 13, 5 },   // lava
+        { 8, 2 }, { 12, 4 },   // hole
+        { 7, 3 },              // panic point
+    };
 
     // Shared by every special-tile placement below: builds TileType at
     // `coords`'s screen position and inserts it into `grid`. TileType is
@@ -60,45 +74,44 @@ namespace BoardGenerator
 
     void applySpecialTiles(Grid& grid, const BoardLayout& layout,
         const std::function<sf::Vector2f(int, int)>& anchorToScreen,
-        Heart* p1Heart, Heart* p2Heart, std::mt19937& rng)
+        Heart* p1Heart, Heart* p2Heart, std::mt19937& rng, bool useFixedPlacement)
     {
-        // אוספים משבצות רק מהאיזור המותר (בלי הטורים הקיצוניים של הזימונים והלבבות)
-        std::vector<std::pair<int, int>> allCoords;
-        int minQ = layout.spawnColumnWidth;
-        int maxQ = layout.cols - 1 - layout.spawnColumnWidth;
-        for (auto const& [coords, tile] : grid)
-        {
-            if (coords.first >= minQ && coords.first <= maxQ)
-                allCoords.push_back(coords);
-        }
-
         int needed = layout.lavaTileCount + layout.holeTileCount + layout.panicPointCount;
-        if (static_cast<int>(allCoords.size()) < needed)
-            return;
+        std::vector<std::pair<int, int>> chosenCoords;
 
-        std::shuffle(allCoords.begin(), allCoords.end(), rng);
+        if (useFixedPlacement)
+        {
+            if (static_cast<int>(FIXED_SPECIAL_TILE_COORDS.size()) < needed)
+                return;
+            chosenCoords.assign(FIXED_SPECIAL_TILE_COORDS.begin(), FIXED_SPECIAL_TILE_COORDS.begin() + needed);
+        }
+        else
+        {
+            // אוספים משבצות רק מהאיזור המותר (בלי הטורים הקיצוניים של הזימונים והלבבות)
+            std::vector<std::pair<int, int>> allCoords;
+            int minQ = layout.spawnColumnWidth;
+            int maxQ = layout.cols - 1 - layout.spawnColumnWidth;
+            for (auto const& [coords, tile] : grid)
+            {
+                if (coords.first >= minQ && coords.first <= maxQ)
+                    allCoords.push_back(coords);
+            }
 
-        // TEMP DEBUG (see conversation) - remove once the desync is found.
-        std::cout << "[BoardGenerator] allCoords.size()=" << allCoords.size() << " chosen coords:";
+            if (static_cast<int>(allCoords.size()) < needed)
+                return;
+
+            std::shuffle(allCoords.begin(), allCoords.end(), rng);
+            chosenCoords.assign(allCoords.begin(), allCoords.begin() + needed);
+        }
 
         int next = 0;
         for (int i = 0; i < layout.lavaTileCount; ++i, ++next)
-        {
-            std::cout << " Lava(" << allCoords[next].first << "," << allCoords[next].second << ")";
-            placeSpecialTile<LavaTile>(grid, allCoords[next], anchorToScreen);
-        }
+            placeSpecialTile<LavaTile>(grid, chosenCoords[next], anchorToScreen);
 
         for (int i = 0; i < layout.holeTileCount; ++i, ++next)
-        {
-            std::cout << " Hole(" << allCoords[next].first << "," << allCoords[next].second << ")";
-            placeSpecialTile<Hole>(grid, allCoords[next], anchorToScreen);
-        }
+            placeSpecialTile<Hole>(grid, chosenCoords[next], anchorToScreen);
 
         for (int i = 0; i < layout.panicPointCount; ++i, ++next)
-        {
-            std::cout << " Panic(" << allCoords[next].first << "," << allCoords[next].second << ")";
-            placeSpecialTile<PanicPoint>(grid, allCoords[next], anchorToScreen, p1Heart, p2Heart);
-        }
-        std::cout << std::endl;
+            placeSpecialTile<PanicPoint>(grid, chosenCoords[next], anchorToScreen, p1Heart, p2Heart);
     }
 }

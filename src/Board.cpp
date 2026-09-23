@@ -165,7 +165,7 @@ void Board::draw(sf::RenderWindow& window, PlayerSide currentSide) const
 //    }
 //    generateSpecialTiles(p1Heart, p2Heart);
 //}
-void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart)
+void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart, bool useFixedSpecialTiles)
 {
     int middleRow = getMiddleRow(); // was hardcoded to 3 - now follows m_layout.rows, whatever the layout
 
@@ -174,14 +174,14 @@ void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart)
     if (p2Heart != nullptr)
         spawnEntityOnTile(p2Heart, getExtremeTileInRow(middleRow, false));
 
-    generateSpecialTiles(p1Heart, p2Heart);
+    generateSpecialTiles(p1Heart, p2Heart, useFixedSpecialTiles);
 }
 
-void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart)
+void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart, bool useFixedPlacement)
 {
     BoardGenerator::applySpecialTiles(m_grid, m_layout,
         [this](int q, int row) { return tileAnchor(q, row); },
-        p1Heart, p2Heart, rng());
+        p1Heart, p2Heart, rng(), useFixedPlacement);
 }
 
 //bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)

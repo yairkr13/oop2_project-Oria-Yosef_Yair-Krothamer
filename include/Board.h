@@ -35,7 +35,11 @@ public:  // הפונקציות הציבוריות שיכלו להיות const - 
 	void clearHighlights() const;
 
 	void updateTileEffects() const; //למה יש לזה את השם הזה ולא את השם end turn?????
-	void initPlayerHearts(Heart* p1Heart, Heart* p2Heart); //change this funciton!!!!! 
+	// `useFixedSpecialTiles` (PlayerVsRemote only - see GameplayState's
+	// PlayerVsRemote constructor) forwards to generateSpecialTiles below -
+	// both peers must land on the exact same board, and a hardcoded layout
+	// guarantees that with no random source to keep synchronized.
+	void initPlayerHearts(Heart* p1Heart, Heart* p2Heart, bool useFixedSpecialTiles = false); //change this funciton!!!!!
 
 	// AI_FindBestTargetForMonster עברה ל-AIPlayer - Board נשאר "טיפש" ומספק
 	// רק שאילתות (getReachableTiles), ההחלטה איזה יעד עדיף היא לא באחריותו.
@@ -272,7 +276,7 @@ private:
 	// before). Board owns *when* generation happens (its own lifecycle);
 	// BoardGenerator owns *how* a layout's tiles are actually built - it,
 	// not Board, is what now knows LavaTile/Hole/PanicPoint exist.
-	void generateSpecialTiles(Heart* p1Heart, Heart* p2Heart);
+	void generateSpecialTiles(Heart* p1Heart, Heart* p2Heart, bool useFixedPlacement);
 	void createBoard();
 
 	// This board's own layout recipe (shape + special-tile plan) - kept so

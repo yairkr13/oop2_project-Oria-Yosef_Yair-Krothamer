@@ -80,7 +80,7 @@ GameplayState::GameplayState(sf::RenderWindow& window, std::unique_ptr<NetworkCo
         : static_cast<RemotePlayer*>(m_player1.get());
 
     scaleBackgroundToWindow();
-    m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart());
+    m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart(), /*useFixedSpecialTiles=*/true);
     buildMiniMenuButton();
 
     m_turnManager.setOnPlayerSwitched([this]() {
