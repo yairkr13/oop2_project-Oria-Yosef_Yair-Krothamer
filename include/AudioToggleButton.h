@@ -36,6 +36,7 @@ private:
     // פונקציה סטטית פנימית שקובעת את טקסטורות ברירת המחדל לפי הטיפול ב-AudioService
     static std::pair<const char*, const char*> getDefaultTextures()
     { //זה בסדר שדבר כזה נמצא בפונקציה תבניתית?????
+        // pick the icon pair matching which service this instance toggles - sound vs. music
         if constexpr (std::is_same_v<AudioService, SoundPlayer>)
         {
             return { "SoundUpButton", "SoundMuteButton" };
@@ -50,6 +51,8 @@ private:
     {
         AudioService::getInstance().toggleMute();
 
+        // only the sound-toggle button needs this: the click sound Button already played
+        // was silent if we were muted, so replay it now that unmuting just turned it audible
         if constexpr (std::is_same_v<AudioService, SoundPlayer>)
         {
             if (!SoundPlayer::getInstance().isMuted())

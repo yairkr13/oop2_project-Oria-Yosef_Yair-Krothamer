@@ -87,6 +87,7 @@ void Button::handle(const sf::Event::MouseButtonPressed& event)
 	if (event.button == sf::Mouse::Button::Left)
 	{
 		sf::Vector2i clickPos(event.position.x, event.position.y);
+		// click only counts if it lands inside this button's rect, checked independently of hover state
 		if (m_rect.contains(clickPos))
 		{
 			SoundPlayer::getInstance().play("button_click");

@@ -10,8 +10,6 @@ namespace Config
     // ������ �����
     inline constexpr unsigned int WINDOW_WIDTH = 1280;
     inline constexpr unsigned int WINDOW_HEIGHT = 720;
-    /*inline constexpr unsigned int WINDOW_WIDTH = 1600;
-    inline constexpr unsigned int WINDOW_HEIGHT = 900;*/
 
     // Half/double the original 1280x720 design size - small enough to still
     // fit the bottom panel's fixed-size hand of cards (Card::WIDTH/HEIGHT

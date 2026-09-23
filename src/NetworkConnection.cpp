@@ -72,6 +72,7 @@ bool NetworkConnection::startHosting(unsigned short port)
 
 bool NetworkConnection::acceptConnection()
 {
+    // nothing to accept once already connected, or before startHosting() has opened a listening socket
     if (m_connected || m_listenSocket == 0) return false;
 
     SOCKET accepted = accept(toSocket(m_listenSocket), nullptr, nullptr);
@@ -139,6 +140,7 @@ std::string NetworkConnection::getLocalAddress()
     hints.ai_socktype = SOCK_STREAM;
 
     addrinfo* result = nullptr;
+    // treat a null result as failure too, even if the call itself reported success
     if (getaddrinfo(hostname, nullptr, &hints, &result) != 0 || !result)
         return "";
 
