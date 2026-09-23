@@ -67,3 +67,28 @@ void Henrietta::onSpecialAbility(const Board& board, BoardEntity* target)
 
     target->playSpecialAbilityAnimation(std::move(shieldEffect));
 }
+
+bool Henrietta::specialAbilityNeedsTarget() const
+{
+    return true;
+}
+
+bool Henrietta::isValidSpecialTarget(const BoardEntity& candidate) const
+{
+    return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(m_side);
+}
+
+float Henrietta::scoreAsSpecialTarget(const BoardEntity& candidate) const
+{
+    return static_cast<float>(candidate.getMaxHealth() - candidate.getHealth());
+}
+
+std::string Henrietta::getSpecialAbilityDescription() const
+{
+    return "Protection: Grants a shield to an ally, blocking all damage until the next turn.";
+}
+
+sf::Color Henrietta::getSpecialTargetHighlightColor() const
+{
+    return sf::Color(255, 165, 0, 180); // orange
+}

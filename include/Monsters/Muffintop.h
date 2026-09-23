@@ -15,29 +15,21 @@ public:
 
     std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
 
-    bool specialAbilityNeedsTarget() const override { return true; }
+    bool specialAbilityNeedsTarget() const override;
     // בתוך class Muffintop (תחת public):
-    virtual std::string getSpecialAbilityDescription() const override {
-        return "Heal: Restores health to a targeted friendly monster.";
-    }
+    virtual std::string getSpecialAbilityDescription() const override;
     // Heal Ally targets a friendly Monster - flips the base (enemy)
     // default, but keeps its isAlive() requirement (see Monster's own
     // isValidSpecialTarget): a dying ally is still Tile-linked and must not
     // be targetable (e.g. healed) while its death animation plays.
-    bool isValidSpecialTarget(const BoardEntity& candidate) const override
-    {
-        return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(getSide());
-    }
+    bool isValidSpecialTarget(const BoardEntity& candidate) const override;
 
     // AI preference: whoever is missing the most HP benefits most from a
     // heal - a full-health ally scores 0 (never preferred over someone
     // actually hurt).
-    float scoreAsSpecialTarget(const BoardEntity& candidate) const override
-    {
-        return static_cast<float>(candidate.getMaxHealth() - candidate.getHealth());
-    }
+    float scoreAsSpecialTarget(const BoardEntity& candidate) const override;
 
-    sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(0, 100, 0, 180); } // dark green
+    sf::Color getSpecialTargetHighlightColor() const override;
 private:
     void onSpecialAbility(const Board& board, BoardEntity* target) override;
 };

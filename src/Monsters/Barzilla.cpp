@@ -136,3 +136,23 @@ std::unique_ptr<AttackAnimation> Barzilla::createAttackAnimation(sf::Vector2f ta
     return std::make_unique<SplashAttackAnimation>(
         fireBlastTexture, m_screenPos, targetPosition, FIRE_BLAST_DURATION, FIRE_BLAST_THICKNESS);
 }
+
+bool Barzilla::specialAbilityNeedsTarget() const
+{
+    return true;
+}
+
+bool Barzilla::isValidSpecialTarget(const BoardEntity& candidate) const
+{
+    return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(getSide());
+}
+
+std::string Barzilla::getSpecialAbilityDescription() const
+{
+    return "Empowered Attack: Doubles the damage of a chosen ally's next attack.";
+}
+
+sf::Color Barzilla::getSpecialTargetHighlightColor() const
+{
+    return sf::Color(190, 90, 230, 180); // purple
+}

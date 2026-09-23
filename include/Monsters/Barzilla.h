@@ -28,25 +28,20 @@ public:
     // Empowered Attack now targets an ally (mirrors Henrietta's Protection -
     // the buff lives on the recipient, granted immediately on selection, not
     // armed on Barzilla for later).
-    bool specialAbilityNeedsTarget() const override { return true; }
+    bool specialAbilityNeedsTarget() const override;
 
     // Ally-targeted, like Muffintop's Heal/Henrietta's Protection - flips
     // the base (enemy) default. Barzilla can target himself too (same side),
     // same as those two Specials already allow.
-    bool isValidSpecialTarget(const BoardEntity& candidate) const override
-    {
-        return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(getSide());
-    }
+    bool isValidSpecialTarget(const BoardEntity& candidate) const override;
 
     //
-    virtual std::string getSpecialAbilityDescription() const override {
-        return "Empowered Attack: Doubles the damage of a chosen ally's next attack.";
-    }
+    virtual std::string getSpecialAbilityDescription() const override;
 
     // Distinct from every other monster's color (and from Mozzy, which
     // shares the base Monster default white) - same purple family the
     // project's old extended-attack-range highlight used to use.
-    sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(190, 90, 230, 180); } // purple
+    sf::Color getSpecialTargetHighlightColor() const override;
 private:
     void onSpecialAbility(const Board& board, BoardEntity* target) override;
 

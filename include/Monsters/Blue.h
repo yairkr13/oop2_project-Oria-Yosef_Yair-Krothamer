@@ -16,12 +16,10 @@ public:
 
     // Knockback targets an enemy Monster - the base Monster::isValidSpecialTarget
     // default (enemy + Monster) already expresses exactly that.
-    bool specialAbilityNeedsTarget() const override { return true; }
+    bool specialAbilityNeedsTarget() const override;
     // בתוך class Blue (תחת public):
-    virtual std::string getSpecialAbilityDescription() const override {
-        return "Knockback: Knocks back a targeted enemy monster on the grid.";
-    }
-    sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(60, 120, 255, 180); } // blue
+    virtual std::string getSpecialAbilityDescription() const override;
+    sf::Color getSpecialTargetHighlightColor() const override;
 private:
     void onSpecialAbility(const Board& board, BoardEntity* target) override;
 };

@@ -4,12 +4,7 @@
 class Hole : public Tile
 {
 public:
-    Hole(int q, int row, const sf::Vector2f& position)
-        : Tile(q, row, position, sf::Color(30, 30, 30, 200)) // ��� ��� ����, ���� ��� ����
-    {
-        // �� �� ����! ���� ������ �-Pathfinding ����� ����� ����
-        m_isPassable = false;
-    }
+    Hole(int q, int row, const sf::Vector2f& position);
     //bool isPassableFor(Monster* monster) const override
     //{
     //    if (monster && monster->canFly()) {
@@ -17,11 +12,9 @@ public:
     //    }
     //    return false; // ������ ���� ������
     //}
-    bool isPassableFor(const BoardEntity* entity) const override {
-        return entity && entity->canFly();
-    }
+    bool isPassableFor(const BoardEntity* entity) const override;
 
     //bool isHole() const override { return true; } // ���� ������� ��������� ������ ������ �-Tile.h
 protected:
-    std::optional<sf::Color> ownHighlightColor() const override { return sf::Color(30, 30, 30, 200); }
+    std::optional<sf::Color> ownHighlightColor() const override;
 };

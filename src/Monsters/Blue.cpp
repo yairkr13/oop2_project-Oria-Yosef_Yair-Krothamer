@@ -137,3 +137,18 @@ void Blue::onSpecialAbility(const Board& board, BoardEntity* target)
 
     target->playSpecialAbilityAnimation(std::move(windEffect));
 }
+
+bool Blue::specialAbilityNeedsTarget() const
+{
+    return true;
+}
+
+std::string Blue::getSpecialAbilityDescription() const
+{
+    return "Knockback: Knocks back a targeted enemy monster on the grid.";
+}
+
+sf::Color Blue::getSpecialTargetHighlightColor() const
+{
+    return sf::Color(60, 120, 255, 180); // blue
+}

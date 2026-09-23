@@ -387,3 +387,98 @@ void Monster::playSpecialAbilityAnimation(std::unique_ptr<AttackAnimation> anima
 {
     m_specialAnimation = std::move(animation);
 }
+
+bool Monster::canBeSelectedBy(PlayerSide side) const
+{
+    return isAlive() && !isEnemyOf(side) && m_actionsLeft > 0;
+}
+
+bool Monster::canBeTargetedBySpecial() const
+{
+    return true;
+}
+
+int Monster::getRange() const
+{
+    return m_range;
+}
+
+int Monster::getAttackDamage() const
+{
+    return static_cast<int>(m_attackDamage * m_attackMultiplier);
+}
+
+int Monster::getActionsLeft() const
+{
+    return m_actionsLeft;
+}
+
+PlayerSide Monster::getSide() const
+{
+    return m_side;
+}
+
+bool Monster::canFly() const
+{
+    return m_flying;
+} // ������ ���� ������ �� �������
+
+bool Monster::isMoving() const
+{
+    return m_isMoving;
+}
+
+bool Monster::isAttacking() const
+{
+    return m_attackAnimation != nullptr;
+}
+
+bool Monster::isUsingSpecialAnimation() const
+{
+    return m_specialAnimation != nullptr;
+}
+
+int Monster::getSpecialCooldown() const
+{
+    return m_specialCooldown;
+}
+
+bool Monster::isSpecialReady() const
+{
+    return m_specialCooldown <= 0;
+}
+
+bool Monster::canUseSpecialAbilityNow() const
+{
+    return isAlive() && isSpecialReady() && getActionsLeft() > 0;
+}
+
+bool Monster::specialAbilityCommitsOnSelect() const
+{
+    return true;
+}
+
+void Monster::cancelSpecialAbility()
+{
+}
+
+bool Monster::isValidSpecialTarget(const BoardEntity& candidate) const
+{
+    //האם אני יכולה למחוק את הפונקציה ??????למה
+    return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isEnemyOf(m_side);
+}
+
+float Monster::scoreAsSpecialTarget(const BoardEntity& candidate) const
+{
+    return 0.f;
+}
+
+bool Monster::canMove() const
+{
+    return isAlive() && m_actionsLeft > 0;
+}
+
+void Monster::useAction()
+{
+    if (m_actionsLeft > 0) m_actionsLeft--;
+}
