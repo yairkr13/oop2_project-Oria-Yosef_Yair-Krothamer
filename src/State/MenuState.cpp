@@ -7,15 +7,6 @@
 
 namespace
 {
-    /*constexpr unsigned int VOLUME_BUTTON_WIDTH = 60;
-    constexpr int VOLUME_BUTTON_TOP_MARGIN = 20;
-    constexpr int VOLUME_BUTTON_X_OFFSET = -30;
-
-    sf::Vector2i volumeButtonPosition(const sf::RenderWindow& window)
-    {
-        int centerX = static_cast<int>(window.getSize().x) / 2;
-        return { centerX - static_cast<int>(VOLUME_BUTTON_WIDTH) / 2 + VOLUME_BUTTON_X_OFFSET, VOLUME_BUTTON_TOP_MARGIN };
-    }*/
     constexpr unsigned int AUDIO_BUTTON_WIDTH = 60;
     constexpr int AUDIO_BUTTON_TOP_MARGIN = 20;
     constexpr int BUTTON_GAP = 15; // רווח בין שני הכפתורים

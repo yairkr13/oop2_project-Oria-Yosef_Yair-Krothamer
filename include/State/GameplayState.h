@@ -99,8 +99,6 @@ private:
 
     // Hand-selected monster awaiting placement. UI/gameplay-input state,
     // not board state.
-    //Monster* m_selectedFromHand = nullptr;
-
     Card* m_selectedFromHand = nullptr;   // קלף שנבחר ליד, טרם שוחק - ממתין ל-tile להנחה
     Card* m_pendingSpecialCard = nullptr; // קלף ששוחק, יכולת מיוחדת שלו ממתינה לבחירת מטרה
 
@@ -110,7 +108,6 @@ private:
     // non-owning pointer into whatever Player actually owns the Monster
     // (see Player::m_monsters). GameplayState never takes ownership here,
     // exactly like it never takes ownership of a selected Card.
-    //BoardEntity* m_selectedEntity = nullptr;
 	BoardEntity* m_selectedEntity = nullptr; // subset of m_selectedEntity - nullptr if the selected entity is a Heart
 
     std::optional<Button> m_miniMenuButton;

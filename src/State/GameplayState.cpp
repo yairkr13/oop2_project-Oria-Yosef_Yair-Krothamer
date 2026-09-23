@@ -142,9 +142,6 @@ void GameplayState::draw(sf::RenderWindow& window) const
     Card* visuallySelectedCard = m_selectedFromHand ? m_selectedFromHand : m_pendingSpecialCard;
     current.draw(window, &current == m_player2.get(), visuallySelectedCard); //למה הוא מעביר את זה לשחקן. השחקן צריך לדעת את זה בעצמו????
 
-    //m_player1->drawKeys(window, false);
-    //m_player2->drawKeys(window, true);
-
     if (m_miniMenuButton)
         m_miniMenuButton->draw(window);
 
@@ -186,24 +183,8 @@ void GameplayState::update(sf::Time deltaTime)
 
     m_turnManager.update();
 
-    // Old safety net, kept as a comment - it existed for a Special that
-    // doesn't need a target click to commit (Barzilla's old self-buff
-    // Empowered Attack, committed later by a normal attack resolving deep
-    // inside m_board.update() above, with no synchronous call site to clear
-    // m_pendingSpecialCard from). Now that every monster's Special commits
-    // synchronously on target selection (specialAbilityNeedsTarget() is true
-    // for all five - see Monster.h), m_pendingSpecialCard is always cleared
-    // directly by handleSpecialTargetClick, and this reactive check would
-    // never trigger (its guard condition can no longer be true for any
-    // monster):
-    //
-    // if (m_pendingSpecialCard)
-    // {
-    //     Monster* pendingMonster = m_pendingSpecialCard->getLinkedMonster();
-    //     if (!pendingMonster || (!pendingMonster->specialAbilityNeedsTarget() && !pendingMonster->isSpecialReady()))
-    //         m_pendingSpecialCard = nullptr;
-    // }
-
+    // Game ends the instant either side's Heart dies - checked every frame
+    // so the transition fires as soon as the killing action resolves.
     if (m_player1->isDead() || m_player2->isDead())
     {
         PlayerSide winner = (m_player1->isDead()) ? PlayerSide::Right : PlayerSide::Left;
@@ -255,6 +236,7 @@ void GameplayState::handle(const sf::Event::MouseMoved& event)
 
     Player& current = m_turnManager.getCurrentPlayer();
 
+    // Mouse is over the bottom hand panel, not the board - only there can it be hovering a card.
     if (mousePos.y > static_cast<float>(Config::WINDOW_HEIGHT) - Config::BOTTOM_PANEL_HEIGHT)
     {
         // Player מחזיר רק טקסט - הקפסולציה נשמרה לחלוטין!
@@ -270,24 +252,6 @@ void GameplayState::handle(const sf::Event::MouseMoved& event)
     m_tooltip.hide();
 }
 
-//void GameplayState::handleSpawnAttempt(const sf::Vector2f& pos, Player& current)
-//{
-//    // ������ ������ *����* playCard - Board �� ���� ���� �� Card, �� �� geometry
-//    if (!m_selectedFromHand)
-//        return;
-//    if (!m_board.isSpawnPositionValid(pos))
-//        return;
-//
-//    Monster* monster = current.playCard(m_selectedFromHand); // Player ���� �cost+ownership
-//    if (!monster)
-//        return; // �� ���� ����� �� ������ ����� ����, ��� ������ �� �����
-//    
-//    if (m_board.trySpawnMonster(pos, monster)) // Board ���� Monster ����, �� Card
-//    {
-//        m_selectedFromHand = nullptr; // clearHighlights ��� ���� ���� trySpawnMonster ������
-//        m_board.clearHighlights();
-//    }
-//}
 void GameplayState::handleSpawnAttempt(const sf::Vector2f& pos, Player& current)
 {
     if (!m_selectedFromHand)
@@ -431,6 +395,7 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
     // getMutableEntity() (not getEntity()) - useSpecialAbility below actually mutates candidate.
     BoardEntity* candidate = targetTile ? targetTile->getMutableEntity() : nullptr;
 
+    // Clicked tile must actually hold something, and that something must be a legal target for this monster's Special.
     if (candidate && monster->isValidSpecialTarget(*candidate))
     {
         if (monster->useSpecialAbility(m_board, candidate))
@@ -484,20 +449,9 @@ void GameplayState::handleBoardClick(const sf::Vector2f& pos, const Player& curr
     else if (BoardEntity* entity = clickedTile->getMutableEntity()) // m_selectedEntity below is later handed to Board::performAction, which mutates it
     {
         // השורה שלך! בדיקה פולימורפית נקייה - ללא asMonster() וללא Casting
-        /*if (entity->canBeSelectedBy(current.getSide()))
-        {*/
-            /*m_selectedEntity = entity;
-            m_board.highlightNeighbors(m_selectedEntity);*/
         if (m_board.selectEntity(entity, current.getSide()))
             m_selectedEntity = entity;
-       /* }*/
     }
-    //else if (BoardEntity* entity = clickedTile->getEntity())
-    //{
-    //    // פולימורפיזם מלא: לא צריך לדעת שזו מפלצת, רק שזו ישות שניתן לבחור כרגע
-    //    if (m_board.selectEntity(entity, current.getSide()))
-    //        m_selectedEntity = entity;
-    //}
 }
 
 void GameplayState::clearPendingSpecial()
@@ -506,22 +460,6 @@ void GameplayState::clearPendingSpecial()
         m_pendingSpecialCard->getMutableLinkedMonster()->cancelSpecialAbility();
     m_pendingSpecialCard = nullptr;
 }
-
-//void GameplayState::highlightValidSpecialTargets(Monster& caster)
-//{
-//    std::vector<const Tile*> validTargets;
-//    for (const Tile* tile : m_board.getOccupiedTiles())
-//    {
-//        const BoardEntity* candidate = tile->getEntity();
-//        if (candidate && caster.isValidSpecialTarget(*candidate))
-//            validTargets.push_back(tile);
-//    }
-//
-//    // Board owns painting its own Tiles - this only ever decides *which*
-//    // tiles qualify and *what color*, both of which stay entirely up to
-//    // `caster` (see Monster::isValidSpecialTarget/getSpecialTargetHighlightColor).
-//    m_board.highlightTiles(validTargets, caster.getSpecialTargetHighlightColor());
-//}
 
 void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
 {
@@ -535,6 +473,7 @@ void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
 
     Player& current = m_turnManager.getCurrentPlayer();
 
+    // Click landed on the bottom hand panel, not the board - route it to hand-click handling below.
     if (pos.y > static_cast<float>(Config::WINDOW_HEIGHT) - Config::BOTTOM_PANEL_HEIGHT)
     {
         bool isPlayer2 = (&current == m_player2.get());
@@ -562,20 +501,6 @@ void GameplayState::handle(const sf::Event::MouseButtonPressed& event)
                 m_board.highlightSpawnTiles(current.getSide());//למה מעבירים מפלצת?????? מיותר קצת
             }
         }
-        /*auto clickedMonster = current.handleHandClick(pos, isPlayer2);
-        if (clickedMonster)
-        {
-            if (m_selectedFromHand == clickedMonster)
-            {
-                m_selectedFromHand = nullptr;
-                m_board.clearHighlights();
-            }
-            else
-            {
-                m_selectedFromHand = clickedMonster;
-                m_board.highlightSpawnTiles(current.getSide());
-            }
-        }*/
     }
     else
     {
@@ -608,6 +533,7 @@ void GameplayState::handle(const sf::Event::KeyPressed& event)
         return;
     }
 
+    // Only end the turn on Space if it's actually this player's turn to act.
     if (event.code == sf::Keyboard::Key::Space && m_turnManager.canAcceptInput())
     {
         if (m_board.isAnimating())

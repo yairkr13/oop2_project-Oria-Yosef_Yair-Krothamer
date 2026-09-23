@@ -44,9 +44,6 @@ void GameOverState::buildMenu()
     const sf::Texture& buttonTexture = am.getTexture("GenericButton");
     const sf::Font& font = am.getFont("Lilita");
 
-    //m_menu.addButton(buttonTexture, [this]() { onResumeClicked(); }, font, "Resume");
-    //m_menu.addButton(buttonTexture, [this]() { onInstructionsClicked(); }, font, "Instructions");
-
     if (m_createNextState)
         m_menu.addButton(buttonTexture, [this]() { onRestartClicked(); }, font, "Play Again");
 
