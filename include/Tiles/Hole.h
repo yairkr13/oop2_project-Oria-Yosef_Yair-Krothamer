@@ -10,18 +10,9 @@ public:
         // �� �� ����! ���� ������ �-Pathfinding ����� ����� ����
         m_isPassable = false;
     }
-    //bool isPassableFor(Monster* monster) const override
-    //{
-    //    if (monster && monster->canFly()) {
-    //        return true; // ������� ������ �����!
-    //    }
-    //    return false; // ������ ���� ������
-    //}
     bool isPassableFor(const BoardEntity* entity) const override {
         return entity && entity->canFly();
     }
-
-    //bool isHole() const override { return true; } // ���� ������� ��������� ������ ������ �-Tile.h
 protected:
     std::optional<sf::Color> ownHighlightColor() const override { return sf::Color(30, 30, 30, 200); }
 };

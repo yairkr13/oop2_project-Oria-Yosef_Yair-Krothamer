@@ -5,9 +5,8 @@
 #include "Constants.h"
 #include <memory>
 #include <optional>
-//#include "StaticObject.h"
 
-class Tile //: public StaticObject
+class Tile
 {
 public:
 	Tile(int q, int row, const sf::Vector2f& position, const sf::Color& color= sf::Color(80, 80, 80, 180));
@@ -58,9 +57,6 @@ public:
 	// implementation for every Tile subtype.
 	void setHighlighted(bool highlighted, const sf::Color& highlightColor= sf::Color(150, 220, 150, 180));
 
-	//void setMonster(std::shared_ptr<Monster> monster) { m_monsterRef = monster; };
-	//std::shared_ptr<Monster> getMonster() const { return m_monsterRef.lock(); }
-	//bool hasMonster() const { return !m_monsterRef.expired(); }
     // --- ����� ����� ---
     void clearEntity();
 
@@ -79,14 +75,6 @@ public:
     // makes every such call site say, at the call site itself, "I intend to
     // mutate this" instead of leaving that ambiguous.
     BoardEntity* getMutableEntity() const { return m_entity; }
-
-    // ������� ������� - ������ ������ ���� (������ ���� �����)
-    //Monster* getMonster() const {
-    //    if (m_entity && m_entity->getType() == EntityType::Monster) {
-    //        return static_cast<Monster*>(m_entity); // Downcasting ����
-    //    }
-    //    return nullptr;
-    //}
 
     void setEntity(BoardEntity* entity);
     bool hasEntity() const { return m_entity != nullptr; }
@@ -138,20 +126,6 @@ public:
     // calling getEntity() itself for this one purely informational query.
     float scoreAsAttackTarget() const;
 
-    // ��� ����� ���� - "�� ��� ���� ��� ����� �����?" (���� �-updateTileEffects)
-    //bool hasDeadEntity() const { return m_entity != nullptr && !m_entity->isAlive(); }
-
-    /*virtual bool isPassableFor(Monster* monster) const {
-        return m_isPassable;
-    }*/
-
-    //void setMonster(Monster* monster) { setEntity(monster); }
-
-    /*bool hasMonster() const {
-        return m_entity != nullptr && m_entity->getType() == EntityType::Monster;
-    }*/
-    //virtual bool isHole() const { return false; }
-
     virtual void applyTileEffect() {}
 protected:
     bool m_isPassable; // set directly by Hole's constructor
@@ -176,6 +150,4 @@ private:
 	int m_q;
 	bool m_isHighlighted = false;
 	BoardEntity* m_entity = nullptr;
-
-	//std::weak_ptr<BoardEntity> m_entityRef;
 };

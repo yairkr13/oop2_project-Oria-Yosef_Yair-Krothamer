@@ -4,7 +4,6 @@
 class Barzilla : public Monster
 {
 public:
-    //static constexpr int COST = 4;
     static constexpr int BASE_HEALTH = 150;
     static constexpr int BASE_ATTACK = 30;
     static constexpr int BASE_RANGE = 2;
@@ -15,14 +14,7 @@ public:
     // Empowered Attack is now ally-targeted (see onSpecialAbility) - Barzilla
     // no longer buffs its own next attack, so it no longer needs to override
     // attack()/getAttackRange(), or defer-and-cancel the Special the way the
-    // old self-buff version did. Old code kept as comments immediately below
-    // each removed member, not deleted, per request.
-    //
-    // void attack(BoardEntity* target) override;
-    // int getAttackRange() const override { return m_empoweredAttack ? m_range * 2 : m_range; }
-    // bool specialAbilityCommitsOnSelect() const override { return false; }
-    // void cancelSpecialAbility() override { m_empoweredAttack = false; }
-
+    // old self-buff version did.
     std::unique_ptr<AttackAnimation> createAttackAnimation(sf::Vector2f targetPosition) const override;
 
     // Empowered Attack now targets an ally (mirrors Henrietta's Protection -
@@ -38,7 +30,6 @@ public:
         return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(getSide());
     }
 
-    //
     virtual std::string getSpecialAbilityDescription() const override {
         return "Empowered Attack: Doubles the damage of a chosen ally's next attack.";
     }
@@ -57,5 +48,4 @@ private:
     // place Protection's flag lives - and unlike Protection it has no
     // turn-count expiry of its own, it simply waits for that ally's next
     // attack to consume it.
-    // void onTurnBoundary() override;
 };

@@ -10,17 +10,16 @@
 // AttackAnimation type, which is only forward-declared in Monster.h.
 Monster::~Monster() = default;
 
-Monster::Monster(PlayerSide side, int health, int attackPower, int range, int baseCooldown/*, int cost*/, int q, int row, sf::Color color, const std::string& textureKey, bool flying)
+Monster::Monster(PlayerSide side, int health, int attackPower, int range, int baseCooldown, int q, int row, sf::Color color, const std::string& textureKey, bool flying)
     : BoardEntity(q, row, {}, health),
     m_side(side), m_attackDamage(attackPower),
-    m_range(range)/*, m_cost(cost)*/, m_color(color), m_textureKey(textureKey), m_flying(flying),
+    m_range(range), m_color(color), m_textureKey(textureKey), m_flying(flying),
     m_baseCooldown(baseCooldown), m_specialCooldown(baseCooldown),
     m_sprite(AssetsManager::getInstance().getTexture(m_textureKey))
 {
     try
     {
         const sf::Texture& texture = m_sprite.getTexture();
-        //m_sprite(texture);
 
         // origin at texture center
         m_sprite.setOrigin({ texture.getSize().x / 2.f, texture.getSize().y / 2.f });
@@ -28,7 +27,6 @@ Monster::Monster(PlayerSide side, int health, int attackPower, int range, int ba
         // scale relative to on-board size
         m_baseScale = SpriteUtils::maxDimensionScale(texture.getSize(), Config::MONSTER_BOARD_SIZE);
 
-        //m_sprite.setScale({ m_baseScale, m_baseScale });
         m_hasTexture = true;
     }
     catch (...)
@@ -118,6 +116,7 @@ bool Monster::isReadyForRemoval() const
 
 void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
 {
+    // Not yet placed on the board (still in hand) - nothing to draw.
     if (m_q == -1 && m_row == -1) return;
 
     if (m_hasTexture)
@@ -173,10 +172,6 @@ void Monster::draw(sf::RenderWindow& window, PlayerSide currentTurnSide) const
         circle.setPosition(m_screenPos);
         window.draw(circle);
     }
-    //if (m_side != currentTurnSide)
-    //{
-    //    drawHealthBar(window); // already a no-op while dead - see BoardEntity::drawHealthBar
-    //}
     if (isAlive())
     {
         // Skipped while dying (see isDying()) - an actions-left count has
@@ -238,6 +233,7 @@ void Monster::applyEmpoweredAttack(float multiplier)
 
 void Monster::moveAlongPath(int finalQ, int finalRow, const std::vector<sf::Vector2f>& pathScreenPositions)
 {
+    // No actions left to spend on a move, or an empty path (nowhere to go).
     if (m_actionsLeft <= 0 || pathScreenPositions.empty()) return;
 
     // בדיוק כמו ב-moveTo: המיקום הלוגי מתעדכן מיידית ליעד הסופי. השינוי היחיד הוא
@@ -354,10 +350,6 @@ bool Monster::useSpecialAbility(const Board& board, BoardEntity* target)
 
 void Monster::attack(BoardEntity* target)
 {
-    //const sf::Sound& attackSound = AssetsManager::getInstance().getSound(m_textureKey);
-    //attackSound.
-    /*SoundPlayer::getInstance().play("attack_hit"); *///מאוחר מדי!!!! לחשוב על מקום אחר לפני שנשים את זה
-
     // Empowered Attack (granted by an ally's Barzilla - see
     // applyEmpoweredAttack) consumed here, at the moment THIS monster's own
     // attack actually resolves - the one place every monster's attack
@@ -379,7 +371,6 @@ void Monster::attack(BoardEntity* target)
 
 void Monster::playAttackAnimation(std::unique_ptr<AttackAnimation> animation)
 {
-    //SoundPlayer::getInstance().play("attack_launch"); // נשמע מיד עם תחילת האנימציה!
     m_attackAnimation = std::move(animation);
 }
 
