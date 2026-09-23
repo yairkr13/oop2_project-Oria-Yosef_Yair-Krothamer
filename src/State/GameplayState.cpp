@@ -202,6 +202,18 @@ void GameplayState::update(sf::Time deltaTime)
     {
         PlayerSide winner = (m_player1->isDead()) ? PlayerSide::Right : PlayerSide::Left;
 
+        // The killing action usually lands mid-turn, before the local human
+        // ever ends their own turn - so without this, it (and anything else
+        // recorded this turn) would sit unsent in m_recordedActions forever,
+        // since sendRecordedActions() otherwise only fires from
+        // setOnPlayerSwitched, which this transition preempts. Flushing here
+        // guarantees the peer receives it, replays it, and its own Board
+        // reaches this same dead state - so its own isDead() check above
+        // fires independently right after, with no separate "you lost"
+        // message needed at all.
+        if (m_remotePlayer)
+            m_remotePlayer->sendRecordedActions();
+
         // ������� �� m_mode �-m_window ���� ��� ����� this
         GameMode currentMode = m_mode;
         sf::RenderWindow& window = m_window;
