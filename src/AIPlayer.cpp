@@ -1,7 +1,6 @@
 #include "AIPlayer.h"
 #include "Tiles/Tile.h"
 #include "HexGrid.h"
-#include <iostream>
 #include <limits>
 
 namespace
@@ -213,7 +212,6 @@ void AIPlayer::updateTurn(Board& board)
 
         // Execute this single action (will trigger walkTo animation for moves)
         m_safetyCounter++;
-        std::cout << "[AI] Performing action with monster at (" << monster->getQ() << "," << monster->getRow() << ")" << std::endl;
         board.performAction(monster, targetTile);
 
         // Return - we executed one action, now wait for animation to finish

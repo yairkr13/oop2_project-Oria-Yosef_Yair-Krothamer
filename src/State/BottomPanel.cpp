@@ -15,6 +15,13 @@ BottomPanel::BottomPanel(const sf::Font& font)
     m_endTurnHintText.setCharacterSize(13); // גודל קטן
     m_endTurnHintText.setFillColor(sf::Color(200, 200, 200, 180)); // צבע אפור-לבן עדין מעט שקוף
 
+    // Origin's X moved to the text's own horizontal center (Y left at the
+    // default top-left) - without this, setPosition below places the
+    // text's LEFT edge at centerX, not its actual center, so it visibly
+    // sits to the right of center instead of on it.
+    sf::FloatRect bounds = m_endTurnHintText.getLocalBounds();
+    m_endTurnHintText.setOrigin({ bounds.position.x + bounds.size.x / 2.f, 0.f });
+
     // מיקום במרכז X ובחלק התחתון ביותר של המסך (12 פיקסלים מהקצה)
     float centerX = static_cast<float>(Config::WINDOW_WIDTH) / 2.0f;
     float bottomY = static_cast<float>(Config::WINDOW_HEIGHT) - 12.0f;
