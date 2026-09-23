@@ -7,7 +7,7 @@ BottomPanel::BottomPanel(const sf::Font& font)
     // Must match Player::BOTTOM_PANEL_TOP_Y so the panel and the cards drawn onto it agree.
     m_panel.setSize({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
     m_panel.setPosition({ 0.f, static_cast<float>(Config::WINDOW_HEIGHT) - Config::BOTTOM_PANEL_HEIGHT });
-    m_panel.setFillColor(sf::Color(40, 40, 40));
+    m_panel.setFillColor(sf::Color(40, 40, 40)); // dark gray
 
     m_endTurnHintText.setString("PRESS SPACE TO END TURN");
     m_endTurnHintText.setCharacterSize(13);

@@ -1,7 +1,6 @@
 #pragma once
 #include "State/State.h"
 #include "Menu.h"
-//#include "MusicToggleButton.h"
 #include "AudioToggleButton.h"
 
 // The game's main menu: background plus Start Game / Instructions / Exit

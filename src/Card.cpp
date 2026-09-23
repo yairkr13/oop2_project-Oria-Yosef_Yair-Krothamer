@@ -41,7 +41,7 @@ void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected
 
     if (isSelected)
     {
-		drawBoarder(window, position, sf::Color(255,220,50));
+		drawBoarder(window, position, sf::Color(255,220,50)); // gold
     }
 
 	//calculate scale and position for the card sprite
@@ -65,9 +65,9 @@ void Card::draw(sf::RenderWindow& window, sf::Vector2f position, bool isSelected
     sprite.setScale({ scaleX, scaleY });
 
     if (isPlayed())
-        sprite.setColor(sf::Color(255, 255, 255, 100));
+        sprite.setColor(sf::Color(255, 255, 255, 100)); // translucent white
 	if (m_linkedMonster && m_linkedMonster->isSpecialReady())
-		sprite.setColor(sf::Color(255, 255, 255));
+		sprite.setColor(sf::Color(255, 255, 255)); // white
 
     window.draw(sprite);
 
@@ -102,7 +102,7 @@ void Card::drawCostText(sf::RenderWindow& window, sf::Vector2f drawPos, const sf
     sf::Text costText(font);
     costText.setString(std::to_string(m_cost));
     costText.setCharacterSize(22);
-    costText.setFillColor(enoughKeys ? sf::Color::White : sf::Color(255, 100, 100));
+    costText.setFillColor(enoughKeys ? sf::Color::White : sf::Color(255, 100, 100)); // light red
     costText.setOutlineColor(sf::Color::Black);
     costText.setOutlineThickness(2.f);
     costText.setPosition({ drawPos.x + 10.f, drawPos.y + 5.f });
@@ -121,7 +121,7 @@ void Card::drawStatusText(sf::RenderWindow& window, sf::Vector2f drawPos, const 
     else
     {
         statusText.setString("READY");
-        statusText.setFillColor(sf::Color(120, 255, 120));
+        statusText.setFillColor(sf::Color(120, 255, 120)); // light green
     }
     statusText.setCharacterSize(16);
     statusText.setOutlineColor(sf::Color::Black);

@@ -79,7 +79,7 @@ void Player::drawHand(sf::RenderWindow& window, bool alignRight, const Card* sel
 {
     /*sf::RectangleShape bottomPanel({ static_cast<float>(Config::WINDOW_WIDTH), Config::BOTTOM_PANEL_HEIGHT });
     bottomPanel.setPosition({ 0.f, Config::BOTTOM_PANEL_Y });
-    bottomPanel.setFillColor(sf::Color(40, 40, 40));
+    bottomPanel.setFillColor(sf::Color(40, 40, 40)); // dark gray
     window.draw(bottomPanel);*/
 
     for (size_t i = 0; i < m_hand.size(); ++i)

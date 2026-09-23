@@ -12,7 +12,7 @@ Tile::Tile(int q, int row, const sf::Vector2f& position,const sf::Color& color)
     m_shape.setFillColor(m_color);
 
     m_shape.setOutlineThickness(2.f);
-    m_shape.setOutlineColor(sf::Color(80, 80, 80, 180));
+    m_shape.setOutlineColor(sf::Color(80, 80, 80, 180)); // gray
 
     //m_shape.setRotation(sf::degrees(30.f));
     m_shape.setPosition(position);
@@ -42,12 +42,12 @@ void Tile::setHighlighted(bool highlighted,const sf::Color& highlightColor)
     if (highlighted)
     {
         m_shape.setFillColor(ownHighlightColor().value_or(highlightColor));
-        m_shape.setOutlineColor(sf::Color(200, 255, 200, 220));
+        m_shape.setOutlineColor(sf::Color(200, 255, 200, 220)); // light green
     }
     else
     {
         m_shape.setFillColor(m_color);
-        m_shape.setOutlineColor(sf::Color(80, 80, 80, 180));
+        m_shape.setOutlineColor(sf::Color(80, 80, 80, 180)); // gray
     }
 }
 

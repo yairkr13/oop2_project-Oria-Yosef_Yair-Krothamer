@@ -121,14 +121,14 @@ void BoardEntity::drawHealthBar(sf::RenderWindow& window) const
 
     sf::RectangleShape bgBar({ barWidth, barHeight });
     bgBar.setPosition({ x, y });
-    bgBar.setFillColor(sf::Color(80, 20, 20));
+    bgBar.setFillColor(sf::Color(80, 20, 20)); // dark red
 
     float healthRatio = static_cast<float>(m_health) / m_maxHealth;
     if (healthRatio < 0.f) healthRatio = 0.f;
 
     sf::RectangleShape fgBar({ barWidth * healthRatio, barHeight });
     fgBar.setPosition({ x, y });
-    fgBar.setFillColor(sf::Color(50, 220, 50));
+    fgBar.setFillColor(sf::Color(50, 220, 50)); // green
 
     window.draw(bgBar);
     window.draw(fgBar);

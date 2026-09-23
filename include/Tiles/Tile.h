@@ -13,7 +13,7 @@
 class Tile //: public StaticObject
 {
 public:
-	Tile(int q, int row, const sf::Vector2f& position, const sf::Color& color= sf::Color(80, 80, 80, 180));
+	Tile(int q, int row, const sf::Vector2f& position, const sf::Color& color= sf::Color(80, 80, 80, 180)); // default: gray
     virtual ~Tile() = default;
 	void draw(sf::RenderWindow& window) const;
 
@@ -26,7 +26,7 @@ public:
 
 	bool isHighlighted() const;
 
-	void setHighlighted(bool highlighted, const sf::Color& highlightColor= sf::Color(150, 220, 150, 180));
+	void setHighlighted(bool highlighted, const sf::Color& highlightColor= sf::Color(150, 220, 150, 180)); // default: light green
 
 	//void setMonster(std::shared_ptr<Monster> monster) { m_monsterRef = monster; };
 	//std::shared_ptr<Monster> getMonster() const { return m_monsterRef.lock(); }

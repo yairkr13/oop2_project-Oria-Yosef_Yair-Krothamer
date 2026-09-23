@@ -2,7 +2,7 @@
 #include "Heart.h"
 
 PanicPoint::PanicPoint(int q, int row, const sf::Vector2f& position, Heart* p1Heart, Heart* p2Heart)
-    : Tile(q, row, position, sf::Color(200, 100, 250, 140)),
+    : Tile(q, row, position, sf::Color(200, 100, 250, 140)), // light purple
     m_p1Heart(p1Heart), m_p2Heart(p2Heart)
 {
 }
@@ -23,5 +23,5 @@ void PanicPoint::applyTileEffect()
 
 std::optional<sf::Color> PanicPoint::ownHighlightColor() const
 {
-    return sf::Color(200, 100, 250, 180);
+    return sf::Color(200, 100, 250, 180); // light purple
 }

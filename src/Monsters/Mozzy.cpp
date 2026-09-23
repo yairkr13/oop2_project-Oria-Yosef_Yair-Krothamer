@@ -84,5 +84,5 @@ float Mozzy::scoreAsSpecialTarget(const BoardEntity& candidate) const
 
 sf::Color Mozzy::getSpecialTargetHighlightColor() const
 {
-    return sf::Color(255, 255, 255, 180);
+    return sf::Color(255, 255, 255, 180); // white
 }

@@ -6,8 +6,8 @@ Tooltip::Tooltip(const sf::Font& font)
     m_text.setCharacterSize(14);
     m_text.setFillColor(sf::Color::White);
 
-    m_background.setFillColor(sf::Color(20, 20, 30, 230));
-    m_background.setOutlineColor(sf::Color(180, 180, 210));
+    m_background.setFillColor(sf::Color(20, 20, 30, 230)); // near-black
+    m_background.setOutlineColor(sf::Color(180, 180, 210)); // light gray
     m_background.setOutlineThickness(1.5f);
 }
 

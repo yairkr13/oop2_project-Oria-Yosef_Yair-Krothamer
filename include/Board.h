@@ -91,7 +91,7 @@ private:
     static std::mt19937& rng();
 
     // Generic "paint these tiles this color" primitive shared by every highlight* method.
-    void highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color = sf::Color(150, 220, 150, 180)) const;
+    void highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color = sf::Color(150, 220, 150, 180)) const; // default: light green
     //std::vector<Tile*> getOccupiedTiles() const;
 
     // The [minQ, maxQ] column band reserved for side's spawns.
