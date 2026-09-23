@@ -9,8 +9,6 @@ namespace Config
 {
     inline constexpr unsigned int WINDOW_WIDTH = 1280;
     inline constexpr unsigned int WINDOW_HEIGHT = 720;
-    /*inline constexpr unsigned int WINDOW_WIDTH = 1600;
-    inline constexpr unsigned int WINDOW_HEIGHT = 900;*/
 
     // Valid range for WINDOW_WIDTH/HEIGHT, checked at runtime in
     // Controller::Controller (not static_assert) for a clean failure message.
