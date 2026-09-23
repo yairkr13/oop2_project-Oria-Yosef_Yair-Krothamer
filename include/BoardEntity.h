@@ -65,11 +65,6 @@ public:
     // as soon as it's dead; Monster overrides to also wait for its death animation.
     virtual bool isReadyForRemoval() const;
 
-    // Removed (kept as comments, not deleted): m_currentTile duplicated
-    // m_q/m_row with a second, separately-maintained reference to the same
-    // fact. Callers ask Board::getTileAt/getMutableTileAt instead.
-    // void setCurrentTile(Tile* tile) { m_currentTile = tile; }
-    // Tile* getCurrentTile() const { return m_currentTile; }
 
     int getQ() const;
     int getRow() const;

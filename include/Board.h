@@ -46,8 +46,6 @@ public:
     // move/attack options. Returns whether selection happened.
     bool selectEntity(const BoardEntity* entity, PlayerSide side) const;
 
-    // Board is just the facade here - the actual BFS lives in BoardPathfinder (m_pathfinder).
-    //std::vector<Tile*> getReachableTiles(Monster* monster) const;
     // includeAllies (default false) also returns ally-occupied tiles, needed
     // for Special-ability target search.
     std::vector<const Tile*> getReachableTiles(const BoardEntity* entity, bool includeAllies = false) const;
@@ -61,7 +59,6 @@ public:
     /*std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;*/
     //std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
 
-    //bool spawnMonsterOnTile(Monster* monster, Tile* targetTile);
     bool spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile) const;
 
     // Picks one tile uniformly at random (Board's own shared rng()); nullptr for an empty list.
@@ -72,9 +69,6 @@ public:
     const Tile* getTileAtScreenPosition(const sf::Vector2f& pos) const;
     const Tile* getTileAt(int q, int row) const;
 
-    // Commented out (not deleted): its only caller now bounds candidates by
-    // range instead of checking the whole board.
-    /*std::vector<const Tile*> getOccupiedTiles() const;*/
     void highlightValidSpecialTargets(const Monster* caster) const;
     // Pushes entity up to maxTiles steps in direction (dq, dr), stopping at
     // the first blocked/occupied/off-board tile. maxTiles is the caller's
@@ -92,7 +86,6 @@ private:
 
     // Generic "paint these tiles this color" primitive shared by every highlight* method.
     void highlightTiles(const std::vector<const Tile*>& tiles, const sf::Color& color = sf::Color(150, 220, 150, 180)) const; // default: light green
-    //std::vector<Tile*> getOccupiedTiles() const;
 
     // The [minQ, maxQ] column band reserved for side's spawns.
     std::pair<int, int> spawnColumnRange(PlayerSide side) const;

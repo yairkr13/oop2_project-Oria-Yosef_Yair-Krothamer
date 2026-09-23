@@ -22,7 +22,6 @@ bool BoardEntity::isProtected() const { return m_protected; }
 
 bool BoardEntity::canBeSelectedBy(PlayerSide side) const { return false; }
 
-//virtual bool isSelected() const { return false; }
 bool BoardEntity::isMoving() const { return false; }
 
 // True while this entity is playing its own attack animation (see
@@ -49,7 +48,6 @@ void BoardEntity::spawnOnBoard(int q, int row, const sf::Vector2f& screenPos) {
 void BoardEntity::update(float dt) {}
 bool BoardEntity::canFly() const { return false; }
 sf::Vector2f BoardEntity::getScreenPosition() const { return m_screenPos; }
-//virtual Monster* asMonster() { return nullptr; }
 bool BoardEntity::canBeTargetedBySpecial() const { return false; }
 
 std::unique_ptr<AttackAnimation> BoardEntity::createAttackAnimation(sf::Vector2f targetPosition) const
@@ -110,9 +108,6 @@ void BoardEntity::onTurnBoundary()
 void BoardEntity::drawHealthBar(sf::RenderWindow& window) const
 {
     if (!isAlive()) return;
-    /*if (m_side == currentPlayer)
-        return;*/
-
     float barWidth = Config::MONSTER_BOARD_SIZE * 0.65f;
     float barHeight = 6.f;
 

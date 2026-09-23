@@ -22,14 +22,6 @@ public:
     // Special-ability target search.
     std::vector<const Tile*> getReachableTiles(const BoardEntity* entity, bool includeAllies = false) const;
 
-    // Enemy tiles reachable ONLY via an extended attack range
-    // (getAttackRange() > getRange()) - currently always empty since no
-    // monster's attack range differs from its move range any more. Kept
-    // commented (not deleted): the underlying plumbing stays in
-    // computeReachability either way, shared with the two methods above/below.
-    //std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;
-    //std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
-
     // Same reachability, but returns the ordered tile-by-tile path to
     // target. target must be a tile already returned by getReachableTiles
     // (movement, not attack) or an empty list is returned.

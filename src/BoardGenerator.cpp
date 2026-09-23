@@ -75,6 +75,9 @@ namespace BoardGenerator
 
         if (useFixedPlacement)
         {
+            // The hardcoded list must have at least as many coordinates as
+            // this layout needs - bail out silently otherwise (a config
+            // error, not something to crash over).
             if (static_cast<int>(FIXED_SPECIAL_TILE_COORDS.size()) < needed)
                 return;
             chosenCoords.assign(FIXED_SPECIAL_TILE_COORDS.begin(), FIXED_SPECIAL_TILE_COORDS.begin() + needed);
@@ -91,6 +94,8 @@ namespace BoardGenerator
                     allCoords.push_back(coords);
             }
 
+            // Not enough eligible tiles outside the spawn margins to place
+            // every special tile this layout wants - bail out silently.
             if (static_cast<int>(allCoords.size()) < needed)
                 return;
 

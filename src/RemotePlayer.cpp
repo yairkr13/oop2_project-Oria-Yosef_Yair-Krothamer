@@ -77,6 +77,8 @@ void RemotePlayer::applyAction(const GameAction& action, Board& board)
     {
     case GameAction::Type::Spawn:
     {
+        // Guard against a malformed/out-of-sync action referencing a card
+        // that no longer exists in this hand.
         if (action.cardIndex < 0 || action.cardIndex >= static_cast<int>(m_hand.size())) return;
         const Tile* tile = board.getTileAt(action.targetQ, action.targetRow);
         if (!tile) return;
@@ -90,6 +92,7 @@ void RemotePlayer::applyAction(const GameAction& action, Board& board)
     {
         const Tile* sourceTile = board.getTileAt(action.sourceQ, action.sourceRow);
         const Tile* targetTile = board.getTileAt(action.targetQ, action.targetRow);
+        // Bail if either coordinate didn't resolve to an actual tile.
         if (!sourceTile || !targetTile) return;
 
         if (BoardEntity* entity = sourceTile->getMutableEntity())
@@ -98,8 +101,12 @@ void RemotePlayer::applyAction(const GameAction& action, Board& board)
     }
     case GameAction::Type::Special:
     {
+        // Guard against a malformed/out-of-sync action referencing a card
+        // that no longer exists in this hand.
         if (action.cardIndex < 0 || action.cardIndex >= static_cast<int>(m_hand.size())) return;
         Monster* monster = m_hand[action.cardIndex]->getMutableLinkedMonster();
+        // No monster linked, or its Special isn't usable right now (dead, on
+        // cooldown, etc.) - nothing to replay.
         if (!monster || !monster->canUseSpecialAbilityNow()) return;
 
         if (!action.hasTarget)
@@ -110,6 +117,9 @@ void RemotePlayer::applyAction(const GameAction& action, Board& board)
 
         const Tile* targetTile = board.getTileAt(action.targetQ, action.targetRow);
         BoardEntity* candidate = targetTile ? targetTile->getMutableEntity() : nullptr;
+        // Only replay the Special if the target tile actually holds a
+        // still-valid target - the same check the local caster's own click
+        // already went through.
         if (candidate && monster->isValidSpecialTarget(*candidate))
             monster->useSpecialAbility(board, candidate);
         break;

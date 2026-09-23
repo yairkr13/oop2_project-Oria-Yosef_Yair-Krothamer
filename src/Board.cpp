@@ -24,6 +24,8 @@ namespace
 Board::Board(const BoardLayout& layout)
     : m_layout(layout), m_pathfinder(m_grid)
 {
+    // Zero/negative rows or cols would make the loops below (createBoard,
+    // etc.) either build nothing or misbehave - reject it outright instead.
     if (m_layout.rows <= 0 || m_layout.cols <= 0)
     {
         throw std::invalid_argument(
@@ -31,6 +33,9 @@ Board::Board(const BoardLayout& layout)
             ", cols=" + std::to_string(m_layout.cols) + ")");
     }
 
+    // Below the smallest board this game was ever tuned/played on - reject
+    // it rather than silently accepting an untested shape (see MIN_ROWS/
+    // MIN_COLS above).
     if (m_layout.rows < MIN_ROWS || m_layout.cols < MIN_COLS)
     {
         throw std::invalid_argument(
@@ -54,6 +59,9 @@ Board::Board(const BoardLayout& layout)
     // The board only needs to fit above the bottom panel, not the window's full height.
     float playAreaHeight = static_cast<float>(Config::WINDOW_HEIGHT) - Config::BOTTOM_PANEL_HEIGHT;
 
+    // The computed pixel footprint must fit inside the window (width) and
+    // above the bottom panel (height) - otherwise this layout can't be
+    // drawn at the current Config::TILE_RADIUS.
     if (boardWidth > static_cast<float>(Config::WINDOW_WIDTH) || boardHeight > playAreaHeight)
     {
         throw std::out_of_range(
@@ -96,26 +104,6 @@ void Board::draw(sf::RenderWindow& window, PlayerSide currentSide) const
     }
 }
 
-//void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart) {
-//    int middleRow = 3; // השורה האמצעית של הלוח
-//
-//    // 1. מיקום הלב של שחקן 1 (הכי שמאלי)
-//    //Tile* p1Tile = getLeftmostTileInRow(middleRow);
-//	Tile* p1Tile = getExtremeTileInRow(middleRow, true);
-//    if (p1Tile != nullptr && p1Heart != nullptr) {
-//        p1Heart->spawnOnBoard(p1Tile->getQ(), p1Tile->getRow(), p1Tile->getScreenPosition());
-//        p1Tile->setEntity(p1Heart);
-//    }
-//
-//    // 2. מיקום הלב של שחקן 2 (הכי ימני)
-//    //Tile* p2Tile = getRightmostTileInRow(middleRow);
-//    Tile* p2Tile = getExtremeTileInRow(middleRow, false);
-//    if (p2Tile != nullptr && p2Heart != nullptr) {
-//        p2Heart->spawnOnBoard(p2Tile->getQ(), p2Tile->getRow(), p2Tile->getScreenPosition());
-//        p2Tile->setEntity(p2Heart);
-//    }
-//    generateSpecialTiles(p1Heart, p2Heart);
-//}
 void Board::initPlayerHearts(Heart* p1Heart, Heart* p2Heart, bool useFixedSpecialTiles)
 {
     int middleRow = getMiddleRow();
@@ -143,25 +131,6 @@ void Board::generateSpecialTiles(Heart* p1Heart, Heart* p2Heart, bool useFixedPl
         p1Heart, p2Heart, rng(), useFixedPlacement);
 }
 
-//bool Board::trySpawnMonster(const sf::Vector2f& pos, Monster* monster)
-//{
-//    if (!monster) return false;
-//
-//    // Same screen-position -> Tile lookup handleClick's replacement
-//    // (GameplayState::handleBoardClick) and every other click-driven flow
-//    // already use, instead of a second hand-rolled hypot-distance scan.
-//    Tile* tile = getTileAtScreenPosition(pos);
-//    if (!tile || !tile->isHighlighted()) return false;
-//
-//    //if (spawnMonsterOnTile(monster, tile))
-//    if (spawnEntityOnTile(monster,tile))
-//    {
-//        clearHighlights();
-//        return true;
-//    }
-//    return false;
-//}
-
 std::pair<int, int> Board::spawnColumnRange(PlayerSide side) const
 {
     return (side == PlayerSide::Left)
@@ -180,34 +149,16 @@ void Board::highlightSpawnTiles(PlayerSide side) const
     {
         if (tile->hasEntity()) continue;
 
+        // Only tiles within this side's own spawn column band count.
         if (coords.first >= minQ && coords.first <= maxQ)
         {
             spawnTiles.push_back(tile.get());
         }
     }
     highlightTiles(spawnTiles); // default green, same as before
-
-    /*clearHighlights();
-    for (auto& [coords, tile] : m_grid)
-    {
-        if (tile->hasEntity() || !tile->isPassableFor(monster)) continue;
-
-        if (side == PlayerSide::Left && coords.first <= 1)
-        {
-            tile->setHighlighted(true);
-        }
-        else if (side == PlayerSide::Right && coords.first >= 12)
-        {
-            tile->setHighlighted(true);
-        }
-    }*/
 }
 
 // Board is just the facade here - the actual BFS lives in BoardPathfinder (m_pathfinder).
-//std::vector<Tile*> Board::getReachableTiles(Monster* monster) const
-//{
-//    return m_pathfinder.getReachableTiles(monster);
-//}
 std::vector<const Tile*> Board::getReachableTiles(const BoardEntity* entity, bool includeAllies) const
 {
     return m_pathfinder.getReachableTiles(entity, includeAllies);
@@ -222,23 +173,6 @@ std::vector<const Tile*> Board::getReachableOccupiedTiles(const BoardEntity* ent
     return occupied;
 }
 
-//std::vector<Tile*> Board::getExtendedAttackOnlyTiles(Monster* monster) const
-//{
-//    return m_pathfinder.getExtendedAttackOnlyTiles(monster);
-//}
-//
-//std::vector<Tile*> Board::getPathTo(Monster* monster, Tile* target) const
-//{
-//    return m_pathfinder.getPathTo(monster, target);
-//}
-
-// Commented out (not deleted): currently always empty now that no monster
-// overrides getAttackRange().
-//std::vector<const Tile*> Board::getExtendedAttackOnlyTiles(const BoardEntity* entity) const
-//{
-//    return m_pathfinder.getExtendedAttackOnlyTiles(entity);
-//}
-
 std::vector<const Tile*> Board::getPathTo(const BoardEntity* entity, const Tile* target) const
 {
     return m_pathfinder.getPathTo(entity, target);
@@ -246,26 +180,6 @@ std::vector<const Tile*> Board::getPathTo(const BoardEntity* entity, const Tile*
 
 // Thin wrapper: calls the pure query above, then paints the result. AIPlayer
 // calls getReachableTiles directly instead - it needs the list, not the paint.
-//void Board::highlightNeighbors(Monster* monster)
-//{
-//    if (!monster) return;
-//
-//    for (Tile* tile : getReachableTiles(monster))
-//    {
-//        //bool isEnemy = tile->hasEntity() && tile->getEntity()->getSide() != monster->getSide();
-//        if (tile->isOccupiedByEnemy(monster->getSide()))
-//            tile->setHighlighted(true, sf::Color(255, 90, 90, 180)); // אדום - ניתן לתקוף
-//        else
-//            tile->setHighlighted(true); // ירוק (ברירת המחדל) - ניתן לזוז
-//    }
-//
-//    // Extended attack-only band (see getExtendedAttackOnlyTiles) - empty for
-//    // every monster except an empowered Barzilla. Distinct purple, clearly
-//    // different from both the red attack and green move colors above:
-//    // "Barzilla can strike here, but cannot move here."
-//    for (Tile* tile : getExtendedAttackOnlyTiles(monster))
-//        tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
-//}
 void Board::highlightNeighbors(const BoardEntity* entity) const
 {
     if (!entity) return;
@@ -276,29 +190,8 @@ void Board::highlightNeighbors(const BoardEntity* entity) const
 
     highlightTiles(moveTiles);                              // green - can move
     highlightTiles(enemyTiles, sf::Color(255, 90, 90, 180)); // red - can attack
-
-    // Extended attack-only band - commented out (not deleted), see
-    // getExtendedAttackOnlyTiles: currently always empty.
-    //for (const Tile* constTile : getExtendedAttackOnlyTiles(entity))
-    //{
-    //    Tile* tile = getMutableTileAt(constTile->getQ(), constTile->getRow());
-    //    if (tile)
-    //        tile->setHighlighted(true, sf::Color(190, 90, 230, 170));
-    //}
 }
 
-//bool Board::selectEntity(BoardEntity* entity, PlayerSide side)
-//{
-//    //למה הוא לא שולח מפלצת???? ככה הוא שומר אותה במילא בgamestatee לא?
-//    if (!entity || !entity->canBeSelectedBy(side)) return false;
-//
-//    // Which entity is currently selected is GameplayState's own interaction
-//    // state (see GameplayState::m_selectedEntity) - Board no longer tracks
-//    // it, so there's nothing here to clear on any previous selection.
-//    clearHighlights();
-//    highlightNeighbors(entity->asMonster());
-//    return true;
-//}
 bool Board::selectEntity(const BoardEntity* entity, PlayerSide side) const
 {
     if (!entity || !entity->canBeSelectedBy(side)) return false;
@@ -354,36 +247,6 @@ void Board::updateTileEffects() const
     }
 }
 
-//Tile* Board::getLeftmostTileInRow(int row) const {
-//    Tile* leftmost = nullptr;
-//    int minQ = std::numeric_limits<int>::max();
-//
-//    for (const auto& [coords, tile] : m_grid) {
-//        if (coords.second == row) { // אם אנחנו בשורה המבוקשת
-//            if (coords.first < minQ) {
-//                minQ = coords.first;
-//                leftmost = tile.get();
-//            }
-//        }
-//    }
-//    return leftmost;
-//}
-//
-//// החזרת המשבצת הכי ימנית בשורה מסוימת
-//Tile* Board::getRightmostTileInRow(int row) const {
-//    Tile* rightmost = nullptr;
-//    int maxQ = std::numeric_limits<int>::min();
-//
-//    for (const auto& [coords, tile] : m_grid) {
-//        if (coords.second == row) { // אם אנחנו בשורה המבוקשת
-//            if (coords.first > maxQ) {
-//                maxQ = coords.first;
-//                rightmost = tile.get();
-//            }
-//        }
-//    }
-//    return rightmost;
-//}
 int Board::getMiddleRow() const
 {
     return m_layout.middleRow();
@@ -395,6 +258,8 @@ const Tile* Board::getExtremeTileInRow(int row, bool findLeftmost) const {
 
     for (const auto& [coords, tile] : m_grid) {
         if (coords.second == row) {
+            // Keep whichever candidate is farther in the requested direction
+            // (smallest q for leftmost, largest q for rightmost).
             if ((findLeftmost && coords.first < bestQ) || (!findLeftmost && coords.first > bestQ)) {
                 bestQ = coords.first;
                 bestTile = tile.get();
@@ -414,8 +279,10 @@ std::vector<const Tile*> Board::getSpawnableTiles(const Monster* monster, Player
 
     for (auto& [coords, tile] : m_grid)
     {
+        // Only tiles within this side's own spawn column band count.
         if (coords.first >= minQ && coords.first <= maxQ)
         {
+            // ...and only if actually free and passable for this monster.
             if (!tile->hasEntity() && tile->isPassableFor(monster))
             {
                 spawnable.push_back(tile.get());
@@ -425,20 +292,15 @@ std::vector<const Tile*> Board::getSpawnableTiles(const Monster* monster, Player
 
     return spawnable;
 }
-//bool Board::spawnMonsterOnTile(Monster* monster, Tile* targetTile)
-//{
-//    if (!monster || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(monster)) return false;
-//    targetTile->setEntity(monster);
-//    monster->spawnOnBoard(targetTile->getQ(), targetTile->getRow(), targetTile->getScreenPosition());
-//    return true;
-//}
 bool Board::spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile) const
 {
-    /*if (!entity || !targetTile || targetTile->hasEntity() || !targetTile->isPassableFor(entity)) return false;*/
     if (!entity || !targetTile) return false;
 
     // Convert the const Tile* to the board's own internal mutable Tile*.
     Tile* internalTile = getMutableTileAt(targetTile->getQ(), targetTile->getRow());
+
+    // Reject the spawn outright if the tile is missing, already occupied,
+    // or not passable for this entity (e.g. lava for a non-flyer).
     if (!internalTile || internalTile->hasEntity() || !internalTile->isPassableFor(entity))
         return false;
 
@@ -449,21 +311,6 @@ bool Board::spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile) const
     return true;
 }
 
-//void Board::performAction(BoardEntity* entity, Tile* targetTile)
-//{
-//    if (!entity || !targetTile) return;
-//
-//    if (targetTile->isOccupiedByEnemy(entity->getSide()))
-//    {
-//        performAttack(entity, targetTile);
-//        return;
-//    }
-//
-//    // Movement is Monster-only (Heart has no legal movement) - the one safe
-//    // downcast performMove needs happens here, once.
-//    if (Monster* monster = entity->asMonster())//לא אוהבת את זה
-//        performMove(monster, targetTile);
-//}
 void Board::performAction(BoardEntity* entity,const Tile* constTargetTile) const
 {
     if (!entity || !constTargetTile) return;
@@ -479,21 +326,6 @@ void Board::performAction(BoardEntity* entity,const Tile* constTargetTile) const
     if (entity->canMove())
         performMove(entity, targetTile);
 }
-//void Board::performAction(Monster* monster, Tile* targetTile)
-//{
-//    if (!monster || !targetTile) return;
-//
-//    if (targetTile->isOccupiedByEnemy(monster->getSide()))
-//    {
-//        performAttack(monster, targetTile);
-//        return;
-//    }
-//
-//    // Movement is Monster-only (Heart has no legal movement) - the one safe
-//    // downcast performMove needs happens here, once.
-//    //if (Monster* monster = entity->asMonster())//לא אוהבת את זה
-//    performMove(monster, targetTile);
-//}
 
 void Board::performAttack(BoardEntity* entity, Tile* targetTile) const
 {
@@ -512,72 +344,7 @@ void Board::performAttack(BoardEntity* entity, Tile* targetTile) const
         targetTile->receiveAttackFrom(entity);
     }
 }
-//void Board::performAttack(Monster* monster, Tile* targetTile)
-//{
-//    // Give the attacker a chance to supply an animated attack (see
-//    // BoardEntity::createAttackAnimation). Most entities don't override
-//    // it, so this is nullptr and the attack resolves immediately below,
-//    // exactly as before. An entity that does provide one (e.g. Mozzy)
-//    // gets its damage deferred until the animation reports impact -
-//    // Board never needs to know which concrete entity/animation this is,
-//    // nor does it ever compute or inspect a damage value: that stays
-//    // entirely below Tile::receiveAttackFrom, inside Monster::attack().
-//    BoardEntity* target = targetTile->getEntity();
-//    if (std::unique_ptr<AttackAnimation> animation = monster->createAttackAnimation(target))
-//    {
-//        animation->setOnImpact([targetTile, monster]() {
-//            targetTile->receiveAttackFrom(monster);
-//            });
-//
-//        // Board's job ends at deciding the attack happens and wiring
-//        // how it eventually resolves - from here the attacker owns and
-//        // drives its own animation (update/draw/isAttacking), the same
-//        // ownership split it already has for its own movement.
-//        monster->playAttackAnimation(std::move(animation));
-//    }
-//    else
-//    {
-//        targetTile->receiveAttackFrom(monster);
-//    }
-//}
 
-//void Board::performMove(Monster* monster, Tile* targetTile)
-//{
-//    // Movement is only ever legal onto a tile within this monster's NORMAL
-//    // range - an extended attack-only range (see Monster::getAttackRange,
-//    // Barzilla's Empowered Attack) lets it strike farther, never walk
-//    // farther. Checked explicitly against getReachableTiles here rather
-//    // than relying on getPathTo coming back empty for such a tile, since
-//    // the no-path fallback a few lines below would otherwise still
-//    // teleport the monster there directly.
-//    std::vector<Tile*> reachable = getReachableTiles(monster);
-//    bool isMoveLegal = !targetTile->hasEntity() && targetTile->isPassableFor(monster)
-//        && std::find(reachable.begin(), reachable.end(), targetTile) != reachable.end();
-//
-//    if (!isMoveLegal) return;
-//
-//    // לא צריך m_grid.find({q,row}) - המפלצת יודעת ישירות על איזה Tile
-//    // היא נמצאת, בזכות הקשר הדו-כיווני ב-setEntity/clearEntity.
-//    Tile* sourceTile = monster->getCurrentTile();
-//    if (sourceTile == nullptr) return;
-//
-//    // בונים את המסלול המדורג (משבצת-משבצת) במקום לקפוץ בקו ישר ליעד
-//    std::vector<Tile*> path = getPathTo(monster, targetTile);
-//    std::vector<sf::Vector2f> pathScreenPositions;
-//    pathScreenPositions.reserve(path.size());
-//    for (Tile* step : path)
-//        pathScreenPositions.push_back(step->getScreenPosition());
-//
-//    // רשת ביטחון: אם משום מה לא נמצא מסלול (לא אמור לקרות, כי targetTile
-//    // כבר אושר כנגיש), נופלים חזרה על תזוזה ישירה כדי שהמפלצת לא "תיתקע"
-//    if (pathScreenPositions.empty())
-//        pathScreenPositions.push_back(targetTile->getScreenPosition());
-//
-//    targetTile->setEntity(monster);
-//    sourceTile->clearEntity();
-//
-//    monster->moveAlongPath(targetTile->getQ(), targetTile->getRow(), pathScreenPositions);
-//}
 void Board::performMove(BoardEntity* entity, Tile* targetTile) const
 {
     // Legal only onto a tile within normal range - checked against
@@ -650,6 +417,9 @@ std::pair<int, int> Board::screenToTile(const sf::Vector2f& pos) const
     float y_diff = std::abs(ry - y_cube);
     float z_diff = std::abs(rz - z_cube);
 
+    // Standard cube-rounding fixup: recompute whichever of the three rounded
+    // coordinates had the largest error from its own component, so x+y+z
+    // still sums to zero after rounding.
     if (x_diff > y_diff && x_diff > z_diff)
         rx = -ry - rz;
     else if (y_diff > z_diff)
@@ -677,8 +447,6 @@ const Tile* Board::pickRandomTile(const std::vector<const Tile*>& tiles) const
 const Tile* Board::getTileAt(int q, int row) const
 {
     return getMutableTileAt(q, row);
-    //auto it = m_grid.find({ q, row });
-    //return (it != m_grid.end()) ? it->second.get() : nullptr;
 }
 
 const Tile* Board::getTileAtScreenPosition(const sf::Vector2f& pos) const
@@ -692,18 +460,6 @@ Tile* Board::getMutableTileAt(int q, int row) const
     auto it = m_grid.find({ q, row });
     return (it != m_grid.end()) ? it->second.get() : nullptr;
 }
-
-// Commented out (not deleted) - now bounds candidates by range (getReachableTiles) instead.
-//std::vector< Tile*> Board::getOccupiedTiles() const
-//{
-//    std::vector<Tile*> occupied;
-//    for (auto const& [coords, tile] : m_grid)
-//    {
-//        if (tile->hasEntity())
-//            occupied.push_back(tile.get());
-//    }
-//    return occupied;
-//}
 
 void Board::highlightValidSpecialTargets(const Monster* caster) const
 {

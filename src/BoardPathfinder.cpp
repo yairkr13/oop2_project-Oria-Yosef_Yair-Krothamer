@@ -114,78 +114,20 @@ void BoardPathfinder::computeReachability(const BoardEntity* entity,
     }
 }
 
-//std::vector<Tile*> BoardPathfinder::getReachableTiles(Monster* monster) const
-//{
-//    std::vector<Tile*> reachable;
-//    std::map<std::pair<int, int>, std::pair<int, int>> parent; // לא בשימוש כאן, רק כי computeReachability דורש אותו
-//    computeReachability(monster, reachable, parent);
-//    return reachable;
-//}
 std::vector<const Tile*> BoardPathfinder::getReachableTiles(const BoardEntity* entity, bool includeAllies) const
 {
     std::vector<Tile*> reachable;
     std::map<std::pair<int, int>, std::pair<int, int>> parent; // unused here, just required by computeReachability
     computeReachability(entity, reachable, parent, includeAllies);
-    //return reachable;
     return { reachable.begin(), reachable.end() };
 }
-//
-// Commented out (not deleted) - currently always empty, since no monster
-// overrides getAttackRange() to differ from getRange() any more.
-//
-//std::vector<Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(Monster* monster) const
-//{
-//    std::vector<Tile*> reachable, extended;
-//    std::map<std::pair<int, int>, std::pair<int, int>> parent; // unused here, same as above
-//    computeReachability(monster, reachable, parent, &extended);
-//    return extended;
-//}
-//std::vector<const Tile*> BoardPathfinder::getExtendedAttackOnlyTiles(const BoardEntity* entity) const
-//{
-//    std::vector<Tile*> reachable, extended;
-//    std::map<std::pair<int, int>, std::pair<int, int>> parent;
-//    computeReachability(entity, reachable, parent, &extended);
-//    return { extended.begin(), extended.end() };
-//}
 
 // Walks backward from target through outParent to the source, then reverses.
 // No outParent entry means unreachable, so an empty path is returned.
-//std::vector<Tile*> BoardPathfinder::getPathTo(Monster* monster, Tile* target) const
-//{
-//    std::vector<Tile*> path;
-//    if (!monster || !target) return path;
-//
-//    std::vector<Tile*> reachable;
-//    std::map<std::pair<int, int>, std::pair<int, int>> parent;
-//    computeReachability(monster, reachable, parent);
-//
-//    std::pair<int, int> sourceCoords = { monster->getQ(), monster->getRow() };
-//    std::pair<int, int> targetCoords = { target->getQ(), target->getRow() };
-//
-//    if (targetCoords == sourceCoords) return path; // כבר שם
-//    if (!parent.count(targetCoords)) return path;   // לא נגיש - לא אמור לקרות בפועל
-//
-//    std::vector<std::pair<int, int>> reversedCoords;
-//    std::pair<int, int> cur = targetCoords;
-//    while (cur != sourceCoords)
-//    {
-//        reversedCoords.push_back(cur);
-//        cur = parent.at(cur);
-//    }
-//    std::reverse(reversedCoords.begin(), reversedCoords.end());
-//
-//    for (auto& coords : reversedCoords)
-//    {
-//        auto it = m_grid.find(coords);
-//        if (it != m_grid.end())
-//            path.push_back(it->second.get());
-//    }
-//
-//    return path;
-//}
 std::vector<const Tile*> BoardPathfinder::getPathTo(const BoardEntity* entity, const Tile* target) const
 {
     std::vector<Tile*> path;
+    // Nothing to path for without both a mover and a destination.
     if (!entity || !target) return { path.begin(), path.end() };
 
     std::vector<Tile*> reachable;
@@ -195,6 +137,8 @@ std::vector<const Tile*> BoardPathfinder::getPathTo(const BoardEntity* entity, c
     std::pair<int, int> sourceCoords = { entity->getQ(), entity->getRow() };
     std::pair<int, int> targetCoords = { target->getQ(), target->getRow() };
 
+    // Already standing there (no path needed), or target never showed up in
+    // outParent at all - i.e. genuinely unreachable. Either way: empty path.
     if (targetCoords == sourceCoords) return { path.begin(), path.end() };
     if (!parent.count(targetCoords)) return { path.begin(), path.end() };
 
@@ -214,6 +158,5 @@ std::vector<const Tile*> BoardPathfinder::getPathTo(const BoardEntity* entity, c
             path.push_back(it->second.get());
     }
 
-    //return path;
     return { path.begin(), path.end() };
 }

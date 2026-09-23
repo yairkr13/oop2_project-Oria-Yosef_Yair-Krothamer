@@ -41,10 +41,6 @@ public:
     // Creates a new Monster, transfers ownership out, keeps an observer pointer to it.
     std::unique_ptr<Monster> spawnMonster();
 
-    // No longer called anywhere (kept, not deleted): Player::removeDeadMonsters()
-    // now erases the whole Card via isGone() directly instead of unlinking first.
-    // void clearLink() { m_linkedMonster = nullptr; }
-
 private:
     void drawBoarder(sf::RenderWindow& window, sf::Vector2f position, sf::Color color) const;
     void drawCostText(sf::RenderWindow& window, sf::Vector2f drawPos, const sf::Font& font, bool enoughKeys) const;
