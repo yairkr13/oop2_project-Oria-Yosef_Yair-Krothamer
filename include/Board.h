@@ -128,6 +128,18 @@ public:  // הפונקציות הציבוריות שיכלו להיות const - 
 	// reaching into Board's own random source itself.
 	const Tile* pickRandomTile(const std::vector<const Tile*>& tiles) const;
 
+	// Overrides the seed of Board's own shared random source (rng() above -
+	// still private; this is the one narrow, deliberate way something
+	// outside Board ever touches it). Local/AI play never needs this -
+	// rng() happily self-seeds from system entropy by default. Only
+	// meaningful for network play: called once, with a seed both peers
+	// agreed on during the lobby handshake, BEFORE either one constructs
+	// its own Board - so buildBaseGrid/applySpecialTiles below draw from
+	// the exact same sequence on both computers and land on an identical
+	// special-tile layout, without either one ever sending the other a
+	// description of the board itself.
+	static void seedRng(unsigned int seed) { rng().seed(seed); }
+
 	// The board's own vertical center row - forwards to BoardLayout's own
 	// computation (see BoardGenerator.h) rather than Board re-deriving it
 	// from m_layout.rows itself. Public so a caller like AIPlayer can ask
@@ -186,7 +198,10 @@ private:
 	// Private - Board.cpp's own methods (generateSpecialTiles, pickRandomTile)
 	// are the only callers now; an outside caller that needs a random pick
 	// asks pickRandomTile() above instead of reaching into Board's own
-	// random source directly.
+	// random source directly. A function-local static: one generator for
+	// this whole process's lifetime, shared by every Board ever
+	// constructed in it - see seedRng() below for the one legitimate way
+	// something outside Board ever touches it.
 	static std::mt19937& rng()
 	{
 		static std::mt19937 gen(std::random_device{}());

@@ -15,6 +15,11 @@
 // project). Restart and Exit need to also finish the paused GameplayState
 // beneath this one, which this state has no access to and must not reach
 // into - GameplayState hands in callbacks for those two at push time.
+//
+// onRestartGame may be an empty std::function - GameplayState passes an
+// empty one for a PlayerVsRemote match (there's no way to redo the
+// host/join handshake in-place), and the "Restart Game" button simply
+// isn't shown in that case.
 class MiniMenuState : public State
 {
 public:

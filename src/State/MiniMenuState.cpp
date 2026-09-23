@@ -58,7 +58,10 @@ void MiniMenuState::buildMenu()
 
     m_menu.addButton(buttonTexture, [this]() { onResumeClicked(); }, font, "Resume");
     m_menu.addButton(buttonTexture, [this]() { onInstructionsClicked(); }, font, "Instructions");
-    m_menu.addButton(buttonTexture, [this]() { onRestartClicked(); }, font, "Restart Game");
+
+    if (m_onRestartGame)
+        m_menu.addButton(buttonTexture, [this]() { onRestartClicked(); }, font, "Restart Game");
+
     m_menu.addButton(buttonTexture, [this]() { onExitClicked(); }, font, "Exit Game");
 }
 

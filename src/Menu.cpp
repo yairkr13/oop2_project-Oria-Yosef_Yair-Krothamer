@@ -8,24 +8,30 @@ Menu::Menu(sf::Vector2f center, unsigned int buttonWidth, float gap)
 
 void Menu::addButton(const sf::Texture& texture, Button::Func func)
 {
-	auto [rect, scale] = nextButtonRect(texture);
+	auto [rect, scale] = nextButtonRect(texture, m_buttonWidth);
+	m_buttons.emplace_back(rect, texture, func, scale);
+}
+
+void Menu::addButton(const sf::Texture& texture, Button::Func func, unsigned int width)
+{
+	auto [rect, scale] = nextButtonRect(texture, width);
 	m_buttons.emplace_back(rect, texture, func, scale);
 }
 
 void Menu::addButton(const sf::Texture& texture, Button::Func func, const sf::Font& font, const std::string& label)
 {
-	auto [rect, scale] = nextButtonRect(texture);
+	auto [rect, scale] = nextButtonRect(texture, m_buttonWidth);
 	m_buttons.emplace_back(rect, texture, func, font, label, scale);
 }
 
-std::pair<sf::IntRect, sf::Vector2f> Menu::nextButtonRect(const sf::Texture& texture)
+std::pair<sf::IntRect, sf::Vector2f> Menu::nextButtonRect(const sf::Texture& texture, unsigned int width)
 {
 	auto textureSize = texture.getSize();
-	float scale = SpriteUtils::widthScale(textureSize, m_buttonWidth);
+	float scale = SpriteUtils::widthScale(textureSize, width);
 	float scaledHeight = static_cast<float>(textureSize.y) * scale;
 
-	sf::Vector2i size(static_cast<int>(m_buttonWidth), static_cast<int>(scaledHeight));
-	sf::Vector2i position(static_cast<int>(m_center.x - m_buttonWidth / 2.f), static_cast<int>(m_nextY));
+	sf::Vector2i size(static_cast<int>(width), static_cast<int>(scaledHeight));
+	sf::Vector2i position(static_cast<int>(m_center.x - width / 2.f), static_cast<int>(m_nextY));
 
 	m_nextY += scaledHeight + m_gap;
 

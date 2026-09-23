@@ -16,6 +16,13 @@ public:
 
 	void addButton(const sf::Texture& texture, Button::Func func);
 
+    // Same layout, but this one button is sized to `width` instead of the
+    // Menu's own buttonWidth - for a texture whose aspect ratio differs
+    // enough from the others sharing this Menu (e.g. BackButton.png next to
+    // FriendButton.png/AiButton.png) that using the shared width would make
+    // it a very different height and throw off the whole stack.
+    void addButton(const sf::Texture& texture, Button::Func func, unsigned int width);
+
     // Same layout, plus a text caption centered over the button - for
     // buttons sharing a generic texture instead of a pre-labeled one.
     void addButton(const sf::Texture& texture, Button::Func func, const sf::Font& font, const std::string& label);
@@ -24,8 +31,8 @@ public:
 
 private:
 	// Computes the next stacked button's rect/scale and advances m_nextY -
-	// shared layout math for both addButton overloads.
-	std::pair<sf::IntRect, sf::Vector2f> nextButtonRect(const sf::Texture& texture);
+	// shared layout math for all three addButton overloads.
+	std::pair<sf::IntRect, sf::Vector2f> nextButtonRect(const sf::Texture& texture, unsigned int width);
 
 	std::vector<Button> m_buttons;
 	sf::Vector2f m_center;

@@ -1,5 +1,6 @@
 #include "State/GameModeState.h"
 #include "State/GameplayState.h"
+#include "State/NetworkLobbyState.h"
 #include "SpriteUtils.h"
 #include "AssetsManager.h"
 #include "Constants.h"
@@ -11,6 +12,13 @@ namespace
     // size (310 - 360 center = -50.f), expressed as a compile-time Config
     // value now instead of staying pinned to that original size.
     constexpr float MENU_Y_OFFSET_FROM_CENTER = -50.f;
+
+    // BackButton.png is a much taller shape (426x300) relative to its width
+    // than FriendButton/AiButton/RemoteButton's wide banners - at the
+    // Menu's own buttonWidth it would end up far taller than the other
+    // three and push this 4-button stack below the window. Given its own,
+    // smaller width instead (see Menu::addButton's width overload).
+    constexpr unsigned int BACK_BUTTON_WIDTH = 110;
 }
 
 GameModeState::GameModeState(sf::RenderWindow& window)
@@ -33,7 +41,8 @@ void GameModeState::buildMenu()
 
     m_menu.addButton(am.getTexture("FriendButton"), [this]() { onFriendClicked(); });
     m_menu.addButton(am.getTexture("AiButton"), [this]() { onAiClicked(); });
-    m_menu.addButton(am.getTexture("BackButton"), [this]() { onBackClicked(); });
+    m_menu.addButton(am.getTexture("RemoteButton"), [this]() { onRemoteClicked(); });
+    m_menu.addButton(am.getTexture("BackButton"), [this]() { onBackClicked(); }, BACK_BUTTON_WIDTH);
 }
 
 void GameModeState::onFriendClicked()
@@ -44,6 +53,11 @@ void GameModeState::onFriendClicked()
 void GameModeState::onAiClicked()
 {
     transitionTo(std::make_unique<GameplayState>(m_window, GameMode::PlayerVsAI));
+}
+
+void GameModeState::onRemoteClicked()
+{
+    transitionTo(std::make_unique<NetworkLobbyState>(m_window));
 }
 
 void GameModeState::onBackClicked()

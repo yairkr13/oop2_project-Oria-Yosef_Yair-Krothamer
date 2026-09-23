@@ -3,11 +3,11 @@
 #include "Menu.h"
 
 // Game-mode selection screen pushed by MenuState's Start Game button. Same
-// background as the main menu; lets the player pick Friend (local 2-player)
-// or AI, or go Back to whichever state pushed this one. Retrieves its assets
-// from AssetsManager and contains no game logic - Friend/AI are wired to
-// their own handlers so hooking up the real gameplay state later is a
-// one-line change inside those handlers.
+// background as the main menu; lets the player pick Friend (local 2-player),
+// AI, or Remote (LAN, via NetworkLobbyState), or go Back to whichever state
+// pushed this one. Retrieves its assets from AssetsManager and contains no
+// game logic - Friend/AI are wired to their own handlers so hooking up the
+// real gameplay state later is a one-line change inside those handlers.
 class GameModeState : public State
 {
 public:
@@ -24,6 +24,7 @@ private:
 
     void onFriendClicked();
     void onAiClicked();
+    void onRemoteClicked();
     void onBackClicked();
 
     sf::RenderWindow& m_window;

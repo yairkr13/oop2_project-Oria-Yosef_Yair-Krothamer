@@ -35,6 +35,7 @@ void AssetsManager::queueRemainingAssets() //ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½? ï¿½ï¿½ï
     { Kind::Texture, "ExitButton", "resources/Button/ExitButton.png" },
     { Kind::Texture, "FriendButton", "resources/Button/FriendButton.png" },
     { Kind::Texture, "AiButton", "resources/Button/AiButton.png" },
+    { Kind::Texture, "RemoteButton", "resources/Button/remoteButton.png" },
     { Kind::Texture, "BackButton", "resources/Button/BackButton.png" },
     { Kind::Texture, "GenericButton", "resources/Button/Button.png" },
     { Kind::Texture, "VolumeUpButton", "resources/Button/VolumeUpButton.png" },

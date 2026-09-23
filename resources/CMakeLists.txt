@@ -24,6 +24,7 @@ configure_file("Button/Button.png" ${CMAKE_BINARY_DIR}/resources/Button/Button.p
 configure_file("Button/GoToMiniMenuButton.png" ${CMAKE_BINARY_DIR}/resources/Button/GoToMiniMenuButton.png COPYONLY)
 configure_file("Button/NextMenuButton.png" ${CMAKE_BINARY_DIR}/resources/Button/NextMenuButton.png COPYONLY)
 configure_file("Button/BackMenuButton.png" ${CMAKE_BINARY_DIR}/resources/Button/BackMenuButton.png COPYONLY)
+configure_file("Button/remoteButton.png" ${CMAKE_BINARY_DIR}/resources/Button/remoteButton.png COPYONLY)
 
 
 configure_file("Background/Background1.png" ${CMAKE_BINARY_DIR}/resources/Background/Background1.png COPYONLY)

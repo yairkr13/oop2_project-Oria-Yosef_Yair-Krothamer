@@ -40,7 +40,10 @@ void GameOverState::buildMenu()
 
     //m_menu.addButton(buttonTexture, [this]() { onResumeClicked(); }, font, "Resume");
     //m_menu.addButton(buttonTexture, [this]() { onInstructionsClicked(); }, font, "Instructions");
-    m_menu.addButton(buttonTexture, [this]() { onRestartClicked(); }, font, "Play Again");
+
+    if (m_createNextState)
+        m_menu.addButton(buttonTexture, [this]() { onRestartClicked(); }, font, "Play Again");
+
     m_menu.addButton(buttonTexture, [this]() { onMainMenuClicked(); }, font, "Main Menu");
 }
 

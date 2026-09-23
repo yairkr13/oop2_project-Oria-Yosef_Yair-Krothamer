@@ -3,6 +3,8 @@
 #include "Constants.h"
 #include "Board.h"
 #include "Player.h"
+#include "RemotePlayer.h"
+#include "NetworkConnection.h"
 #include "TurnManager.h"
 #include "Button.h"
 #include <optional>
@@ -21,6 +23,15 @@ class GameplayState : public State
 public:
     GameplayState(sf::RenderWindow& window, GameMode mode);
 
+    // PlayerVsRemote only - `connection` must already be connected AND
+    // seeded (see NetworkLobbyState, the only caller of this constructor):
+    // by the time this runs, both peers already agreed on the board's own
+    // random seed, so m_board below generates identically on both
+    // computers with no further network traffic needed for that part.
+    // `localSide` is which side THIS computer's own human player is
+    // playing (host is always Left, joiner always Right).
+    GameplayState(sf::RenderWindow& window, std::unique_ptr<NetworkConnection> connection, PlayerSide localSide);
+
     void draw(sf::RenderWindow& window) const override;
     void update(sf::Time deltaTime) override;
     void handleEvent(const sf::Event& event) override;
@@ -36,6 +47,14 @@ private:
     // list, since unique_ptr<AIPlayer>/unique_ptr<Player> don't resolve to
     // a common type there.
     static std::unique_ptr<Player> makePlayer2(GameMode mode);
+
+    // PlayerVsRemote's own equivalent of makePlayer2 above - same reasoning
+    // (a helper, not an inline ternary: unique_ptr<Player>/unique_ptr<RemotePlayer>
+    // don't resolve to a common type there). `side` is the side THIS
+    // particular Player object represents; it's a plain local Player if
+    // that matches localSide (the human at this keyboard), a RemotePlayer
+    // wired to `connection` otherwise.
+    static std::unique_ptr<Player> makeLocalOrRemotePlayer(PlayerSide side, PlayerSide localSide, NetworkConnection& connection);
 
     void buildMiniMenuButton();
 
@@ -64,6 +83,16 @@ private:
     std::unique_ptr<Player> m_player1;
     std::unique_ptr<Player> m_player2;
     TurnManager m_turnManager;
+
+    // PlayerVsRemote only - null for Friend/AI. Owns the connection for
+    // this match's whole lifetime (RemotePlayer below only ever holds a
+    // reference into it); m_remotePlayer is a non-owning pointer at
+    // whichever of m_player1/m_player2 is actually the RemotePlayer - set
+    // once, in the PlayerVsRemote constructor, known directly from which
+    // side was built as which (see makeLocalOrRemotePlayer), never a cast
+    // guessing at it.
+    std::unique_ptr<NetworkConnection> m_connection;
+    RemotePlayer* m_remotePlayer = nullptr;
 
     BottomPanel m_bottomPanel;
     Tooltip m_tooltip;

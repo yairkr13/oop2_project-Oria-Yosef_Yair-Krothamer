@@ -35,6 +35,14 @@ std::unique_ptr<Player> GameplayState::makePlayer2(GameMode mode)
     return std::make_unique<Player>(PlayerSide::Right);
 }
 
+std::unique_ptr<Player> GameplayState::makeLocalOrRemotePlayer(PlayerSide side, PlayerSide localSide, NetworkConnection& connection)
+{
+    if (side == localSide)
+        return std::make_unique<Player>(side);
+
+    return std::make_unique<RemotePlayer>(side, connection);
+}
+
 GameplayState::GameplayState(sf::RenderWindow& window, GameMode mode)
     : m_window(window)
     , m_background(AssetsManager::getInstance().getTexture(randomGameBackgroundKey()))
@@ -53,6 +61,39 @@ GameplayState::GameplayState(sf::RenderWindow& window, GameMode mode)
     m_turnManager.setOnPlayerSwitched([this]() { clearSelectionState(); });
 }
 
+GameplayState::GameplayState(sf::RenderWindow& window, std::unique_ptr<NetworkConnection> connection, PlayerSide localSide)
+    : m_window(window)
+    , m_background(AssetsManager::getInstance().getTexture(randomGameBackgroundKey()))
+    , m_mode(GameMode::PlayerVsRemote)
+    , m_board(BoardGenerator::standardLayout())
+    , m_player1(makeLocalOrRemotePlayer(PlayerSide::Left, localSide, *connection))
+    , m_player2(makeLocalOrRemotePlayer(PlayerSide::Right, localSide, *connection))
+    , m_turnManager(*m_player1, *m_player2, m_board)
+    , m_bottomPanel(AssetsManager::getInstance().getFont("Lilita"))
+    , m_tooltip(AssetsManager::getInstance().getFont("Lilita"))
+    , m_connection(std::move(connection))
+{
+    // Known directly from which side was built as which above - not a cast
+    // guessing at m_player1/m_player2's actual concrete type.
+    m_remotePlayer = (localSide == PlayerSide::Left)
+        ? static_cast<RemotePlayer*>(m_player2.get())
+        : static_cast<RemotePlayer*>(m_player1.get());
+
+    scaleBackgroundToWindow();
+    m_board.initPlayerHearts(m_player1->getHeart(), m_player2->getHeart());
+    buildMiniMenuButton();
+
+    m_turnManager.setOnPlayerSwitched([this]() {
+        clearSelectionState();
+
+        // We just switched TO the remote player - meaning the local
+        // human's own turn just ended - so send everything recorded
+        // during it now, exactly once per turn.
+        if (m_remotePlayer && &m_turnManager.getCurrentPlayer() == static_cast<Player*>(m_remotePlayer))
+            m_remotePlayer->sendRecordedActions();
+    });
+}
+
 void GameplayState::scaleBackgroundToWindow()
 {
     SpriteUtils::scaleToFill(m_background, m_window.getSize());
@@ -67,9 +108,14 @@ void GameplayState::buildMiniMenuButton()
 
 void GameplayState::openMiniMenu()
 {
+    // No restart mid-match over the network - see MiniMenuState.
+    std::function<void()> onRestartGame = nullptr;
+    if (m_mode != GameMode::PlayerVsRemote)
+        onRestartGame = [this] { transitionTo(std::make_unique<GameplayState>(m_window, m_mode)); };
+
     pushState(std::make_unique<MiniMenuState>(m_window,
         [this] { transitionTo(); },
-        [this] { transitionTo(std::make_unique<GameplayState>(m_window, m_mode)); }));
+        std::move(onRestartGame)));
 }
 
 void GameplayState::draw(sf::RenderWindow& window) const
@@ -101,6 +147,13 @@ void GameplayState::draw(sf::RenderWindow& window) const
 
 void GameplayState::update(sf::Time deltaTime)
 {
+    // Services the connection every frame regardless of whose turn it
+    // locally is - sends anything still queued, and buffers anything
+    // arriving, so a message is never sitting unread in the OS socket
+    // buffer just because it happened to arrive mid-animation.
+    if (m_remotePlayer)
+        m_remotePlayer->pollIncoming();
+
     m_board.update(deltaTime.asSeconds());
 
     // GameplayState is the only thing that ever holds a raw Card* into
@@ -153,12 +206,19 @@ void GameplayState::update(sf::Time deltaTime)
         GameMode currentMode = m_mode;
         sf::RenderWindow& window = m_window;
 
+        // No "Play Again" over the network - see GameOverState.
+        std::function<std::unique_ptr<State>()> createNextState = nullptr;
+        if (currentMode != GameMode::PlayerVsRemote)
+        {
+            createNextState = [&window, currentMode]() {
+                return std::make_unique<GameplayState>(window, currentMode);
+            };
+        }
+
         transitionTo(std::make_unique<GameOverState>(
             m_window,
             winner,
-            [&window, currentMode]() {
-                return std::make_unique<GameplayState>(window, currentMode);
-            }
+            std::move(createNextState)
         ));
     }
 }
@@ -223,6 +283,7 @@ void GameplayState::handleSpawnAttempt(const sf::Vector2f& pos, Player& current)
         return;
 
     // 3. משלמים את העלות ויוצרים את המפלצת
+    int cardIndex = current.indexOfCard(m_selectedFromHand); // before playCard - still in hand right now
     Monster* monster = current.playCard(m_selectedFromHand);
     if (!monster)
         return;
@@ -230,6 +291,17 @@ void GameplayState::handleSpawnAttempt(const sf::Vector2f& pos, Player& current)
     // 4. מזמנים אותה ישירות על המשבצת
     if (m_board.spawnEntityOnTile(monster, tile))
     {
+        if (m_remotePlayer)
+        {
+            GameAction action;
+            action.type = GameAction::Type::Spawn;
+            action.cardIndex = cardIndex;
+            action.hasTarget = true;
+            action.targetQ = tile->getQ();
+            action.targetRow = tile->getRow();
+            m_remotePlayer->recordLocalAction(action);
+        }
+
         m_selectedFromHand = nullptr;
         m_board.clearHighlights();
     }
@@ -276,6 +348,15 @@ void GameplayState::handleSpecialAbilityClick(Card* card)
     }
     else if (monster->useSpecialAbility(m_board))
     {
+        if (m_remotePlayer)
+        {
+            GameAction action;
+            action.type = GameAction::Type::Special;
+            action.cardIndex = m_turnManager.getCurrentPlayer().indexOfCard(card);
+            action.hasTarget = false;
+            m_remotePlayer->recordLocalAction(action);
+        }
+
         // Committed immediately (the common case) unless this monster's
         // Special is armed now and actually used at a later, separate event
         // (Barzilla) - specialAbilityCommitsOnSelect() already told
@@ -336,6 +417,17 @@ void GameplayState::handleSpecialTargetClick(const sf::Vector2f& pos)
     {
         if (monster->useSpecialAbility(m_board, candidate))
         {
+            if (m_remotePlayer)
+            {
+                GameAction action;
+                action.type = GameAction::Type::Special;
+                action.cardIndex = m_turnManager.getCurrentPlayer().indexOfCard(m_pendingSpecialCard);
+                action.hasTarget = true;
+                action.targetQ = candidate->getQ();
+                action.targetRow = candidate->getRow();
+                m_remotePlayer->recordLocalAction(action);
+            }
+
             m_pendingSpecialCard = nullptr; // committed successfully - nothing left to cancel
             m_board.clearHighlights();
         }
@@ -351,7 +443,21 @@ void GameplayState::handleBoardClick(const sf::Vector2f& pos, const Player& curr
     {
         // אם לחצנו על משבצת חוקית (מוארת) - Board כבר תדע אם לזוז או לתקוף
         if (clickedTile->isHighlighted())
+        {
+            if (m_remotePlayer)
+            {
+                GameAction action;
+                action.type = GameAction::Type::MoveOrAttack;
+                action.sourceQ = m_selectedEntity->getQ();
+                action.sourceRow = m_selectedEntity->getRow();
+                action.hasTarget = true;
+                action.targetQ = clickedTile->getQ();
+                action.targetRow = clickedTile->getRow();
+                m_remotePlayer->recordLocalAction(action);
+            }
+
             m_board.performAction(m_selectedEntity, clickedTile);
+        }
 
         // ניקוי וביטול בחירה
         m_selectedEntity = nullptr;

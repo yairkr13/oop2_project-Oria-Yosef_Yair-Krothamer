@@ -6,7 +6,10 @@
 class GameOverState : public State
 {
 public:
-    GameOverState(sf::RenderWindow& window,const PlayerSide& winner, 
+    // createNextState may be an empty std::function - GameplayState passes
+    // an empty one for a PlayerVsRemote match (there's no way to redo the
+    // host/join handshake in-place), and "Play Again" simply isn't shown.
+    GameOverState(sf::RenderWindow& window,const PlayerSide& winner,
         std::function<std::unique_ptr<State>()> createNextState);
 
     void update(sf::Time deltaTime) override;
