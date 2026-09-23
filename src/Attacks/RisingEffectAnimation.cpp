@@ -8,9 +8,7 @@ RisingEffectAnimation::RisingEffectAnimation(const sf::Texture& texture, sf::Vec
 {
     int count = std::max(instanceCount, 1);
 
-    // Centered horizontal spread: e.g. 3 instances -> offsets
-    // [-spacing, 0, +spacing] around `position`; 1 instance -> offset 0,
-    // identical to the original single-sprite placement.
+    // Centered spread, e.g. 3 instances -> offsets [-spacing, 0, +spacing].
     float firstOffset = -horizontalSpacing * static_cast<float>(count - 1) / 2.f;
 
     initInstances(texture, count, staggerDelay, size, duration,
@@ -21,7 +19,5 @@ RisingEffectAnimation::RisingEffectAnimation(const sf::Texture& texture, sf::Vec
 
 void RisingEffectAnimation::positionInstance(Instance& instance, float progress)
 {
-    // Straight vertical rise - screen-space "up" is simply a smaller y, no
-    // direction/rotation math needed since this never travels sideways.
     instance.sprite.setPosition({ instance.anchor.x, instance.anchor.y - m_riseDistance * progress });
 }

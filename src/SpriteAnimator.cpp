@@ -1,14 +1,13 @@
 #include "SpriteAnimator.h"
 #include <algorithm>
 
+// Keeps m_states sorted by ascending priority so update()'s scan can just
+// take the first match.
 void SpriteAnimator::addState(int id, std::unique_ptr<SpriteSheet> sheet,
     std::function<bool()> isActive, int priority)
 {
     Entry entry{ id, std::move(sheet), std::move(isActive), priority };
 
-    // Insert keeping m_states sorted by ascending priority, so update()'s
-    // scan below can just take the first match - registration order is
-    // never significant (see addState's own comment in the header).
     auto pos = std::find_if(m_states.begin(), m_states.end(),
         [priority](const Entry& existing) { return existing.priority > priority; });
     m_states.insert(pos, std::move(entry));
@@ -26,10 +25,8 @@ void SpriteAnimator::update(float dt)
         }
     }
 
-    // Advance only the newly-active state's own clock; reset every other
-    // one back to frame 0 so it starts fresh whenever it next becomes
-    // active - exactly the active/reset split Monster used to do by hand
-    // for each of its four sheets individually.
+    // Advance only the active state's clock; reset every other one so it
+    // starts fresh whenever it next becomes active.
     for (std::size_t i = 0; i < m_states.size(); ++i)
     {
         if (i == newActive)
@@ -62,6 +59,7 @@ float SpriteAnimator::getActiveBaseScale() const
     return hasActiveState() ? m_states[m_activeIndex].sheet->getBaseScale() : 1.f;
 }
 
+// Returns true (nothing to wait for) if `id` was never registered.
 bool SpriteAnimator::isStateFinished(int id) const
 {
     for (auto const& entry : m_states)
@@ -69,5 +67,5 @@ bool SpriteAnimator::isStateFinished(int id) const
         if (entry.id == id)
             return entry.sheet->isFinished();
     }
-    return true; // never registered - nothing to wait for
+    return true;
 }

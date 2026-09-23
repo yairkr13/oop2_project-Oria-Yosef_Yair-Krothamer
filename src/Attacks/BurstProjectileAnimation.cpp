@@ -6,12 +6,9 @@ BurstProjectileAnimation::BurstProjectileAnimation(const sf::Texture& texture, s
     : m_origin(origin), m_target(target)
 {
     initInstances(texture, projectileCount, launchInterval, size, travelDuration,
-        [origin](int) { return origin; }); // every projectile launches from the same shared origin
+        [origin](int) { return origin; }); // every projectile shares the same origin
 
-    // All projectiles travel the same origin->target line, so they all
-    // share one facing direction, computed once - rotating each sprite to
-    // face the direction it flies makes the burst look directional
-    // regardless of which of the six board directions the attack is in.
+    // All projectiles fly the same line, so they share one facing direction.
     float dx = target.x - origin.x;
     float dy = target.y - origin.y;
     sf::Angle facing = sf::radians(std::atan2(dy, dx));

@@ -10,6 +10,7 @@ void AttackAnimation::setOnImpact(std::function<void()> onImpact)
     m_onImpact = std::move(onImpact);
 }
 
+// Fires the impact callback exactly once per animation.
 void AttackAnimation::fireImpact()
 {
     if (m_impactFired) return;
