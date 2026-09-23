@@ -24,7 +24,9 @@ void AssetsManager::queueRemainingAssets() //ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½? ï¿½ï¿½ï
     { Kind::Music, "gameplay_music", "resources/Music/BackGround/InGameMusic.mp3" },
 
     { Kind::Texture, "menu_bg", "resources/Menu/Menu.png" },
-    { Kind::Texture, "instructions_bg", "resources/Menu/Instructions.png" },
+    { Kind::Texture, "instructions_bg_1", "resources/Menu/Instructions1.png" },
+    { Kind::Texture, "instructions_bg_2", "resources/Menu/Instructions2.png" },
+    { Kind::Texture, "instructions_bg_3", "resources/Menu/Instructions3.png" },
     { Kind::Texture, "mini_menu_bg", "resources/Menu/MiniMenu.png" },
     { Kind::Texture, "gameover_bg", "resources/Menu/gameover_bg.png" },
 
@@ -40,6 +42,8 @@ void AssetsManager::queueRemainingAssets() //ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½? ï¿½ï¿½ï
     { Kind::Texture, "SoundMuteButton", "resources/Button/sound_off_button2.png" },
     { Kind::Texture, "SoundUpButton", "resources/Button/sound_on_button.png" },
     { Kind::Texture, "GoToMiniMenuButton", "resources/Button/GoToMiniMenuButton.png" },
+    { Kind::Texture, "NextMenuButton", "resources/Button/NextMenuButton.png" },
+    { Kind::Texture, "BackMenuButton", "resources/Button/BackMenuButton.png" },
 
     { Kind::Texture, "heart100", "resources/Heart/Heart100.png" },
     // Both loaded up front (GameplayState picks one at random per new game
