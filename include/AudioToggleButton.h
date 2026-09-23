@@ -7,7 +7,9 @@
 #include <utility>
 #include <type_traits>
 
-//זה אבסטרקטית ויחודית?????
+// A mute/unmute icon Button generic over which audio service it toggles
+// (MusicManager or SoundPlayer) - see the aliases below. Reads/writes that
+// service's mute flag, so its icon always stays in sync with actual playback.
 template <typename AudioService>
 class AudioToggleButton
 {
@@ -21,6 +23,8 @@ public:
     {
     }
 
+    // Re-reads the mute flag and refreshes the icon every call, so a toggle
+    // clicked on one screen stays in sync everywhere this button is drawn.
     void draw(sf::RenderWindow& window) const
     {
         refreshTexture();
@@ -33,9 +37,10 @@ public:
     }
 
 private:
-    // פונקציה סטטית פנימית שקובעת את טקסטורות ברירת המחדל לפי הטיפול ב-AudioService
+    // Default unmuted/muted texture names, picked by which AudioService this
+    // instance is specialized for.
     static std::pair<const char*, const char*> getDefaultTextures()
-    { //זה בסדר שדבר כזה נמצא בפונקציה תבניתית?????
+    {
         if constexpr (std::is_same_v<AudioService, SoundPlayer>)
         {
             return { "SoundUpButton", "SoundMuteButton" };
@@ -50,6 +55,8 @@ private:
     {
         AudioService::getInstance().toggleMute();
 
+        // Confirms unmuting with a click sound - only for SoundPlayer, so
+        // toggling music doesn't also play a sound effect.
         if constexpr (std::is_same_v<AudioService, SoundPlayer>)
         {
             if (!SoundPlayer::getInstance().isMuted())

@@ -24,6 +24,8 @@ void Menu::addButton(const sf::Texture& texture, Button::Func func, const sf::Fo
 	m_buttons.emplace_back(rect, texture, func, font, label, scale);
 }
 
+// Computes the next stacked button's rect/scale and advances m_nextY -
+// shared layout math for all three addButton overloads.
 std::pair<sf::IntRect, sf::Vector2f> Menu::nextButtonRect(const sf::Texture& texture, unsigned int width)
 {
 	auto textureSize = texture.getSize();
@@ -57,5 +59,4 @@ void Menu::draw(sf::RenderWindow& window) const
 
 void Menu::handle(const sf::Event::KeyPressed& event)
 {
-	// Handle key press events if needed
 }

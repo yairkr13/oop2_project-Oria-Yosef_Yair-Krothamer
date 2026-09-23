@@ -8,11 +8,8 @@
 
 Controller::Controller()
 {
-    // Checked here, before the window is actually created, rather than a
-    // static_assert in Constants.h - main() already wraps Controller's
-    // construction in a try/catch (see main.cpp) that prints e.what()
-    // cleanly, a clearer failure than the wall of repeated compiler errors
-    // a static_assert in a header included almost everywhere produces.
+    // Runtime check instead of static_assert - main() catches this and
+    // prints a clean message rather than a wall of compiler errors.
     if (Config::WINDOW_WIDTH < Config::MIN_WINDOW_WIDTH || Config::WINDOW_WIDTH > Config::MAX_WINDOW_WIDTH ||
         Config::WINDOW_HEIGHT < Config::MIN_WINDOW_HEIGHT || Config::WINDOW_HEIGHT > Config::MAX_WINDOW_HEIGHT)
     {
@@ -23,23 +20,14 @@ Controller::Controller()
             std::to_string(Config::MIN_WINDOW_HEIGHT) + "-" + std::to_string(Config::MAX_WINDOW_HEIGHT) + ")");
     }
 
-    // No sf::Style::Resize - the window is a fixed size for its whole
-    // lifetime (no maximize button, no draggable edges), so every position
-    // computed from Config::WINDOW_WIDTH/HEIGHT stays valid without any
-    // resize handling anywhere else in the game.
+    // No sf::Style::Resize - fixed size, so positions computed from
+    // Config::WINDOW_WIDTH/HEIGHT stay valid with no resize handling elsewhere.
     m_window.create(sf::VideoMode({ Config::WINDOW_WIDTH, Config::WINDOW_HEIGHT }), "Phobies",
         sf::Style::Titlebar | sf::Style::Close);
     m_window.setFramerateLimit(60);
 
-    // Only the loading screen's own two assets are loaded synchronously
-    // here - cheap enough (two images) not to delay the first frame.
-    // Everything else is queued and drained incrementally by LoadingState
-    // itself (see AssetsManager::queueRemainingAssets/loadNext), so run()'s
-    // loop below can actually start presenting frames - AwaitScreen plus a
-    // spinning Spinner - well before the rest of the game's assets (menu/
-    // button textures, fonts, music, every monster's sprite sheets, ...)
-    // are ready, instead of blocking on one big load before the window
-    // ever shows anything.
+    // Only the loading screen's own assets load synchronously here; the rest
+    // is queued and drained incrementally by LoadingState.
     AssetsManager::getInstance().loadBootAssets();
 
     m_states.push_back(std::make_unique<LoadingState>(m_window));

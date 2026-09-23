@@ -2,12 +2,16 @@
 #include "SoundPlayer.h"
 #include "SpriteUtils.h"
 
+// `scale` is the base scale applied to the sprite; hover feedback multiplies
+// on top of it. Callers that don't need scaling can omit it.
 Button::Button(sf::IntRect rect, const sf::Texture& texture, Func func, sf::Vector2f scale)
     : m_rect(rect), m_func(func), m_sprite(texture), m_scale(scale)
 {
     initSprite(rect);
 }
 
+// Builds a Button at `position`, scaled so the texture's width matches
+// `width` (aspect preserved) - the sizing math every button-builder needs.
 Button Button::fromTextureWidth(sf::Vector2i position, const sf::Texture& texture, unsigned int width, Func func)
 {
     auto textureSize = texture.getSize();
@@ -18,6 +22,7 @@ Button Button::fromTextureWidth(sf::Vector2i position, const sf::Texture& textur
     return Button(rect, texture, std::move(func), sf::Vector2f{ scale, scale });
 }
 
+// Same as above, plus a text caption centered over the sprite.
 Button::Button(sf::IntRect rect, const sf::Texture& texture, Func func,
     const sf::Font& font, const std::string& label, sf::Vector2f scale)
     : m_rect(rect), m_func(func), m_sprite(texture), m_scale(scale), m_label(std::in_place, font)
@@ -60,6 +65,9 @@ void Button::draw(sf::RenderWindow& window) const
     if (m_label)
         window.draw(*m_label);
 }
+
+// Only ever called from handle(MouseMoved) below - no external caller sets
+// hover state directly.
 void Button::setHovered(bool hovered)
 {
 	if (m_isHovered == hovered)
@@ -67,7 +75,7 @@ void Button::setHovered(bool hovered)
 
 	m_isHovered = hovered;
 
-	// הצליל מושמע רק ברגע הכניסה לכפתור (מעבר מ-false ל-true)
+	// Plays only on the false->true edge (hover entry), not while held.
 	if (m_isHovered)
 	{
 		SoundPlayer::getInstance().play("hover_on_button");
@@ -77,6 +85,8 @@ void Button::setHovered(bool hovered)
 	m_sprite.setScale({ m_scale.x * hoverFactor, m_scale.y * hoverFactor });
 }
 
+// Swaps the displayed texture without changing rect/position/scale - for
+// toggle-style buttons (e.g. the music/sound icons).
 void Button::setTexture(const sf::Texture& texture)
 {
     m_sprite.setTexture(texture);
@@ -90,8 +100,8 @@ void Button::handle(const sf::Event::MouseButtonPressed& event)
 		if (m_rect.contains(clickPos))
 		{
 			SoundPlayer::getInstance().play("button_click");
-			if (m_func) // בדיקה שה-std::function אינו ריק
-			{
+			if (m_func)
+				{
 				m_func();
 			}
 		}
