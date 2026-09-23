@@ -1,15 +1,10 @@
 #pragma once
 #include "State/State.h"
 
-// Shown for the brief window between the game launching and the rest of its
-// assets (menu/button textures, fonts, music, every monster's sprite sheets,
-// ...) finishing loading. Its own background + spinner are the only two
-// assets Controller loads before this state exists (see
-// AssetsManager::loadBootAssets()) - everything else is queued
-// (queueRemainingAssets()) and drained one asset per frame from update()
-// below, so this state's draw() keeps running (and the spinner keeps
-// turning) the whole time loading is happening, instead of the game
-// blocking on one big load before the window ever shows a frame.
+// Shown while the rest of the game's assets load. Controller preloads only
+// this state's own background + spinner; update() drains the remaining
+// asset queue a bit each frame so the spinner keeps animating instead of
+// the game blocking on one big load.
 class LoadingState : public State
 {
 public:

@@ -3,12 +3,12 @@
 #include "Constants.h"
 #include <functional>
 
+// End-of-match screen: shows the winner and offers Play Again (if a
+// rematch is possible) or Main Menu.
 class GameOverState : public State
 {
 public:
-    // createNextState may be an empty std::function - GameplayState passes
-    // an empty one for a PlayerVsRemote match (there's no way to redo the
-    // host/join handshake in-place), and "Play Again" simply isn't shown.
+    // createNextState may be empty for a PlayerVsRemote match; Play Again is hidden then.
     GameOverState(sf::RenderWindow& window,const PlayerSide& winner,
         std::function<std::unique_ptr<State>()> createNextState);
 

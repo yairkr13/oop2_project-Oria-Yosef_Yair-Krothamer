@@ -4,11 +4,8 @@
 //#include "MusicToggleButton.h"
 #include "AudioToggleButton.h"
 
-// The game's main menu: background image plus Start Game / Instructions / Exit
-// buttons. Retrieves its assets from AssetsManager (loaded up front by
-// Controller) and contains no game logic - Start Game and Instructions are
-// wired to their own handlers so hooking up the real next states later is a
-// one-line change inside those handlers.
+// The game's main menu: background plus Start Game / Instructions / Exit
+// buttons. Pure UI - contains no game logic itself.
 class MenuState : public State
 {
 public:
@@ -31,7 +28,6 @@ private:
     sf::Sprite m_background;
     Menu m_menu;
 
-    // Not part of m_menu: a single fixed-position icon, not a stacked list.
-    MusicToggleButton m_volumeButton;
-    SoundToggleButton m_soundOnButton;
+    MusicToggleButton m_volumeButton; // fixed icon, not part of m_menu
+    SoundToggleButton m_soundOnButton; // fixed icon, not part of m_menu
 };

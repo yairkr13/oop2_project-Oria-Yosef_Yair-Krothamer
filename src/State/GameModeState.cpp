@@ -7,17 +7,11 @@
 
 namespace
 {
-    // Offset from the window's own vertical center - the same ratio the old
-    // fixed 310.f represented at the window's original 720-tall creation
-    // size (310 - 360 center = -50.f), expressed as a compile-time Config
-    // value now instead of staying pinned to that original size.
+    // Offset from the window's own vertical center, Config-based instead of a fixed pixel value.
     constexpr float MENU_Y_OFFSET_FROM_CENTER = -50.f;
 
-    // BackButton.png is a much taller shape (426x300) relative to its width
-    // than FriendButton/AiButton/RemoteButton's wide banners - at the
-    // Menu's own buttonWidth it would end up far taller than the other
-    // three and push this 4-button stack below the window. Given its own,
-    // smaller width instead (see Menu::addButton's width overload).
+    // BackButton.png is much taller relative to its width than the other
+    // three buttons, so it needs its own smaller width to avoid overflowing.
     constexpr unsigned int BACK_BUTTON_WIDTH = 110;
 }
 

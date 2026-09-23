@@ -5,21 +5,10 @@
 #include "AudioToggleButton.h"
 #include <functional>
 
-// Pause-style overlay pushed on top of GameplayState (Escape, or the
-// on-board button). Renders as a small popup centered over the window -
-// GameplayState stays visible underneath since Controller draws the whole
-// state stack, not just the top.
-//
-// Resume and Instructions are fully self-contained (bare transitionTo() /
-// pushState(InstructionsState), same as every other back-navigation in the
-// project). Restart and Exit need to also finish the paused GameplayState
-// beneath this one, which this state has no access to and must not reach
-// into - GameplayState hands in callbacks for those two at push time.
-//
-// onRestartGame may be an empty std::function - GameplayState passes an
-// empty one for a PlayerVsRemote match (there's no way to redo the
-// host/join handshake in-place), and the "Restart Game" button simply
-// isn't shown in that case.
+// Pause overlay pushed on top of GameplayState (Escape, or the on-board
+// button). Resume/Instructions are self-contained; Restart/Exit need to
+// finish the paused GameplayState beneath this one, so GameplayState hands
+// in callbacks for those two at push time instead of this state reaching in.
 class MiniMenuState : public State
 {
 public:
@@ -42,10 +31,9 @@ private:
     sf::Sprite m_background;
     Menu m_menu;
 
-    // Not part of m_menu: a single fixed-position icon, not a stacked list.
-    MusicToggleButton m_volumeButton;
-    SoundToggleButton m_soundOnButton;
+    MusicToggleButton m_volumeButton; // fixed icon, not part of m_menu
+    SoundToggleButton m_soundOnButton; // fixed icon, not part of m_menu
 
     std::function<void()> m_onExitGame;
-    std::function<void()> m_onRestartGame;
+    std::function<void()> m_onRestartGame; // may be empty for a PlayerVsRemote match
 };

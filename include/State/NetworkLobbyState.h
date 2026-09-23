@@ -7,14 +7,10 @@
 #include <memory>
 #include <string>
 
-// The screen between GameModeState and an actual PlayerVsRemote
-// GameplayState: lets the player choose to host or join a LAN match, then
-// handles the connection handshake itself (accept/connect) before handing a
-// fully connected NetworkConnection off to a freshly-built GameplayState.
-// GameplayState itself never touches a socket or a raw connection attempt -
-// by the time it exists, all of that is already done. No board-generation
-// seed to exchange here (see BoardGenerator's fixed PlayerVsRemote special-
-// tile layout) - once connected, both sides move straight to the match.
+// The screen between GameModeState and a PlayerVsRemote GameplayState: lets
+// the player host or join a LAN match, handles the connection handshake,
+// then hands a connected NetworkConnection off to a fresh GameplayState.
+// GameplayState itself never touches a socket or a raw connection attempt.
 class NetworkLobbyState : public State
 {
 public:
@@ -36,32 +32,22 @@ private:
 
     void scaleBackgroundToWindow();
 
-    // Rebuilds m_menu with whichever buttons `phase` actually needs (Menu
-    // has no remove-button operation, so a phase change just replaces it
-    // outright) - the one place that decides which buttons show for which
-    // phase, alongside setPhase's own per-phase status text.
+    // Rebuilds m_menu with the buttons `phase` needs - Menu has no
+    // remove-button op, so a phase change just replaces it outright.
     void buildMenuForPhase(Phase phase);
 
     void setPhase(Phase phase);
 
-    // Applies m_pendingPhase (if one is set) and clears it - called once,
-    // at the very start of update(). setPhase() rebuilds m_menu outright
-    // (see buildMenuForPhase), which frees the whole m_buttons vector - and
-    // startHosting/startJoining/attemptConnect below are usually called
-    // from INSIDE one of THOSE buttons' own click callbacks, i.e. while
-    // Menu::handleEvent is still iterating m_buttons on the call stack. So
-    // they never call setPhase() directly; they set m_pendingPhase instead,
-    // and the actual rebuild happens safely here, in update() - which SFML
-    // only ever calls after every pending event has already finished being
-    // handled (see Controller::run), never mid-iteration.
+    // Applies m_pendingPhase, once per frame at the start of update(). Never
+    // called directly from a button callback, since setPhase() rebuilds
+    // m_menu while Menu::handleEvent may still be iterating it.
     void applyPendingPhase();
 
     void startHosting();
     void startJoining();
     void attemptConnect();
 
-    // Both peers end up here once ready - the point where this State's own
-    // job (getting a connected NetworkConnection) is done.
+    // Both peers end up here once ready - this state's job is done.
     void enterGame(PlayerSide localSide);
 
     sf::RenderWindow& m_window;

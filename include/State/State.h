@@ -17,35 +17,18 @@ public:
 
     bool isFinished() const { return m_isFinished; }
 
-    // Which background track this screen wants playing while it's on top
-    // of the stack - MusicTrack::None by default, so states that don't
-    // care about music (MiniMenuState, GameOverState, ...) don't need to
-    // know anything about it. Controller reads this every frame and asks
-    // MusicManager to play it.
+    // Track this state wants playing while it's on top of the stack; None by default.
     virtual MusicTrack desiredMusicTrack() const { return MusicTrack::None; }
 
-    // Hands ownership of the next state to the caller (Controller).
-    // Returns nullptr if the finished state has no successor (e.g. "quit"
-    // or "just pop back to whatever's beneath me").
     std::unique_ptr<State> getNextState();
 
     bool hasStateToPush() const { return m_stateToPush != nullptr; }
 
-    // Hands ownership of the state that should be pushed on top of this one.
     std::unique_ptr<State> getStateToPush();
 
 protected:
-    // Finishes this state, popping it off the Controller's state stack.
-    // Pass a state to replace it with one for a forward transition (e.g.
-    // Start Game). Pass nothing (the default) to just pop, which resumes
-    // whatever state is beneath it - e.g. a "Back" button - or closes the
-    // window if the stack becomes empty.
     void transitionTo(std::unique_ptr<State> next = nullptr);
 
-    // Suspends this state - it stays alive, paused, beneath `next` on the
-    // stack - and shows `next` on top of it. This state resumes
-    // automatically once `next` (or whatever it in turn pushes) eventually
-    // calls transitionTo() with no argument, popping back down to it.
     void pushState(std::unique_ptr<State> next);
 
 private:

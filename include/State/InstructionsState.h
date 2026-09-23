@@ -3,13 +3,9 @@
 #include "Menu.h"
 #include "Button.h"
 
-// Full-screen "How To Play" screen - three pages (Instructions1/2/3.png)
-// with Next/Previous buttons to move between them. Retrieves its assets
-// from AssetsManager and contains no game logic. BackButton/ESC always exit
-// this state entirely, back to whichever state pushed it (MenuState or
-// MiniMenuState) - it has no knowledge of that state's type. Next/Previous
-// only ever change which page is showing (m_page) - they never touch the
-// state stack, so they stay completely separate from the exit path.
+// Full-screen "How To Play" screen: three pages (Instructions1/2/3.png)
+// with Next/Previous buttons. BackButton/ESC exit to whichever state pushed
+// this one; Next/Previous only ever change m_page, never the state stack.
 class InstructionsState : public State
 {
 public:
@@ -35,13 +31,10 @@ private:
     sf::Sprite m_background;
     Menu m_menu;
 
-    // Which of the 3 instruction pages is currently showing - always starts
-    // on page 0 (Instructions1.png).
-    int m_page = 0;
+    int m_page = 0; // which of the 3 pages is showing, starts at 0
 
-    // Page-to-page navigation only (see setPage/goToNextPage/goToPreviousPage
-    // above) - shown/handled conditionally in draw()/handleEvent() based on
-    // m_page, rather than any enabled/visible flag on Button itself.
+    // Shown/handled conditionally in draw()/handleEvent() based on m_page,
+    // not an enabled/visible flag on Button itself.
     Button m_nextPageButton;
     Button m_prevPageButton;
 };

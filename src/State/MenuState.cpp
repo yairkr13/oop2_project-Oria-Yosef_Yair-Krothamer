@@ -18,15 +18,12 @@ namespace
     }*/
     constexpr unsigned int AUDIO_BUTTON_WIDTH = 60;
     constexpr int AUDIO_BUTTON_TOP_MARGIN = 20;
-    constexpr int BUTTON_GAP = 15; // רווח בין שני הכפתורים
+    constexpr int BUTTON_GAP = 15; // gap between the two audio buttons
 
-    // Offset from the window's own vertical center - the same ratio the old
-    // fixed 350.f represented at the window's original 720-tall creation
-    // size (350 - 360 center = -10.f), expressed as a compile-time Config
-    // value now instead of staying pinned to that original size.
+    // Offset from the window's own vertical center, Config-based instead of a fixed pixel value.
     constexpr float MENU_Y_OFFSET_FROM_CENTER = -10.f;
 
-    // חישוב המיקום של כפתור המוזיקה (משמאל)
+    // Music button position (left of the pair).
     sf::Vector2i musicButtonPosition(const sf::RenderWindow& window)
     {
         int centerX = static_cast<int>(window.getSize().x) / 2;
@@ -36,7 +33,7 @@ namespace
         return { startX, AUDIO_BUTTON_TOP_MARGIN };
     }
 
-    // חישוב המיקום של כפתור הסאונד (מימין, בצמוד לכפתור המוזיקה)
+    // Sound button position (right of the music button).
     sf::Vector2i soundButtonPosition(const sf::RenderWindow& window)
     {
         sf::Vector2i musicPos = musicButtonPosition(window);
@@ -44,12 +41,12 @@ namespace
     }
 }
 
-MenuState::MenuState(sf::RenderWindow& window) //למה זה excplicit?????
+MenuState::MenuState(sf::RenderWindow& window)
     : m_window(window)
     , m_background(AssetsManager::getInstance().getTexture("menu_bg"))
     , m_menu({ static_cast<float>(window.getSize().x) / 2.f, static_cast<float>(Config::WINDOW_HEIGHT) / 2.f + MENU_Y_OFFSET_FROM_CENTER }, 340, 22.f)
-    , m_volumeButton(musicButtonPosition(window), AUDIO_BUTTON_WIDTH)  // כפתור מוזיקה - שמאלה
-    , m_soundOnButton(soundButtonPosition(window), AUDIO_BUTTON_WIDTH) // כפתור אפקטים - ימינה
+    , m_volumeButton(musicButtonPosition(window), AUDIO_BUTTON_WIDTH)
+    , m_soundOnButton(soundButtonPosition(window), AUDIO_BUTTON_WIDTH)
 {
     scaleBackgroundToWindow();
     buildMenu();

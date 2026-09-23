@@ -6,16 +6,10 @@
 
 namespace
 {
-    // Offset from the window's own vertical center - the same ratio the old
-    // fixed 260.f represented at the window's original 720-tall creation
-    // size (260 - 360 center = -100.f), expressed as a compile-time Config
-    // value now instead of staying pinned to that original size.
+    // Offset from the window's own vertical center, Config-based instead of a fixed pixel value.
     constexpr float MENU_Y_OFFSET_FROM_CENTER = -100.f;
 
-    // Same convention as MENU_Y_OFFSET_FROM_CENTER above - the ratio the
-    // old windowHeight/4.5f divisor worked out to at the original 720-tall
-    // size (160 - 360 center = -200.f), expressed as a Config-derived
-    // offset instead of a live-window-size divisor.
+    // Same convention as MENU_Y_OFFSET_FROM_CENTER above.
     constexpr float WINNER_TEXT_Y_OFFSET_FROM_CENTER = -200.f;
 }
 
@@ -63,7 +57,6 @@ void GameOverState::onRestartClicked()
 
 void GameOverState::onMainMenuClicked()
 {
-    // ���� ����� ������ �����
     transitionTo(std::make_unique<MenuState>(m_window));
 }
 
@@ -76,7 +69,7 @@ void GameOverState::draw(sf::RenderWindow& window) const
 
 void GameOverState::update(sf::Time deltaTime)
 {
-    // ���� ������ ��� ������ �� �������� ����� �� �����
+    // Nothing to animate on the game-over screen.
 }
 
 void GameOverState::handleEvent(const sf::Event& event)

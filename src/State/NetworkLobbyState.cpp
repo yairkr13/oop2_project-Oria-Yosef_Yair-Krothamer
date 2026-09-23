@@ -6,36 +6,23 @@
 
 namespace
 {
-    // Arbitrary, just needs to not collide with a well-known service - this
-    // game never needs more than the one port, since it's always exactly
-    // one LAN connection.
+    // Arbitrary port; the game only ever needs the one LAN connection.
     constexpr unsigned short PORT = 54321;
 
     constexpr unsigned int MENU_BUTTON_WIDTH = 260;
     constexpr float MENU_GAP = 18.f;
 
-    // Every Y position here is an offset from the window's own vertical
-    // center (a compile-time Config value, not a live window size - the
-    // window never resizes) rather than an absolute pixel value, the same
-    // convention GameModeState/MiniMenuState use - so this whole layout
-    // moves and spaces itself correctly if Config::WINDOW_HEIGHT ever
-    // changes, instead of staying pinned to numbers tuned for one size.
+    // Offsets from the window's own vertical center, Config-based instead of live window size.
     constexpr float STATUS_TEXT_OFFSET_FROM_CENTER = -220.f;
     constexpr float ADDRESS_TEXT_OFFSET_FROM_CENTER = -130.f;
-
-    // Where the button stack starts, below the status/address text block -
-    // same "first button's own top-left y" meaning as every other Menu in
-    // the project (see GameModeState's MENU_Y_OFFSET_FROM_CENTER).
-    constexpr float MENU_TOP_OFFSET_FROM_CENTER = -20.f;
+    constexpr float MENU_TOP_OFFSET_FROM_CENTER = -20.f; // where the button stack starts
 
     float statusTextY() { return static_cast<float>(Config::WINDOW_HEIGHT) / 2.f + STATUS_TEXT_OFFSET_FROM_CENTER; }
     float addressTextY() { return static_cast<float>(Config::WINDOW_HEIGHT) / 2.f + ADDRESS_TEXT_OFFSET_FROM_CENTER; }
     float menuTopY() { return static_cast<float>(Config::WINDOW_HEIGHT) / 2.f + MENU_TOP_OFFSET_FROM_CENTER; }
 
-    // Centers `text` horizontally on the window, keeping its top edge at
-    // its current position - so a message growing from one line to two
-    // (e.g. the Hosting phase's address message) grows downward instead of
-    // re-centering vertically and jumping around.
+    // Centers `text` horizontally, keeping its top edge fixed - so a message
+    // growing to two lines grows downward instead of jumping around.
     void centerHorizontally(sf::Text& text, float windowWidth)
     {
         sf::FloatRect bounds = text.getLocalBounds();
