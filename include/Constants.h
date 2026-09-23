@@ -3,7 +3,7 @@
 enum class PlayerSide { Left, Right };
 
 // Represents the selected play configuration.
-enum class GameMode { None, PlayerVsAI, PlayerVsPlayer };
+enum class GameMode { None, PlayerVsAI, PlayerVsPlayer, PlayerVsRemote };
 
 namespace Config
 {

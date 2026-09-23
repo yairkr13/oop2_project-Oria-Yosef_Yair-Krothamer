@@ -16,3 +16,9 @@ add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
 )
 
 target_link_libraries (${CMAKE_PROJECT_NAME} ${SFML_TARGETS})
+
+# NetworkConnection.cpp (LAN multiplayer) uses the Winsock2 API - only ever
+# actually used on Windows, which is this project's only real target anyway.
+if (WIN32)
+    target_link_libraries (${CMAKE_PROJECT_NAME} ws2_32)
+endif()

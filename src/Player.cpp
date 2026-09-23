@@ -266,6 +266,16 @@ void Player::removeDeadMonsters()
     //std::erase_if(m_monsters, [](const auto& m) { return !m || !m->isAlive(); });
 }
 
+int Player::indexOfCard(const Card* card) const
+{
+    for (size_t i = 0; i < m_hand.size(); ++i)
+    {
+        if (m_hand[i].get() == card)
+            return static_cast<int>(i);
+    }
+    return -1;
+}
+
 Card* Player::getCardAtPosition(const sf::Vector2f& mousePos, bool alignRight) const
 {
     for (size_t i = 0; i < m_hand.size(); ++i)

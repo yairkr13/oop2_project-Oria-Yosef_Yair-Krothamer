@@ -47,6 +47,12 @@ public:
     Monster* playCard(Card* card); // כבר לא מוחק מ-m_hand!
     void removeDeadMonsters();
     std::string getCardTooltipAt(const sf::Vector2f& pos) const;
+
+    // A Card* means nothing outside this process (it's a memory address) -
+    // this is how GameplayState turns one into something that DOES mean
+    // the same thing on a remote peer's own computer, for GameAction::cardIndex
+    // (see RemotePlayer). -1 if `card` isn't actually in this hand.
+    int indexOfCard(const Card* card) const;
 //private:
 protected:
     //void drawHand(sf::RenderWindow& window, bool alignRight, Monster* selectedFromHand = nullptr) const;

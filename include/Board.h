@@ -150,6 +150,12 @@ public:  // הפונקציות הציבוריות שיכלו להיות const - 
 	// for tile occupancy.
 	const Tile* getTileAtScreenPosition(const sf::Vector2f& pos) const;
 
+	// (q, row) -> Tile lookup - unlike screen position, (q, row) means the
+	// same thing regardless of window size, so this is what RemotePlayer
+	// uses to turn a received GameAction's coordinates back into a Tile,
+	// the same way getTileAtScreenPosition turns a local click into one.
+	const Tile* getTileAt(int q, int row) const;
+
 
 	// Every currently-occupied Tile, board-wide - a plain occupancy fact.
 	// Commented out (not deleted): its only caller, highlightValidSpecialTargets,
@@ -175,11 +181,6 @@ private:
 	// caller (GameplayState, AIPlayer) asks Board for a path directly, they
 	// only ever ask it to actually perform a move/attack.
 	std::vector<const Tile*> getPathTo(const BoardEntity* entity, const Tile* target) const;
-
-	// Only getTileAtScreenPosition (above) calls this - Blue's knockback
-	// (the header comment this used to justify) now goes through
-	// applyKnockback instead.
-	const Tile* getTileAt(int q, int row) const;
 
 	// מקור רנדומליות אחד ומשותף לכל הלוח (במקום std::mt19937 מקומי במקום אחד ו-rand() במקום אחר).
 	// Private - Board.cpp's own methods (generateSpecialTiles, pickRandomTile)
