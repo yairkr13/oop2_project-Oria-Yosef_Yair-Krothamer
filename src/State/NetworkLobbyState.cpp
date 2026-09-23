@@ -155,12 +155,12 @@ void NetworkLobbyState::startHosting()
         m_connection.reset();
         return;
     }
-    setPhase(Phase::Hosting);
+    m_pendingPhase = Phase::Hosting; // not setPhase() directly - see applyPendingPhase
 }
 
 void NetworkLobbyState::startJoining()
 {
-    setPhase(Phase::EnterAddress);
+    m_pendingPhase = Phase::EnterAddress;
 }
 
 void NetworkLobbyState::attemptConnect()
@@ -175,7 +175,15 @@ void NetworkLobbyState::attemptConnect()
         m_connection.reset();
         return;
     }
-    setPhase(Phase::Connecting);
+    m_pendingPhase = Phase::Connecting;
+}
+
+void NetworkLobbyState::applyPendingPhase()
+{
+    if (!m_pendingPhase) return;
+    Phase phase = *m_pendingPhase;
+    m_pendingPhase.reset();
+    setPhase(phase);
 }
 
 void NetworkLobbyState::enterGame(PlayerSide localSide)
@@ -185,6 +193,8 @@ void NetworkLobbyState::enterGame(PlayerSide localSide)
 
 void NetworkLobbyState::update(sf::Time /*deltaTime*/)
 {
+    applyPendingPhase();
+
     if (!m_connection) return;
 
     m_connection->update();

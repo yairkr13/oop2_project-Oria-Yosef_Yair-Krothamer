@@ -22,6 +22,7 @@ public:
     void draw(sf::RenderWindow& window) const override;
     void update(sf::Time deltaTime) override;
     void handleEvent(const sf::Event& event) override;
+    MusicTrack desiredMusicTrack() const override { return MusicTrack::Menu; }
 
 private:
     enum class Phase
@@ -42,6 +43,19 @@ private:
     void buildMenuForPhase(Phase phase);
 
     void setPhase(Phase phase);
+
+    // Applies m_pendingPhase (if one is set) and clears it - called once,
+    // at the very start of update(). setPhase() rebuilds m_menu outright
+    // (see buildMenuForPhase), which frees the whole m_buttons vector - and
+    // startHosting/startJoining/attemptConnect below are usually called
+    // from INSIDE one of THOSE buttons' own click callbacks, i.e. while
+    // Menu::handleEvent is still iterating m_buttons on the call stack. So
+    // they never call setPhase() directly; they set m_pendingPhase instead,
+    // and the actual rebuild happens safely here, in update() - which SFML
+    // only ever calls after every pending event has already finished being
+    // handled (see Controller::run), never mid-iteration.
+    void applyPendingPhase();
+
     void startHosting();
     void startJoining();
     void attemptConnect();
@@ -53,6 +67,7 @@ private:
     sf::RenderWindow& m_window;
     sf::Sprite m_background;
     Phase m_phase = Phase::ChooseRole;
+    std::optional<Phase> m_pendingPhase; // see applyPendingPhase
 
     std::unique_ptr<NetworkConnection> m_connection;
     std::string m_addressInput;

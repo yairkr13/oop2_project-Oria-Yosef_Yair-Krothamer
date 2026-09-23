@@ -19,15 +19,13 @@ public:
     // Protection targets a friendly Monster - flips the base (enemy)
     // default, but keeps its isAlive() requirement (see Monster's own
     // isValidSpecialTarget): a dying ally is still Tile-linked and must not
-    //// be targetable while its death animation plays.
-    //bool isValidSpecialTarget(const BoardEntity& candidate) const override
-    //{
-    //    return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(getSide());
-    //}
+    // be targetable while its death animation plays. Also keeps the base's
+    // canBeTargetedBySpecial() check - Heart doesn't override that (stays
+    // false), so Protection can't target it either, same as every other
+    // Special.
     bool isValidSpecialTarget(const BoardEntity& candidate) const override
     {
-        // הנרייטה יכולה להגן על כל בעל ברית חי - מפלצת או לב!
-        return candidate.isAlive() && candidate.isAllyOf(m_side);
+        return candidate.isAlive() && candidate.canBeTargetedBySpecial() && candidate.isAllyOf(m_side);
     }
 
     // AI preference: whoever has the least HP is the most vulnerable, so
@@ -39,7 +37,7 @@ public:
     }
     // בתוך class Henrietta (תחת public):
     virtual std::string getSpecialAbilityDescription() const override {
-        return "Protection: Grants a shield to an ally or the Heart, blocking all damage until the next turn.";
+        return "Protection: Grants a shield to an ally, blocking all damage until the next turn.";
     }
     sf::Color getSpecialTargetHighlightColor() const override { return sf::Color(255, 165, 0, 180); } // orange
 private:
