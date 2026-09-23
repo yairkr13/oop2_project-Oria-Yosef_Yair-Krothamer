@@ -28,6 +28,8 @@ const std::string& MusicManager::assetNameFor(MusicTrack track)
     }
 }
 
+// Plays `track` looping if it isn't already the active one - stopping
+// whatever else was playing first. MusicTrack::None just stops.
 void MusicManager::playTrack(MusicTrack track)
 {
     if (track == m_currentTrack)

@@ -112,6 +112,10 @@
 #include <stdexcept>
 #include <type_traits>
 
+// Central store for every game asset - textures, fonts, music, sound
+// buffers. Everything else only ever retrieves already-loaded assets through
+// this class; loading is deferred (see queueRemainingAssets/loadNext) so the
+// loading screen can keep drawing while the rest streams in.
 class AssetsManager
 {
 public:
@@ -120,16 +124,13 @@ public:
 
     static AssetsManager& getInstance();
 
-    // טעינת נכסים ראשוניים למסך הטעינה בלבד (בלוקינג קצר)
     void loadBootAssets();
 
-    // הכנסת כל שאר נכסי המשחק לתור הטעינה
     void queueRemainingAssets();
 
-    // טעינת הנכס הבא בתור (נקרא בכל פריים מתוך ה-LoadingState)
     bool loadNext();
 
-    // --- 1. מתודת טעינה תבניתית גנרית ---
+    // Generic loader: loads `filePath` as a T under `name`, no-op if already loaded.
     template <typename T>
     void load(const std::string& name, const std::string& filePath)
     {
@@ -140,7 +141,7 @@ public:
         auto asset = std::make_unique<T>();
         bool success = false;
 
-        // בדיקה בזמן קומפילציה איזו מתודת טעינה להפעיל מ-SFML
+        // sf::Texture/sf::SoundBuffer use loadFromFile; sf::Font/sf::Music use openFromFile.
         if constexpr (std::is_same_v<T, sf::Texture> || std::is_same_v<T, sf::SoundBuffer>) {
             success = asset->loadFromFile(filePath);
         }
@@ -155,7 +156,8 @@ public:
         map[name] = std::move(asset);
     }
 
-    // --- 2. מתודות שליפה תבניות גנריות (get<T>) ---
+    // Generic lookup, mutable and const overloads - throws if `name` was
+    // never loaded.
     template <typename T>
     T& get(const std::string& name)
     {
@@ -178,7 +180,6 @@ public:
         return *it->second;
     }
 
-    // --- 3. מעטפות נוחות לשמירה על תאימות עם הקוד הקיים בפרויקט ---
     const sf::Texture& getTexture(const std::string& name) const;
     const sf::Font& getFont(const std::string& name) const;
     sf::Music& getMusic(const std::string& name) const;
@@ -195,14 +196,13 @@ private:
         std::string filePath;
     };
 
-    // פונקציות עזר מודולריות לחלוקת רישום הנכסים בתור
     /*void queueUIAssets();
     void queueMonsterAssets();
     void queueAttackAssets();
     void queueSpecialEffectsAssets();
     void queueAudioAssets();*/
 
-    // --- 4. מיפוי תבניתי פנימי (מיפוי T למפה המתאימה ב-AssetsManager) ---
+    // Maps T to the member map holding it.
     template <typename T>
     auto& getMap()
     {
@@ -222,9 +222,8 @@ private:
     }
 
     std::vector<PendingAsset> m_pendingAssets;
-    std::size_t m_nextPendingIndex = 0;
+    std::size_t m_nextPendingIndex = 0; // read position into m_pendingAssets
 
-    // המפות שמחזיקות את הנכסים בזיכרון
     std::unordered_map<std::string, std::unique_ptr<sf::Texture>>     m_textures;
     std::unordered_map<std::string, std::unique_ptr<sf::Font>>        m_fonts;
     std::unordered_map<std::string, std::unique_ptr<sf::Music>>       m_music;

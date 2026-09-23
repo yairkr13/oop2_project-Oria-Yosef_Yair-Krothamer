@@ -7,6 +7,8 @@ AssetsManager& AssetsManager::getInstance()
     return instance;
 }
 
+// Loads only the loading screen's own two images - small enough to block on
+// without delaying the first frame.
 void AssetsManager::loadBootAssets()
 {
    /* loadTexture("await_bg", "resources/Menu/AwaitScreen.png");
@@ -15,13 +17,12 @@ void AssetsManager::loadBootAssets()
     load<sf::Texture>("spinner", "resources/Menu/Spinner.png");
 }
 
-void AssetsManager::queueRemainingAssets() //��� ��� ��? ��� ���� ���� ���� �� ������� �������� ���� ���??????
+// Queues every other asset the game needs instead of loading it immediately -
+// loadNext() drains this one entry per frame (see LoadingState).
+void AssetsManager::queueRemainingAssets()
 {
     using Kind = PendingAsset::Kind;
 
-    // Same assets loadAllAssets() used to load immediately, in the same
-    // order - now queued instead, so loadNext() can drain them one at a
-    // time across frames (see the class comment in AssetsManager.h).
     m_pendingAssets = {
     { Kind::Font, "arial", "resources/Fonts/arial.ttf" },
     { Kind::Font, "Lilita", "resources/Fonts/LilitaOne.ttf" },
@@ -54,11 +55,7 @@ void AssetsManager::queueRemainingAssets() //��� ��� ��? ���
 
     { Kind::Texture, "heart_blue", "resources/Heart/BlueHeart.png" },
     { Kind::Texture, "heart_orange", "resources/Heart/OrangeHeart.png" },
-    // Both loaded up front (GameplayState picks one at random per new game
-    // - see GameplayState::randomGameBackgroundKey) rather than just the
-    // one "game_bg" this used to be - loadNext() drains the whole queue
-    // before MenuState is ever reachable, so both are already available
-    // by the time any GameplayState gets constructed.
+    // Both loaded up front - GameplayState picks one at random per game.
     { Kind::Texture, "game_bg_1", "resources/Background/Background1.png" },
     { Kind::Texture, "game_bg_2", "resources/Background/BackGround2.png" },
     { Kind::Texture, "BonePile", "resources/StaticObject/BonePile.png" },
@@ -121,6 +118,8 @@ void AssetsManager::queueRemainingAssets() //��� ��� ��? ���
     m_nextPendingIndex = 0;
 }
 
+// Loads exactly one queued asset. Returns false once the queue is drained -
+// the signal for the caller (LoadingState) to stop calling and move on.
 bool AssetsManager::loadNext()
 {
     if (m_nextPendingIndex >= m_pendingAssets.size())
@@ -139,9 +138,7 @@ bool AssetsManager::loadNext()
             + asset.name + "'");
     }
 
-   /*  Advance only once the asset above actually loaded - if loadX threw, the
-     index still points at the failed entry (irrelevant while we unwind to
-     main(), but keeps this function's own state honest).*/
+    // Only reached if the load above didn't throw.
     ++m_nextPendingIndex;
 
     return true;
@@ -160,10 +157,11 @@ const sf::Font& AssetsManager::getFont(const std::string& name) const
     catch (const std::out_of_range&) {
         return get<
     }*/
-    // בא לי שאם לא מצאנו את הפונט שביקושנו, ננסה להחזיר את הפונט ברירת המחדל (DefaultFont) במקום לזרוק חריגה. זה יכול להיות שימושי במצבים שבהם הפונט לא קריטי, או כשאנחנו רוצים להבטיח שהמשחק ימשיך לרוץ גם אם נכס מסוים חסר.
     return get<sf::Font>(name);
 }
 
+// Non-const on purpose, unlike the other getters: callers need to control
+// playback (play/pause/stop), not just read the asset.
 sf::Music& AssetsManager::getMusic(const std::string& name) const
 {
     return const_cast<sf::Music&>(get<sf::Music>(name));

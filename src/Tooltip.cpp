@@ -1,7 +1,7 @@
 #include "Tooltip.h"
 
 Tooltip::Tooltip(const sf::Font& font)
-    : m_text(font) // אתחול sf::Text ברשימת האתחול (חובה ב-SFML 3)
+    : m_text(font) // SFML 3 requires sf::Text to be constructed with a font
 {
     m_text.setCharacterSize(14);
     m_text.setFillColor(sf::Color::White);
@@ -11,6 +11,8 @@ Tooltip::Tooltip(const sf::Font& font)
     m_background.setOutlineThickness(1.5f);
 }
 
+// Positions the box near the cursor, flipped to whichever side keeps it
+// fully on screen.
 void Tooltip::show(const std::string& text, const sf::Vector2f& mousePos) {
     if (text.empty()) {
         m_visible = false;
@@ -27,14 +29,12 @@ void Tooltip::show(const std::string& text, const sf::Vector2f& mousePos) {
     constexpr float windowWidth = static_cast<float>(Config::WINDOW_WIDTH);
     constexpr float windowHeight = static_cast<float>(Config::WINDOW_HEIGHT);
 
-    // 1. ברירת מחדל: מיקום מימין ולמטה מהעכבר
     sf::Vector2f finalPos = mousePos + sf::Vector2f(15.f, 15.f);
 
-    // 2. אם החריגה מגיעה אל מעבר לקצה הימני - נזיז אותו לשמאל העכבר!
+    // Flip to the cursor's left/above if it would overflow that edge.
     if (finalPos.x + tooltipSize.x > windowWidth) {
         finalPos.x = mousePos.x - tooltipSize.x - 15.f;
     }
-    // 3. אותו דבר כלפי מטה - היה חסר קודם (רק הקצה הימני נבדק).
     if (finalPos.y + tooltipSize.y > windowHeight) {
         finalPos.y = mousePos.y - tooltipSize.y - 15.f;
     }

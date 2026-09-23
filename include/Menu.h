@@ -4,11 +4,9 @@
 #include <utility>
 #include "Button.h"
 
-// Lays out and scales buttons automatically: each texture added is scaled so
-// its on-screen width matches `buttonWidth` (aspect ratio preserved), stacked
-// vertically below the previous button and horizontally centered on
-// `center.x`. Callers just supply textures and callbacks - no size or
-// position math required.
+// Lays out and scales buttons automatically: each texture is scaled to
+// `buttonWidth`, stacked vertically, and centered on `center.x`. Callers
+// just supply textures and callbacks - no size/position math needed.
 class Menu
 {
 public:
@@ -16,22 +14,17 @@ public:
 
 	void addButton(const sf::Texture& texture, Button::Func func);
 
-    // Same layout, but this one button is sized to `width` instead of the
-    // Menu's own buttonWidth - for a texture whose aspect ratio differs
-    // enough from the others sharing this Menu (e.g. BackButton.png next to
-    // FriendButton.png/AiButton.png) that using the shared width would make
-    // it a very different height and throw off the whole stack.
+    // Sized to `width` instead of the Menu's own buttonWidth - for a texture
+    // whose aspect ratio differs enough from the others sharing this Menu
+    // that the shared width would throw off the stack.
     void addButton(const sf::Texture& texture, Button::Func func, unsigned int width);
 
-    // Same layout, plus a text caption centered over the button - for
-    // buttons sharing a generic texture instead of a pre-labeled one.
+    // Same layout, plus a text caption centered over the button.
     void addButton(const sf::Texture& texture, Button::Func func, const sf::Font& font, const std::string& label);
 	void handleEvent(const sf::Event& event);
 	void draw(sf::RenderWindow& window) const;
 
 private:
-	// Computes the next stacked button's rect/scale and advances m_nextY -
-	// shared layout math for all three addButton overloads.
 	std::pair<sf::IntRect, sf::Vector2f> nextButtonRect(const sf::Texture& texture, unsigned int width);
 
 	std::vector<Button> m_buttons;

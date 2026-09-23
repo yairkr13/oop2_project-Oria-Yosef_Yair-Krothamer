@@ -3,6 +3,8 @@
 #include <string>
 #include "Constants.h"
 
+// A small text box shown next to the mouse cursor (e.g. hovering a Card or
+// a board tile) - stays hidden until show() is called with non-empty text.
 class Tooltip {
 public:
     explicit Tooltip(const sf::Font& font);
