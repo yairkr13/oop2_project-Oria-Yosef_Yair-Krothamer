@@ -32,7 +32,7 @@ namespace
 }
 
 Blue::Blue(PlayerSide side)
-    : Monster(side, BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Magenta, "blue")
+    : Monster(side, BASE_HEALTH, BASE_ATTACK, BASE_RANGE, BASE_COOLDOWN, -1, -1, sf::Color::Magenta, "blue", true)
 {
     // Flying monster: uses its fly sheet instead of a ground walk cycle.
     setStandardSpriteAnimations("blue", "blue_fly", ATTACK_FRAME_DURATION);
