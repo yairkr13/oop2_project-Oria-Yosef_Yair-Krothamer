@@ -53,12 +53,6 @@ public:
     // Same query, narrowed to reachable tiles that are actually occupied.
     std::vector<const Tile*> getReachableOccupiedTiles(const BoardEntity* entity, bool includeAllies = false) const;
 
-    // Commented out (not deleted): served Barzilla's OLD self-extending
-    // Empowered Attack; now ally-targeted (see Barzilla.h), so this would
-    // always be empty for everyone.
-    /*std::vector<Tile*> getExtendedAttackOnlyTiles(Monster* monster) const;*/
-    //std::vector<const Tile*> getExtendedAttackOnlyTiles(const BoardEntity* entity) const;
-
     bool spawnEntityOnTile(BoardEntity* entity,const Tile* targetTile) const;
 
     // Picks one tile uniformly at random (Board's own shared rng()); nullptr for an empty list.

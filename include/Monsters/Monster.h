@@ -24,11 +24,7 @@ public:
     virtual ~Monster();
     void draw(sf::RenderWindow& window, PlayerSide CurrentTurnSide) const override;
     void attack(BoardEntity* target);
-    // isAlive() is checked explicitly (not just implied): a dead monster
-    // stays linked to its Tile for as long as its death animation is
-    // playing (see isDying()/isReadyForRemoval() below), so without this
-    // check it would otherwise still satisfy "not an enemy, has actions
-    // left" and be selectable/movable/attackable-with while visibly dying.
+    
     bool canBeSelectedBy(PlayerSide side) const override;
     virtual bool canBeTargetedBySpecial() const override;
 
@@ -76,9 +72,7 @@ public:
 
     virtual float scoreAsSpecialTarget(const BoardEntity& candidate) const;
 
-    // Tile-highlight color for this monster's valid Special targets. Pure
-    // virtual: every concrete monster states its own, even where it just
-    // matches the base default.
+    // Tile-highlight color for this monster's valid Special targets.
     virtual sf::Color getSpecialTargetHighlightColor() const = 0;
 
     virtual bool useSpecialAbility(const Board& board, BoardEntity* target = nullptr);
@@ -105,11 +99,7 @@ protected:
     const PlayerSide m_side; // reached directly by some subclasses (e.g. Henrietta's isValidSpecialTarget)
 
 private:
-    // None of the 5 concrete monster .cpp files touch any of these
-    // directly - each only ever goes through Monster's own public
-    // accessors/methods. Only BoardEntity's own m_q/m_row/m_screenPos
-    // (inherited, still protected there) and Monster's own m_side above are
-    // genuinely reached directly by a subclass.
+    
     int m_attackDamage;
     int m_range;
     sf::Color m_color;

@@ -28,17 +28,9 @@ configure_file("Button/remoteButton.png" ${CMAKE_BINARY_DIR}/resources/Button/re
 
 
 configure_file("Background/Background1.png" ${CMAKE_BINARY_DIR}/resources/Background/Background1.png COPYONLY)
-configure_file("Background/Background2.png" ${CMAKE_BINARY_DIR}/resources/Background/Background2.png COPYONLY)
+configure_file("Background/BackGround2.png" ${CMAKE_BINARY_DIR}/resources/Background/BackGround2.png COPYONLY)
 
-configure_file("Key/3Keys.png" ${CMAKE_BINARY_DIR}/resources/Key/3Keys.png COPYONLY)
-configure_file("Key/1Keys.png" ${CMAKE_BINARY_DIR}/resources/Key/1Keys.png COPYONLY)
 
-configure_file("Heart/Heart0.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart0.png COPYONLY)
-configure_file("Heart/Heart12.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart12.png COPYONLY)
-configure_file("Heart/Heart25.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart25.png COPYONLY)
-configure_file("Heart/Heart50.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart50.png COPYONLY)
-configure_file("Heart/Heart75.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart75.png COPYONLY)
-configure_file("Heart/Heart100.png" ${CMAKE_BINARY_DIR}/resources/Heart/Heart100.png COPYONLY)
 configure_file("Heart/OrangeHeart.png" ${CMAKE_BINARY_DIR}/resources/Heart/OrangeHeart.png COPYONLY)
 configure_file("Heart/BlueHeart.png" ${CMAKE_BINARY_DIR}/resources/Heart/BlueHeart.png COPYONLY)
 
@@ -88,14 +80,6 @@ configure_file("SpecialAttack/FreezeEffect.png" ${CMAKE_BINARY_DIR}/resources/Sp
 configure_file("SpecialAttack/WindEffect.png" ${CMAKE_BINARY_DIR}/resources/SpecialAttack/WindEffect.png COPYONLY)
 configure_file("SpecialAttack/ShieldEffect.png" ${CMAKE_BINARY_DIR}/resources/SpecialAttack/ShieldEffect.png COPYONLY)
 
-configure_file("StaticObject/CrystalSpike.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/CrystalSpike.png COPYONLY)
-configure_file("StaticObject/DeadTree.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/DeadTree.png COPYONLY)
-configure_file("StaticObject/RockPillar.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/RockPillar.png COPYONLY)
-configure_file("StaticObject/BonePile.png" ${CMAKE_BINARY_DIR}/resources/StaticObject/BonePile.png COPYONLY)
-
-configure_file("Tile/Tile1.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile1.png COPYONLY)
-configure_file("Tile/Tile2.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile2.png COPYONLY)
-configure_file("Tile/Tile3.png" ${CMAKE_BINARY_DIR}/resources/Tile/Tile3.png COPYONLY)
 
 configure_file("Music/BackGround/BackGroundMusic.mp3" ${CMAKE_BINARY_DIR}/resources/Music/BackGround/BackGroundMusic.mp3 COPYONLY)
 configure_file("Music/BackGround/InGameMusic.mp3" ${CMAKE_BINARY_DIR}/resources/Music/BackGround/InGameMusic.mp3 COPYONLY)

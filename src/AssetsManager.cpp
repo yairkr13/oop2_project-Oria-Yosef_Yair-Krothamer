@@ -56,7 +56,6 @@ void AssetsManager::queueRemainingAssets()
     // Both loaded up front - GameplayState picks one at random per game.
     { Kind::Texture, "game_bg_1", "resources/Background/Background1.png" },
     { Kind::Texture, "game_bg_2", "resources/Background/BackGround2.png" },
-    { Kind::Texture, "BonePile", "resources/StaticObject/BonePile.png" },
 
     { Kind::Texture, "muffintop", "resources/Monster/Muffintop/Muffintop.png" },
     { Kind::Texture, "muffintop_card", "resources/Monster/Muffintop/Muffintop_Card.png" },
