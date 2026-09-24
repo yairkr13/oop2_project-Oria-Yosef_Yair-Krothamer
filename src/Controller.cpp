@@ -8,11 +8,13 @@
 
 Controller::Controller()
 {
+	
     // Runtime check instead of static_assert - main() catches this and
     // prints a clean message rather than a wall of compiler errors.
     if (Config::WINDOW_WIDTH < Config::MIN_WINDOW_WIDTH || Config::WINDOW_WIDTH > Config::MAX_WINDOW_WIDTH ||
         Config::WINDOW_HEIGHT < Config::MIN_WINDOW_HEIGHT || Config::WINDOW_HEIGHT > Config::MAX_WINDOW_HEIGHT)
     {
+        //check if the size of the window is within the supported range, if not throw an exception
         throw std::out_of_range(
             "Config::WINDOW_WIDTH/HEIGHT (" + std::to_string(Config::WINDOW_WIDTH) + "x" +
             std::to_string(Config::WINDOW_HEIGHT) + ") is outside the supported range (" +
@@ -39,7 +41,7 @@ void Controller::run()
     {
         sf::Time deltaTime = m_clock.restart();
         
-
+        // Forward every pending event to the current state; a Closed event closes the window.
         while (const auto event = m_window.pollEvent())
         {
             m_states.back()->handleEvent(*event);
@@ -47,6 +49,7 @@ void Controller::run()
                 m_window.close();
         }
 
+		// manage the current state and check if it wants to push a new state or pop itself.
         State& current = *m_states.back();
         if (current.hasStateToPush())
         {
