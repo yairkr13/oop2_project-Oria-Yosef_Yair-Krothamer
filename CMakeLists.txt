@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.26)
 
 project (oop2_project)
-set (MY_AUTHORS "YOUR-NAME-HERE")
+set (MY_AUTHORS "Oriya_Yosef-Yair_Krothamer")
 
 include (cmake/CompilerSettings.cmake)
 
